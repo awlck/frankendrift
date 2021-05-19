@@ -1,0 +1,6 @@
+*.old/
+.idea/
+.vs
+.DS_Store
+**/obj/
+**/bin/

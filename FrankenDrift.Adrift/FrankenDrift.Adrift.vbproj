@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Adravalon.Adrift</RootNamespace>
+    <TargetFramework>net5.0</TargetFramework>
+    <DefineConstants>Runner=True,Adravalon=True</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ComponentAce.Compression.Libs.zlib" Version="1.0.4" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FrankenDrift.Glue\FrankenDrift.Glue.csproj" />
+  </ItemGroup>
+
+</Project>

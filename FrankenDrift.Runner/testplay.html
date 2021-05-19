@@ -1,0 +1,44 @@
+<html>
+    <head>
+        <title>FrankenDrift</title>
+        <style>
+            html, body {
+                height: 98%;
+                margin: 2px;
+            }
+            .container {
+                background-color: #dddddd;
+                display: table;
+                height: 100%;
+                width: 100%;
+            }
+            .container > div {
+                display: table-row;
+            }
+            .play {
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body style="height: 100%">
+        <div class="container">
+            <div class="play" style="overflow-y:scroll; background-color: darkslategrey; color:white;">
+                Play Area.
+            </div>
+            <div><input id="command" style="width: 100%"/></div>
+        </div>
+
+        <script>
+            const inp = document.getElementById('command');
+            const play = document.getElementsByClassName('play')[0];
+            inp.addEventListener("keyup", function(event) {
+                if (event.key === "Enter") {
+                    var current = document.createElement("p");
+                    current.innerText = "> " + inp.value;
+                    play.append(current);
+                    current.scrollIntoView(true);
+                }
+            });
+        </script>
+    </body>
+</html>
