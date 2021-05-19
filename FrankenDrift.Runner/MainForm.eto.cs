@@ -21,7 +21,7 @@ namespace Adravalon.Runner
             Padding = 10;
 
             output = new AdriftOutput(); //{ BackgroundColor = Color.FromRgb(0), SelectionForeground = Color.FromRgb((255<<8) + 255) /* BrowserContextMenuEnabled = true */ };
-            input = new AdriftInput();
+            input = new AdriftInput { PlaceholderText = ">" };
             status = new Label();
 
             Content = new TableLayout

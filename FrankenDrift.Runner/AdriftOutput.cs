@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
@@ -15,6 +17,8 @@ namespace Adravalon.Runner
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             _defaultFont = SelectionFont;
+            
+            _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
         }
         
         public void Clear()
@@ -36,8 +40,8 @@ namespace Adravalon.Runner
         private readonly Color _defaultColor = Colors.Cyan;
         private readonly Color _defaultBackground = Colors.Black;
         private readonly Color _defaultInput = Colors.Red;
-        private Font _defaultFont;
-        private Color _savedColor;
+        private readonly Font _defaultFont;
+        private Stack<Tuple<Font, Color>> _fonts = new();
 
         private float CalculateTextSize(int requestedSize)
         {
@@ -102,11 +106,12 @@ namespace Adravalon.Runner
                             SelectionUnderline = false;
                             break;
                         case "c":
+                            _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
                             SelectionForeground = _defaultInput;
                             break;
-                        case "/c":
+                        /* case "/c":
                             SelectionForeground = _defaultColor;
-                            break;
+                            break; */
                         case "waitkey":
                             _pendingText = src[consumed..];
                             IsWaiting = true;
@@ -114,9 +119,15 @@ namespace Adravalon.Runner
                             Append("\n(Press any key to continue)");
                             _outputMutex.ReleaseMutex();
                             return;
+                        case "/c":
                         case "/font":
-                            SelectionForeground = _savedColor;
-                            SelectionFont = _defaultFont;
+                            // SelectionForeground = _savedColor;
+                            // SelectionFont = _defaultFont;
+                            var restore = _fonts.Peek();
+                            SelectionFont = restore.Item1;
+                            SelectionForeground = restore.Item2;
+                            if (_fonts.Count > 1)
+                                _fonts.Pop();
                             break;
                         case "cls":
                             Clear();
@@ -127,12 +138,18 @@ namespace Adravalon.Runner
 
                     // Yay, special cases!
                     if (!currentToken.StartsWith("font")) continue;
-                    _savedColor = SelectionForeground;
-                    var re = new Regex("color=\"?(#[0-9A-Fa-f]{6})\"?");
+                    // _savedColor = SelectionForeground;
+                    _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
+                    var re = new Regex("color ?= ?\"?(#?[0-9A-Fa-f]{6})\"?");
                     var col = re.Match(currentToken);
                     if (col.Success)
-                        SelectionForeground = Color.Parse(col.Groups[1].Value);
+                    {
+                        var matchString = col.Groups[1].ToString();
+                        var colorString = matchString.StartsWith('#') ? matchString : ("#" + matchString);
+                        if (Color.TryParse(colorString, out var newColor))
+                            SelectionForeground = newColor;
                         //SelectionForeground = ParseHexColor(col.Groups[0].Value);
+                    }
                     else if (currentToken.Contains("black"))
                         SelectionForeground = Colors.Black;
                     else if (currentToken.Contains("blue"))
@@ -167,7 +184,9 @@ namespace Adravalon.Runner
                         SelectionForeground = Colors.White;
                     else if (currentToken.Contains("yellow"))
                         SelectionForeground = Colors.Yellow;
-                    re = new Regex("face=\"(.*?)\"");
+                    else if (currentToken.Contains("cyan"))
+                        SelectionForeground = Colors.Cyan;
+                    re = new Regex("face ?= ?\"(.*?)\"");
                     var face = re.Match(currentToken);
                     if (face.Success)
                     {
@@ -181,7 +200,7 @@ namespace Adravalon.Runner
                         }
                     }
 
-                    re = new Regex("size=\"?([+-]?\\d+)\"?");
+                    re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
                     var size = re.Match(currentToken);
                     if (size.Success)
                     {
