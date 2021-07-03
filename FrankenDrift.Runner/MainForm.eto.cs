@@ -20,7 +20,7 @@ namespace Adravalon.Runner
             MinimumSize = new Size(400, 400);
             Padding = 10;
 
-            output = new AdriftOutput(); //{ BackgroundColor = Color.FromRgb(0), SelectionForeground = Color.FromRgb((255<<8) + 255) /* BrowserContextMenuEnabled = true */ };
+            output = new AdriftOutput();
             input = new AdriftInput { PlaceholderText = ">" };
             status = new Label();
 
@@ -33,7 +33,7 @@ namespace Adravalon.Runner
             var clickMe = new Command { MenuText = "Click Me!", ToolBarText = "Click Me!" };
             clickMe.Executed += (sender, e) => MessageBox.Show(this, "I was clicked!");
 
-            loadGameCommand = new Command { MenuText = "Open Game" };
+            loadGameCommand = new Command { MenuText = "Open Game", Shortcut = Application.Instance.CommonModifier | Keys.O };
             saveGameCommand = new Command { MenuText = "Save", Enabled = false };
             restoreGameCommand = new Command { MenuText = "Restore", Enabled = false };
 
@@ -41,7 +41,13 @@ namespace Adravalon.Runner
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
 
             var aboutCommand = new Command { MenuText = "About..." };
-            aboutCommand.Executed += (sender, e) => new AboutDialog().ShowDialog(this);
+            aboutCommand.Executed += (sender, e) => new AboutDialog
+            {
+                Copyright = "FrankenDrift (c) 20221 Adrian Welcker\nADRIFT Runner (c) 1996-2020 Campbell Wild",
+                ProgramName = "FrankenDrift",
+                ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code" +
+                                     "with a cross-platform UI layer (Eto.Forms) glued on top."
+            }.ShowDialog(this);
 
             // create menu
             Menu = new MenuBar
