@@ -6,7 +6,7 @@ using Eto.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using MonoMac.CoreImage;
+// using MonoMac.CoreImage;
 
 namespace Adravalon.Runner
 {
@@ -15,14 +15,18 @@ namespace Adravalon.Runner
         public AdriftOutput() : base()
         {
             BackgroundColor = _defaultBackground;
-            SelectionForeground = _defaultColor;
             _defaultFont = SelectionFont;
+            SelectionForeground = _defaultColor;
             
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
         }
         
         public void Clear()
         {
+            _fonts.Clear();
+            _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
+            SelectionForeground = _defaultColor;
+            SelectionFont = _defaultFont;
             Text = "";
         }
 
@@ -36,16 +40,16 @@ namespace Adravalon.Runner
         // Whenever ADRIFT's timer runs out, the engine outputs whatever it was trying to output. Like this, we only
         // get duplicate text rather than crashes...
         private readonly Mutex _outputMutex = new Mutex();
-        
-        private readonly Color _defaultColor = Colors.Cyan;
-        private readonly Color _defaultBackground = Colors.Black;
+
+        private readonly Color _defaultColor = Eto.Platform.Detect.IsMac ? Colors.Cyan : Colors.White;
+        private readonly Color _defaultBackground = Eto.Platform.Detect.IsWpf ? Colors.White : Colors.Black;
         private readonly Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
         private Stack<Tuple<Font, Color>> _fonts = new();
 
-        private float CalculateTextSize(int requestedSize)
+        private int CalculateTextSize(int requestedSize)
         {
-            return requestedSize - 12 + _defaultFont.Size;
+            return (int)(requestedSize - 12 + _defaultFont.Size);
         }
         
         // We! Are the masters of the Jank-axy, we're the Lords of Space Jank-ee!
@@ -61,12 +65,14 @@ namespace Adravalon.Runner
             var inToken = false;
             var current = new StringBuilder();
             var currentToken = "";
+            var previousToken = "";
             foreach (var c in src)
             {
                 consumed++;
                 if (c == '<' && !inToken)
                 {
                     inToken = true;
+                    previousToken = currentToken; 
                     currentToken = "";
                     _outputMutex.WaitOne();
                     Append(current.ToString(), true);
@@ -139,53 +145,62 @@ namespace Adravalon.Runner
                     // Yay, special cases!
                     if (!currentToken.StartsWith("font")) continue;
                     // _savedColor = SelectionForeground;
-                    _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
-                    var re = new Regex("color ?= ?\"?(#?[0-9A-Fa-f]{6})\"?");
+                    if (current.Length > 0 || !previousToken.StartsWith("font"))
+                        _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
+                    var tokenLower = currentToken.ToLower();
+                    var re = new Regex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?");
                     var col = re.Match(currentToken);
                     if (col.Success)
                     {
-                        var matchString = col.Groups[1].ToString();
-                        var colorString = matchString.StartsWith('#') ? matchString : ("#" + matchString);
+                        var colorString =  ("#" + col.Groups[1].Value);
                         if (Color.TryParse(colorString, out var newColor))
                             SelectionForeground = newColor;
-                        //SelectionForeground = ParseHexColor(col.Groups[0].Value);
                     }
-                    else if (currentToken.Contains("black"))
+                    else if (tokenLower.Contains("black"))
                         SelectionForeground = Colors.Black;
-                    else if (currentToken.Contains("blue"))
+                    else if (tokenLower.Contains("blue"))
                         SelectionForeground = Colors.Blue;
-                    else if (currentToken.Contains("gray"))
+                    else if (tokenLower.Contains("gray"))
                         SelectionForeground = Colors.Gray;
-                    else if (currentToken.Contains("green"))
+                    else if (tokenLower.Contains("darkgreen"))
+                        SelectionForeground = Colors.DarkGreen;
+                    else if (tokenLower.Contains("green"))
                         SelectionForeground = Colors.Green;
-                    else if (currentToken.Contains("lime"))
+                    else if (tokenLower.Contains("lime"))
                         SelectionForeground = Colors.Lime;
-                    else if (currentToken.Contains("magenta"))
+                    else if (tokenLower.Contains("magenta"))
                         SelectionForeground = Colors.Magenta;
-                    else if (currentToken.Contains("maroon"))
+                    else if (tokenLower.Contains("maroon"))
                         SelectionForeground = Colors.Maroon;
-                    else if (currentToken.Contains("navy"))
+                    else if (tokenLower.Contains("navy"))
                         SelectionForeground = Colors.Navy;
-                    else if (currentToken.Contains("olive"))
+                    else if (tokenLower.Contains("olive"))
                         SelectionForeground = Colors.Olive;
-                    else if (currentToken.Contains("orange"))
+                    else if (tokenLower.Contains("orange"))
                         SelectionForeground = Colors.Orange;
-                    else if (currentToken.Contains("pink"))
+                    else if (tokenLower.Contains("pink"))
                         SelectionForeground = Colors.Pink;
-                    else if (currentToken.Contains("purple"))
+                    else if (tokenLower.Contains("purple"))
                         SelectionForeground = Colors.Purple;
-                    else if (currentToken.Contains("red"))
+                    else if (tokenLower.Contains("red"))
                         SelectionForeground = Colors.Red;
-                    else if (currentToken.Contains("silver"))
+                    else if (tokenLower.Contains("silver"))
                         SelectionForeground = Colors.Silver;
-                    else if (currentToken.Contains("teal"))
+                    else if (tokenLower.Contains("teal"))
                         SelectionForeground = Colors.Teal;
-                    else if (currentToken.Contains("white"))
+                    else if (tokenLower.Contains("white"))
                         SelectionForeground = Colors.White;
-                    else if (currentToken.Contains("yellow"))
+                    else if (tokenLower.Contains("yellow"))
                         SelectionForeground = Colors.Yellow;
-                    else if (currentToken.Contains("cyan"))
+                    else if (tokenLower.Contains("cyan"))
                         SelectionForeground = Colors.Cyan;
+                    else if (tokenLower.Contains("darkolive"))
+                        SelectionForeground = Colors.DarkOliveGreen;
+                    else if (tokenLower.Contains("olive"))
+                        SelectionForeground = Colors.Olive;
+                    else if (tokenLower.Contains("tan"))
+                        SelectionForeground = Colors.Tan;
+                    
                     re = new Regex("face ?= ?\"(.*?)\"");
                     var face = re.Match(currentToken);
                     if (face.Success)
@@ -202,18 +217,18 @@ namespace Adravalon.Runner
 
                     re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
                     var size = re.Match(currentToken);
-                    if (size.Success)
+                    if (size.Success && !Eto.Platform.Detect.IsWpf)
                     {
                         var sizeString = size.Groups[1].Value;
                         if (sizeString.StartsWith('+'))
                         {
                             if (int.TryParse(sizeString[1..], out var sizeDelta))
-                                SelectionFont = SelectionFont.WithSize(SelectionFont.Size + sizeDelta);
+                                SelectionFont = SelectionFont.WithSize(((int) SelectionFont.Size) + sizeDelta);
                         }
                         else if (sizeString.StartsWith('-'))
                         {
                             if (int.TryParse(sizeString[1..], out var sizeDelta))
-                                SelectionFont = SelectionFont.WithSize(SelectionFont.Size - sizeDelta);
+                                SelectionFont = SelectionFont.WithSize(((int) SelectionFont.Size) - sizeDelta);
                         }
                         else
                         {
@@ -232,8 +247,9 @@ namespace Adravalon.Runner
         internal void FinishWaiting()
         {
             IsWaiting = false;
-            AppendHtml(_pendingText);
+            var theText = _pendingText;
             _pendingText = "";
+            AppendHtml(theText);
         }
     }
 }
