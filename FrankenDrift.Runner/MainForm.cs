@@ -28,7 +28,8 @@ namespace Adravalon.Runner
             if (_graphics is null)
             {
                 _graphics = new GraphicsWindow(this);
-                _graphics.Title = "Grpahics - " + Title;
+                _graphics.Title = "Graphics - " + Title;
+                _graphics.ShowActivated = false;
             }
             _graphics.Show();
             return _graphics;
