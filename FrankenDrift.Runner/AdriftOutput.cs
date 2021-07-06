@@ -41,8 +41,8 @@ namespace Adravalon.Runner
         // get duplicate text rather than crashes...
         private readonly Mutex _outputMutex = new Mutex();
 
-        private readonly Color _defaultColor = Eto.Platform.Detect.IsMac ? Colors.Cyan : Colors.White;
-        private readonly Color _defaultBackground = Eto.Platform.Detect.IsWpf ? Colors.White : Colors.Black;
+        private readonly Color _defaultColor = Eto.Platform.Detect.IsMac ? Colors.Cyan : Colors.Black;
+        private readonly Color _defaultBackground = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
         private readonly Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
         private Stack<Tuple<Font, Color>> _fonts = new();

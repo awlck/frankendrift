@@ -223,7 +223,7 @@ namespace Adravalon.Runner
 
         public void SetBackgroundColour()
         {
-            output.BackgroundColor = Color.FromRgb(0);
+            output.BackgroundColor = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
         }
 
         public void UpdateStatusBar(string desc, string score, string user)
