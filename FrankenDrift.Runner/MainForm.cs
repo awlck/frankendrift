@@ -55,7 +55,9 @@ namespace Adravalon.Runner
                         OutputHTML("<br><br>");
                         Adrift.SharedModule.UserSession.Process(input.Text);
                     }
+                    #if DEBUG
                     else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
+                    #endif
                     else OutputHTML("(Click File > Open Game to load a game!)");
                     input.Text = "";
                     e.Handled = true;

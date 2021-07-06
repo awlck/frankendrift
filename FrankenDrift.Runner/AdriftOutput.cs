@@ -6,7 +6,6 @@ using Eto.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-// using MonoMac.CoreImage;
 
 namespace Adravalon.Runner
 {
@@ -30,7 +29,7 @@ namespace Adravalon.Runner
             SelectionFont = _defaultFont;
             Text = "";
         }
-
+        
         public int TextLength => Text.Length;
         public int SelectionStart { get => Selection.Start; set => Selection = Selection.WithStart(value); }
         public int SelectionLength { get => Selection.Length(); set => Selection = Selection.WithLength(value); }
@@ -120,9 +119,6 @@ namespace Adravalon.Runner
                             _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
                             SelectionForeground = _defaultInput;
                             break;
-                        /* case "/c":
-                            SelectionForeground = _defaultColor;
-                            break; */
                         case "waitkey":
                             _pendingText = src[consumed..];
                             IsWaiting = true;
@@ -132,8 +128,6 @@ namespace Adravalon.Runner
                             return;
                         case "/c":
                         case "/font":
-                            // SelectionForeground = _savedColor;
-                            // SelectionFont = _defaultFont;
                             var restore = _fonts.Peek();
                             SelectionFont = restore.Item1;
                             SelectionForeground = restore.Item2;
@@ -154,7 +148,6 @@ namespace Adravalon.Runner
                         continue;
                     }
                     if (!currentToken.StartsWith("font")) continue;
-                    // _savedColor = SelectionForeground;
                     if (current.Length > 0 || !previousToken.StartsWith("font"))
                         _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
                     var tokenLower = currentToken.ToLower();
