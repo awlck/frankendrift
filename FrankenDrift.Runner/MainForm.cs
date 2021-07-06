@@ -3,6 +3,7 @@ using Adravalon.Glue.Infragistics.Win.UltraWinToolbars;
 using Eto.Drawing;
 using Eto.Forms;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Application = Eto.Forms.Application;
 
@@ -19,6 +20,8 @@ namespace Adravalon.Runner
         public bool Locked => false;
 
         private AdriftMap map;
+
+        private Dictionary<string, SecondaryWindow> _secondaryWindows = new();
 
         public MainForm()
         {
@@ -52,6 +55,7 @@ namespace Adravalon.Runner
                         OutputHTML("<br><br>");
                         Adrift.SharedModule.UserSession.Process(input.Text);
                     }
+                    else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
                     else OutputHTML("(Click File > Open Game to load a game!)");
                     input.Text = "";
                     e.Handled = true;
@@ -88,6 +92,17 @@ namespace Adravalon.Runner
             var toLoad = QueryLoadPath();
             if (!string.IsNullOrWhiteSpace(toLoad))
                 Adrift.SharedModule.UserSession.OpenAdventure(toLoad);
+        }
+
+        internal AdriftOutput GetSecondaryWindow(string name)
+        {
+            if (_secondaryWindows.ContainsKey(name)) return _secondaryWindows[name].Output;
+            var win = new SecondaryWindow(this);
+            win.ShowActivated = false;
+            win.Title = name + " - " + this.Title;
+            win.Show();
+            _secondaryWindows[name] = win;
+            return win.Output;
         }
 
         public void ErrMsg(string message, Exception ex = null)
@@ -236,6 +251,13 @@ namespace Adravalon.Runner
         public void SubmitCommand()
         {
             throw new NotImplementedException();
+        }
+
+        internal void ReportSecondaryClosing(SecondaryWindow secondaryWindow)
+        {
+            if (!_secondaryWindows.ContainsValue(secondaryWindow)) return;
+            foreach(var item in _secondaryWindows.Where(kvp => kvp.Value == secondaryWindow).ToList())
+                _secondaryWindows.Remove(item.Key);
         }
     }
 }

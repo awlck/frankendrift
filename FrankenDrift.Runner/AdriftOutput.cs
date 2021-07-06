@@ -12,8 +12,9 @@ namespace Adravalon.Runner
 {
     public class AdriftOutput : RichTextArea, Glue.RichTextBox
     {
-        public AdriftOutput() : base()
+        public AdriftOutput(MainForm main) : base()
         {
+            _main = main;
             BackgroundColor = _defaultBackground;
             _defaultFont = SelectionFont;
             SelectionForeground = _defaultColor;
@@ -46,6 +47,7 @@ namespace Adravalon.Runner
         private readonly Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
         private Stack<Tuple<Font, Color>> _fonts = new();
+        private MainForm _main;
 
         private int CalculateTextSize(int requestedSize)
         {
@@ -66,9 +68,12 @@ namespace Adravalon.Runner
             var current = new StringBuilder();
             var currentToken = "";
             var previousToken = "";
+            var skip = 0;
             foreach (var c in src)
             {
                 consumed++;
+                if (skip-- > 0) continue;
+                
                 if (c == '<' && !inToken)
                 {
                     inToken = true;
@@ -143,6 +148,11 @@ namespace Adravalon.Runner
                     }
 
                     // Yay, special cases!
+                    if (currentToken.StartsWith("window"))
+                    {
+                        skip = SendToAnotherWindow(src[consumed..], currentToken);
+                        continue;
+                    }
                     if (!currentToken.StartsWith("font")) continue;
                     // _savedColor = SelectionForeground;
                     if (current.Length > 0 || !previousToken.StartsWith("font"))
@@ -250,6 +260,40 @@ namespace Adravalon.Runner
             var theText = _pendingText;
             _pendingText = "";
             AppendHtml(theText);
+        }
+
+        private int SendToAnotherWindow(string output, string tag)
+        {
+            var consumed = 0;
+            var inToken = false;
+            var current = new StringBuilder();
+            var currentToken = "";
+            foreach (var c in output)
+            {
+                consumed++;
+                if (c == '<' && !inToken)
+                {
+                    inToken = true;
+                    currentToken = "";
+                }
+                else if (c != '>' && inToken)
+                {
+                    currentToken += c;
+                }
+                else if (c == '>' && inToken)
+                {
+                    inToken = false;
+                    if (currentToken == "/window")
+                    {
+                        _main.GetSecondaryWindow(tag[7..]).AppendHtml(current.ToString());
+                        return consumed;
+                    }
+                    else current.Append('<').Append(currentToken).Append('>');
+                }
+                else current.Append(c);
+            }
+            _main.GetSecondaryWindow(tag[7..]).AppendHtml(current.ToString());
+            return consumed;
         }
     }
 }

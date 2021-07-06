@@ -20,7 +20,7 @@ namespace Adravalon.Runner
             MinimumSize = new Size(400, 400);
             Padding = 10;
 
-            output = new AdriftOutput();
+            output = new AdriftOutput(this);
             input = new AdriftInput { PlaceholderText = ">" };
             status = new Label();
 
