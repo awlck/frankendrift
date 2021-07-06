@@ -25,8 +25,11 @@ Public Class clsBlorb
     Private Shared cnkFORM As FormChunk
 
 
+    #If Adravalon Then
+    Public Function GetImage(ByVal iResourceNumber As Integer, Optional ByVal bStore As Boolean = False, Optional ByRef sExtn As String = Nothing) As Image
+    #Else
     Friend Function GetImage(ByVal iResourceNumber As Integer, Optional ByVal bStore As Boolean = False, Optional ByRef sExtn As String = Nothing) As Image
-
+    #End If
         Dim bStreamOpen As Boolean = stmBlorb.CanRead
 
         Try

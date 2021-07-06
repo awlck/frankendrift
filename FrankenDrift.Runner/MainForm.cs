@@ -20,8 +20,21 @@ namespace Adravalon.Runner
         public bool Locked => false;
 
         private AdriftMap map;
-
         private Dictionary<string, SecondaryWindow> _secondaryWindows = new();
+        private GraphicsWindow _graphics = null;
+        
+        internal GraphicsWindow Graphics { get
+        {
+            if (_graphics is null)
+            {
+                _graphics = new GraphicsWindow(this);
+                _graphics.Title = "Grpahics - " + Title;
+            }
+            #if false
+            _graphics.Show();
+            #endif
+            return _graphics;
+        }}
 
         public MainForm()
         {

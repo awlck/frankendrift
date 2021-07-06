@@ -142,11 +142,20 @@ namespace Adravalon.Runner
                     }
 
                     // Yay, special cases!
-                    if (currentToken.StartsWith("window"))
+                    if (currentToken.StartsWith("window"))  // alternate windows.
                     {
                         skip = SendToAnotherWindow(src[consumed..], currentToken);
                         continue;
                     }
+                    if (currentToken.StartsWith("img"))  // graphics.
+                    {
+                        var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
+                        if (imgPath.Success)
+                            _main.Graphics.DisplayImage(imgPath.Groups[1].Value);
+                        continue;
+                    }
+                    
+                    // fonts.
                     if (!currentToken.StartsWith("font")) continue;
                     if (current.Length > 0 || !previousToken.StartsWith("font"))
                         _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
