@@ -30,9 +30,7 @@ namespace Adravalon.Runner
                 _graphics = new GraphicsWindow(this);
                 _graphics.Title = "Grpahics - " + Title;
             }
-            #if false
             _graphics.Show();
-            #endif
             return _graphics;
         }}
 
