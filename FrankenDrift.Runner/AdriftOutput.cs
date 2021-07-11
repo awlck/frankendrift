@@ -221,7 +221,7 @@ namespace Adravalon.Runner
                         {
                             SelectionFont = SelectionFont.WithFontFace(face.Groups[1].Value);
                         }
-                        catch (ArgumentOutOfRangeException ex)
+                        catch (ArgumentException ex)
                         {
                             System.Diagnostics.Debug.Print(ex.Message);
                         }
@@ -229,7 +229,7 @@ namespace Adravalon.Runner
 
                     re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
                     var size = re.Match(currentToken);
-                    if (size.Success && !Eto.Platform.Detect.IsWpf)
+                    if (size.Success && !Eto.Platform.Detect.IsWpf && !Eto.Platform.Detect.IsWinForms)
                     {
                         var sizeString = size.Groups[1].Value;
                         if (sizeString.StartsWith('+'))
