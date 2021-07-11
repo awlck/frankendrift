@@ -9,7 +9,7 @@ namespace Adravalon.Runner
     {
         public AdriftOutput Output;
 
-        private MainForm _main;
+        private readonly MainForm _main;
 
         public SecondaryWindow(MainForm main)
         {

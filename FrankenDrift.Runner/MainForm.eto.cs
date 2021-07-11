@@ -56,8 +56,6 @@ namespace Adravalon.Runner
                 {
 					// File submenu
 					new SubMenuItem { Text = "&File", Items = { loadGameCommand, saveGameCommand, restoreGameCommand } },
-					// new SubMenuItem { Text = "&Edit", Items = { /* commands/items */ } },
-					// new SubMenuItem { Text = "&View", Items = { /* commands/items */ } },
 				},
                 ApplicationItems =
                 {

@@ -30,11 +30,10 @@ namespace Adravalon.Runner
             Content = _view;
         }
 
-        // This does not work. Why? Has I ever?
-        // Apparently needs libgdiplus but it still doesn't work
+        // Needs libgdiplus on linux
         public void DisplayImage(string path)
         {
-            if (SharedModule.Adventure.BlorbMappings != null && SharedModule.Adventure.BlorbMappings.Count > 0)
+            if (SharedModule.Adventure.BlorbMappings is {Count: > 0})
             {
                 int res = 0;
                 if (SharedModule.Adventure.BlorbMappings.ContainsKey(path))
