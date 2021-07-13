@@ -43,10 +43,11 @@ namespace Adravalon.Runner
             var aboutCommand = new Command { MenuText = "About..." };
             aboutCommand.Executed += (sender, e) => new AboutDialog
             {
-                Copyright = "FrankenDrift (c) 20221 Adrian Welcker\nADRIFT Runner (c) 1996-2020 Campbell Wild",
+                Copyright = "FrankenDrift (c) 2021 Adrian Welcker\nADRIFT Runner (c) 1996-2020 Campbell Wild",
                 ProgramName = "FrankenDrift",
-                ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code" +
-                                     "with a cross-platform UI layer (Eto.Forms) glued on top."
+                ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
+                                     "with a cross-platform UI layer (Eto.Forms) glued on top.",
+                Version = "0.1-alpha4"
             }.ShowDialog(this);
 
             // create menu
