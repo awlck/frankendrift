@@ -22,6 +22,7 @@ namespace Adravalon.Runner
         private AdriftMap map;
         private Dictionary<string, SecondaryWindow> _secondaryWindows = new();
         private GraphicsWindow _graphics = null;
+        private UITimer _timer;
         
         internal GraphicsWindow Graphics { get
         {
@@ -39,10 +40,12 @@ namespace Adravalon.Runner
         {
             InitializeComponent();
             map = new AdriftMap();
+            _timer = new UITimer { Interval = 1.0d };
 
             loadGameCommand.Executed += LoadGameCommand_Executed;
             saveGameCommand.Executed += SaveGameCommand_Executed;
             restoreGameCommand.Executed += RestoreGameCommand_Executed;
+            _timer.Elapsed += _timer_Elapsed;
 
             input.KeyDown += Input_KeyDown;
 
@@ -50,6 +53,12 @@ namespace Adravalon.Runner
             Adrift.SharedModule.fRunner = this;
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession {Map = map};
             Glue.Application.SetFrontend(this);
+        }
+
+        private void _timer_Elapsed(object sender, EventArgs e)
+        {
+            if (Adrift.SharedModule.UserSession != null)
+                Adrift.SharedModule.UserSession.TimeBasedStuff();
         }
 
         private void Input_KeyDown(object sender, KeyEventArgs e)
@@ -105,7 +114,10 @@ namespace Adravalon.Runner
         {
             var toLoad = QueryLoadPath();
             if (!string.IsNullOrWhiteSpace(toLoad))
+            {
                 Adrift.SharedModule.UserSession.OpenAdventure(toLoad);
+                _timer.Start();
+            }
         }
 
         internal AdriftOutput GetSecondaryWindow(string name)

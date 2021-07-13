@@ -54,8 +54,6 @@ Friend Class RunnerSession
     Public Property bSound As Boolean = True
 #If Not Adravalon Then
     Private WithEvents tmrEvents As New Windows.Forms.Timer
-#Else
-    Private WithEvents tmrEvents As New System.Timers.Timer
 #End If
 
 
@@ -457,12 +455,12 @@ Friend Class RunnerSession
             PrepareForNextTurn()
             'bSystemTask = False
 #If Not www And Not Adravalon Then
-                If Not Debugger Is Nothing AndAlso Not Debugger.IsDisposed Then Debugger.BuildTree()
-                fRunner.ReloadMacros()
-#End If
+            If Not Debugger Is Nothing AndAlso Not Debugger.IsDisposed Then Debugger.BuildTree()
+            fRunner.ReloadMacros()
 
             tmrEvents.Interval = 1000
             tmrEvents.Start()
+#End If
 
             Return True
         Else
@@ -5111,8 +5109,12 @@ NextWord:
         bEventsRunning = False
 
     End Sub
-    Private Sub TimeBasedStuff()
 
+#If Adravalon Then
+    Public Sub TimeBasedStuff()
+#Else
+    Private Sub TimeBasedStuff()
+#End If
         If Adventure.eGameState <> clsAction.EndGameEnum.Running OrElse fRunner.Locked Then Exit Sub
 
         bEventsRunning = True
@@ -8817,10 +8819,10 @@ FoundTask:
 
 #If Not Adravalon Then
     Private Sub tmrEvents_Tick(sender As Object, e As EventArgs) Handles tmrEvents.Tick
-#Else
-    Private Sub tmrEvents_Tick(sender As Object, e As EventArgs) Handles tmrEvents.Elapsed
-#End If
         TimeBasedStuff()
     End Sub
+#Else
+    ' Frontend will have the timer and call TimeBasedStuff() directly.
+#End If
 
 End Class

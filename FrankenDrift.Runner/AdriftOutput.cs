@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace Adravalon.Runner
 {
@@ -36,10 +34,6 @@ namespace Adravalon.Runner
 
         private string _pendingText;
         internal bool IsWaiting { get; private set; } = false;
-
-        // Whenever ADRIFT's timer runs out, the engine outputs whatever it was trying to output. Like this, we only
-        // get duplicate text rather than crashes...
-        private readonly Mutex _outputMutex = new Mutex();
 
         private readonly Color _defaultColor = Eto.Platform.Detect.IsMac ? Colors.Cyan : Colors.Black;
         private readonly Color _defaultBackground = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
@@ -78,9 +72,7 @@ namespace Adravalon.Runner
                     inToken = true;
                     previousToken = currentToken; 
                     currentToken = "";
-                    _outputMutex.WaitOne();
                     Append(current.ToString(), true);
-                    _outputMutex.ReleaseMutex();
                     current.Clear();
                 }
                 else if (c != '>' && inToken)
@@ -93,9 +85,7 @@ namespace Adravalon.Runner
                     switch (currentToken)
                     {
                         case "br":
-                            _outputMutex.WaitOne();
                             Append("\n");
-                            _outputMutex.ReleaseMutex();
                             break;
                         case "b":
                             SelectionBold = true;
@@ -122,9 +112,7 @@ namespace Adravalon.Runner
                         case "waitkey":
                             _pendingText = src[consumed..];
                             IsWaiting = true;
-                            _outputMutex.WaitOne();
                             Append("\n(Press any key to continue)");
-                            _outputMutex.ReleaseMutex();
                             return;
                         case "/c":
                         case "/font":
@@ -251,9 +239,7 @@ namespace Adravalon.Runner
                 }
                 else current.Append(c);
             }
-            _outputMutex.WaitOne();
             Append(current.ToString(), true);
-            _outputMutex.ReleaseMutex();
         }
 
         internal void FinishWaiting()
