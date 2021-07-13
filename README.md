@@ -4,6 +4,20 @@ A cross-platform frontend for the [ADRIFT Runner](https://adrift.co), built on t
 [Eto.Forms](https://github.com/picoe/Eto) library. (Work in progress -- until I get around to
 writing a more complete readme file, see [this IntFiction forum thread](https://intfiction.org/t/frankendrift-play-adrift-games-on-mac-and-linux/51528).)
 
+## Prerequisites
+
+### Windows
+You will need to install the [.NET 5 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/5.0).
+
+### macOS
+Everything (including the runtime) is included in `.dmg` file.
+
+### Linux
+You will need to install the [.NET 5 Runtime](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
+from Microsoft. If you wish to play games that use graphics, you will also need to install `libgdiplus`
+through your distributions's package manager. (Otherwise the program will throw an error whenever an image
+attempts to display itself.)
+
 ## Known limitations
 
 The following features are known not to work:
