@@ -116,9 +116,9 @@ namespace Adravalon.Runner
                             return;
                         case "/c":
                         case "/font":
-                            var restore = _fonts.Peek();
-                            SelectionFont = restore.Item1;
-                            SelectionForeground = restore.Item2;
+                            var (font, color) = _fonts.Peek();
+                            SelectionFont = font;
+                            SelectionForeground = color;
                             if (_fonts.Count > 1)
                                 _fonts.Pop();
                             break;
@@ -250,6 +250,7 @@ namespace Adravalon.Runner
             AppendHtml(theText);
         }
 
+        // This can't cope with nested <window ...> tags. Too bad!
         private int SendToAnotherWindow(string output, string tag)
         {
             var consumed = 0;
