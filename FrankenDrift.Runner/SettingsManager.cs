@@ -46,8 +46,8 @@ namespace Adravalon.Runner
         }
     }
 
-    class Settings
+    public class Settings
     {
-        public bool EnableGraphics;
+        public bool EnableGraphics { get; set; }
     }
 }
