@@ -50,6 +50,9 @@ namespace Adravalon.Runner
                 Version = "0.1-alpha4"
             }.ShowDialog(this);
 
+            var settingsCommand = new Command {MenuText = "&Preferences"};
+            settingsCommand.Executed += (sender, args) => new SettingsDialog().ShowModal(this);
+
             // create menu
             Menu = new MenuBar
             {
@@ -61,7 +64,8 @@ namespace Adravalon.Runner
                 ApplicationItems =
                 {
 					// application (OS X) or file menu (others)
-					new ButtonMenuItem { Text = "&Preferences..." },
+					// new ButtonMenuItem { Text = "&Preferences..." },
+                    settingsCommand
                 },
                 QuitItem = quitCommand,
                 AboutItem = aboutCommand

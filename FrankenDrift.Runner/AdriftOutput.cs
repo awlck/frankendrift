@@ -138,7 +138,7 @@ namespace Adravalon.Runner
                     if (currentToken.StartsWith("img"))  // graphics.
                     {
                         var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
-                        if (imgPath.Success)
+                        if (imgPath.Success && SettingsManager.Instance.Settings.EnableGraphics)
                             _main.Graphics.DisplayImage(imgPath.Groups[1].Value);
                         continue;
                     }
