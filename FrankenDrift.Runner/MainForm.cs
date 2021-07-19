@@ -73,7 +73,14 @@ namespace Adravalon.Runner
                 case Keys.Enter:
                     if (Adrift.SharedModule.Adventure is not null)
                     {
-                        OutputHTML("<br><br>");
+                        OutputHTML("<br>");
+                        if (input.Text.Length > 0)
+                        {
+                            var cmds = Adrift.SharedModule.UserSession.salCommands;
+                            cmds.Add("");
+                            cmds[^2] = input.Text;
+                            Adrift.SharedModule.Adventure.Turns++;
+                        }
                         Adrift.SharedModule.UserSession.Process(input.Text);
                     }
                     #if DEBUG

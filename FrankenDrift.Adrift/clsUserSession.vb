@@ -35,7 +35,11 @@ Friend Class RunnerSession
     Friend bShowShortLocations As Boolean = True
     Friend bSystemTask As Boolean = False
     Private root, obroot, chroot As AutoComplete
+#If Not Adravalon
     Friend salCommands As New StringArrayList
+#else
+    Public salCommands As New StringArrayList
+#End If
     Friend iPreviousOffset As Integer
     Public sGameFolder As String
     Public bGraphics As Boolean = True
