@@ -15,8 +15,7 @@ Everything (including the runtime) is included in `.dmg` file.
 ### Linux
 You will need to install the [.NET 5 Runtime](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
 from Microsoft. If you wish to play games that use graphics, you will also need to install `libgdiplus`
-through your distributions's package manager. (Otherwise the program will throw an error whenever an image
-attempts to display itself.)
+through your distributions's package manager. (Once you do that, enable graphics from the settings.)
 
 ## Known limitations
 
