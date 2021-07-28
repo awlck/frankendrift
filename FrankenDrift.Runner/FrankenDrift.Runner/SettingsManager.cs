@@ -18,7 +18,13 @@ namespace FrankenDrift.Runner
                 _settingsPath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "Library",
                     "Application Support", "de.diepixelecke.frankendrift");
             else
-                _settingsPath = Path.Combine(Environment.GetEnvironmentVariable("XDG_DATA_HOME"), "FrankenDrift");
+            {
+                var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+                if (!string.IsNullOrEmpty(dataHome))
+                    _settingsPath = Path.Combine(dataHome, "FrankenDrift");
+                else
+                    _settingsPath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".local", "share", "FrankenDrift");
+            }
             _settingsFile = Path.Combine(_settingsPath, _fileName);
             if (File.Exists(_settingsFile))
             {
