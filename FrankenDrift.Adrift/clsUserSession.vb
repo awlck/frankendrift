@@ -4,8 +4,8 @@ Imports System.Xml
 Imports System.Drawing
 
 #If Adravalon Then
-Imports Adravalon.Glue
-Imports Adravalon.Glue.Util
+Imports FrankenDrift.Glue
+Imports FrankenDrift.Glue.Util
 
 Public Class RunnerSession
 #Else
@@ -46,7 +46,7 @@ Friend Class RunnerSession
 #If Not Adravalon Then
     Friend WithEvents Map As ADRIFT.Map
 #Else
-    Public WithEvents Map As Adravalon.Glue.Map
+    Public WithEvents Map As FrankenDrift.Glue.Map
 #End If
     Friend DefaultFont As Font
     Friend bUseDefaultFont As Boolean = False

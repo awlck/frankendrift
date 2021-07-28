@@ -1,20 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.31229.75
+VisualStudioVersion = 16.0.31424.327
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrankenDrift.Glue", "FrankenDrift.Glue\FrankenDrift.Glue.csproj", "{E627AB71-4B6E-44BD-A217-58100AC76D6E}"
-EndProject
-Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "FrankenDrift.Adrift", "FrankenDrift.Adrift\FrankenDrift.Adrift.vbproj", "{B414B8DE-75C8-43BF-9ADE-BF7C40F7BECB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrankenDrift.Runner", "FrankenDrift.Runner\FrankenDrift.Runner\FrankenDrift.Runner.csproj", "{664D6959-AD68-4E3C-910A-465359E86DC2}"
 	ProjectSection(ProjectDependencies) = postProject
-		{E627AB71-4B6E-44BD-A217-58100AC76D6E} = {E627AB71-4B6E-44BD-A217-58100AC76D6E}
+		{6AEA978B-9B07-4743-92D8-3A10C9726DCD} = {6AEA978B-9B07-4743-92D8-3A10C9726DCD}
+		{B95593A2-9D66-4536-9251-AF8628A4D61C} = {B95593A2-9D66-4536-9251-AF8628A4D61C}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrankenDrift.Runner", "FrankenDrift.Runner\FrankenDrift.Runner.csproj", "{BC947739-6D1F-429E-839E-2AE93A57CD4B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{E627AB71-4B6E-44BD-A217-58100AC76D6E} = {E627AB71-4B6E-44BD-A217-58100AC76D6E}
-		{B414B8DE-75C8-43BF-9ADE-BF7C40F7BECB} = {B414B8DE-75C8-43BF-9ADE-BF7C40F7BECB}
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrankenDrift.Runner.Gtk", "FrankenDrift.Runner\FrankenDrift.Runner.Gtk\FrankenDrift.Runner.Gtk.csproj", "{B4B95229-5D0D-4128-9EFA-D7D689BE846C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrankenDrift.Runner.Mac", "FrankenDrift.Runner\FrankenDrift.Runner.Mac\FrankenDrift.Runner.Mac.csproj", "{87144D48-3FAD-4A8C-A6B2-318707A4E9D9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrankenDrift.Runner.Win", "FrankenDrift.Runner\FrankenDrift.Runner.Win\FrankenDrift.Runner.Win.csproj", "{6C03F4FD-18A2-4C8E-A860-8A3C06BA86D7}"
+EndProject
+Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "FrankenDrift.Adrift", "FrankenDrift.Adrift\FrankenDrift.Adrift.vbproj", "{6AEA978B-9B07-4743-92D8-3A10C9726DCD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrankenDrift.Glue", "FrankenDrift.Glue\FrankenDrift.Glue.csproj", "{B95593A2-9D66-4536-9251-AF8628A4D61C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,23 +25,35 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E627AB71-4B6E-44BD-A217-58100AC76D6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E627AB71-4B6E-44BD-A217-58100AC76D6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E627AB71-4B6E-44BD-A217-58100AC76D6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E627AB71-4B6E-44BD-A217-58100AC76D6E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B414B8DE-75C8-43BF-9ADE-BF7C40F7BECB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B414B8DE-75C8-43BF-9ADE-BF7C40F7BECB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B414B8DE-75C8-43BF-9ADE-BF7C40F7BECB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B414B8DE-75C8-43BF-9ADE-BF7C40F7BECB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BC947739-6D1F-429E-839E-2AE93A57CD4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC947739-6D1F-429E-839E-2AE93A57CD4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BC947739-6D1F-429E-839E-2AE93A57CD4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BC947739-6D1F-429E-839E-2AE93A57CD4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{664D6959-AD68-4E3C-910A-465359E86DC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{664D6959-AD68-4E3C-910A-465359E86DC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{664D6959-AD68-4E3C-910A-465359E86DC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{664D6959-AD68-4E3C-910A-465359E86DC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4B95229-5D0D-4128-9EFA-D7D689BE846C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4B95229-5D0D-4128-9EFA-D7D689BE846C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4B95229-5D0D-4128-9EFA-D7D689BE846C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4B95229-5D0D-4128-9EFA-D7D689BE846C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87144D48-3FAD-4A8C-A6B2-318707A4E9D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87144D48-3FAD-4A8C-A6B2-318707A4E9D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87144D48-3FAD-4A8C-A6B2-318707A4E9D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87144D48-3FAD-4A8C-A6B2-318707A4E9D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C03F4FD-18A2-4C8E-A860-8A3C06BA86D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C03F4FD-18A2-4C8E-A860-8A3C06BA86D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C03F4FD-18A2-4C8E-A860-8A3C06BA86D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C03F4FD-18A2-4C8E-A860-8A3C06BA86D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AEA978B-9B07-4743-92D8-3A10C9726DCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AEA978B-9B07-4743-92D8-3A10C9726DCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AEA978B-9B07-4743-92D8-3A10C9726DCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AEA978B-9B07-4743-92D8-3A10C9726DCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B95593A2-9D66-4536-9251-AF8628A4D61C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B95593A2-9D66-4536-9251-AF8628A4D61C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B95593A2-9D66-4536-9251-AF8628A4D61C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B95593A2-9D66-4536-9251-AF8628A4D61C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {718D7932-03BF-469A-AB65-63C19B927957}
+		SolutionGuid = {78CD939C-C8DA-4003-B2E2-D8DB0F3195AE}
 	EndGlobalSection
 EndGlobal

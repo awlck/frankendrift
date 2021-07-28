@@ -1,13 +1,13 @@
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
-using Adravalon.Adrift;
+using FrankenDrift.Adrift;
 using Eto.Forms;
 using SysImage = System.Drawing.Image;
 using EtoBitmap = Eto.Drawing.Bitmap;
 using Size = Eto.Drawing.Size;
 
-namespace Adravalon.Runner
+namespace FrankenDrift.Runner
 {
     public class GraphicsWindow : Form
     {

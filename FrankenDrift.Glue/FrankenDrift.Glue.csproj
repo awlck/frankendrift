@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <RootNamespace>Adravalon.Glue</RootNamespace>
+    <RootNamespace>FrankenDrift.Glue</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

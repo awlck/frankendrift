@@ -2,7 +2,7 @@ using System;
 using Eto.Forms;
 using System.Configuration;
 
-namespace Adravalon.Runner
+namespace FrankenDrift.Runner
 {
     public class SettingsDialog : Dialog
     {

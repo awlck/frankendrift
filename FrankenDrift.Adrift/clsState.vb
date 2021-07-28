@@ -503,7 +503,7 @@ Friend Class clsGameState
             Friend Status As clsWalk.StatusEnum
             Friend TimerToEndOfWalk As Integer
         End Class
-        <DebuggerDisplay("CharState={Value}")> _
+        <DebuggerDisplay("CharState={Value}")>
         Friend Class clsStateProperty
             Friend Value As String
         End Class

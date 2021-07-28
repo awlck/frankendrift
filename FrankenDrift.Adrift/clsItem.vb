@@ -1,5 +1,5 @@
 ﻿#If Adravalon Then
-Imports Adravalon.Glue.Util
+Imports FrankenDrift.Glue.Util
 #End If
 
 Public MustInherit Class clsItem

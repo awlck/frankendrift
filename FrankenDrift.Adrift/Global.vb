@@ -1,7 +1,7 @@
 #If Adravalon Then
 Imports System.Drawing
-Imports Adravalon.Glue
-Imports Adravalon.Glue.Util
+Imports FrankenDrift.Glue
+Imports FrankenDrift.Glue.Util
 
 Public Module SharedModule
 #Else

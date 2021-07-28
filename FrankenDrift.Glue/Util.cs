@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text.RegularExpressions;
-using Adravalon.Glue.Infragistics.Win.UltraWinToolbars;
+using FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars;
 
-namespace Adravalon.Glue
+namespace FrankenDrift.Glue
 {
     public static class Util
     {

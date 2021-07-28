@@ -1,4 +1,4 @@
-<DebuggerDisplay("Name: {Description}, Type: {Type}")> _
+<DebuggerDisplay("Name: {Description}, Type: {Type}")>
 Public Class clsProperty
     Inherits clsItem
 

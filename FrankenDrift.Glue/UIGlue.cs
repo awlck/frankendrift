@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Adravalon.Glue
+namespace FrankenDrift.Glue
 {
     public enum QueryResult
     {

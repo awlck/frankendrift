@@ -1,9 +1,9 @@
 using System;
-using Adravalon.Glue;
+using FrankenDrift.Glue;
 using Eto.Drawing;
 using Eto.Forms;
 
-namespace Adravalon.Runner
+namespace FrankenDrift.Runner
 {
     public class SecondaryWindow : Form
     {

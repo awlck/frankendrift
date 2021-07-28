@@ -1,5 +1,5 @@
 #If Adravalon Then
-Imports Adravalon.Glue
+Imports FrankenDrift.Glue
 #End If
 
 Public Class clsVariable

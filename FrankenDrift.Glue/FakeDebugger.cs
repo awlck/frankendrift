@@ -1,4 +1,4 @@
-﻿namespace Adravalon.Glue
+﻿namespace FrankenDrift.Glue
 {
     public enum DebugDetailLevelEnum
     {

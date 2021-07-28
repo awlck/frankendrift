@@ -1,6 +1,6 @@
 #If Adravalon Then
-Imports Adravalon.Glue
-Imports Adravalon.Glue.Util
+Imports FrankenDrift.Glue
+Imports FrankenDrift.Glue.Util
 #End If
 
 Public Class clsDirection
@@ -271,7 +271,7 @@ Public Class clsLocation
 
             If sView = "" Then sView = "Nothing special."
 
-            If UserSession.bShowShortLocations Then                
+            If UserSession.bShowShortLocations Then
                 sView = "<b>" & ShortDescription.ToString & "</b>" & vbCrLf & sView
                 If Adventure.dVersion >= 5 Then sView = vbCrLf & sView
             End If

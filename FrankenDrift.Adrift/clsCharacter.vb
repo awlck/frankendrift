@@ -1,5 +1,5 @@
 #If Adravalon Then
-Imports Adravalon.Glue
+Imports FrankenDrift.Glue
 #End If
 
 <DebuggerDisplay("{Name}")>
@@ -1411,7 +1411,7 @@ End Class
 
 
 
-<DebuggerDisplay("{Summary} : {Keywords}")> _
+<DebuggerDisplay("{Summary} : {Keywords}")>
 Public Class clsTopic
 
     Public Key As String

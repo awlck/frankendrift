@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Adravalon.Glue
+namespace FrankenDrift.Glue
 {
     public interface Map
     {

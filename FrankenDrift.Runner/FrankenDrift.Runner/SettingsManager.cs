@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
-namespace Adravalon.Runner
+namespace FrankenDrift.Runner
 {
     internal class SettingsManager
     {

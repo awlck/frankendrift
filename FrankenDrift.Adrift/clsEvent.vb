@@ -1,4 +1,4 @@
-Imports Adravalon.Glue
+Imports FrankenDrift.Glue
 
 Public Class clsEvent
     Inherits clsItem

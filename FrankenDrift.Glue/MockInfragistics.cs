@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Adravalon.Glue.Infragistics.Win.UltraWinToolbars
+namespace FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars
 {
     public interface UltraToolbarsManager
     {
