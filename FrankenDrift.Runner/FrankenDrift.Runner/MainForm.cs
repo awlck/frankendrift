@@ -79,8 +79,8 @@ namespace FrankenDrift.Runner
             };
 
             // create a few commands that can be used for the menu and toolbar
-            var clickMe = new Command { MenuText = "Click Me!", ToolBarText = "Click Me!" };
-            clickMe.Executed += (sender, e) => MessageBox.Show(this, "I was clicked!");
+            // var clickMe = new Command { MenuText = "Click Me!", ToolBarText = "Click Me!" };
+            // clickMe.Executed += (sender, e) => MessageBox.Show(this, "I was clicked!");
 
             loadGameCommand = new Command { MenuText = "Open Game", Shortcut = Application.Instance.CommonModifier | Keys.O };
             saveGameCommand = new Command { MenuText = "Save", Enabled = false };

@@ -13,19 +13,21 @@ namespace FrankenDrift.Runner
         {
             _main = main;
             BackgroundColor = _defaultBackground;
-            _defaultFont = SelectionFont;
             SelectionForeground = _defaultColor;
+            _defaultFont = SelectionFont.WithSize(10);
+            SelectionFont = _defaultFont;
+            Append(" ");
             
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
         }
         
         public void Clear()
         {
+            Text = "";
             _fonts.Clear();
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
             SelectionForeground = _defaultColor;
             SelectionFont = _defaultFont;
-            Text = "";
         }
         
         public int TextLength => Text.Length;
@@ -72,7 +74,7 @@ namespace FrankenDrift.Runner
                     inToken = true;
                     previousToken = currentToken; 
                     currentToken = "";
-                    Append(current.ToString(), true);
+                    AppendWithFont(current.ToString(), true);
                     current.Clear();
                 }
                 else if (c != '>' && inToken)
@@ -106,19 +108,15 @@ namespace FrankenDrift.Runner
                             SelectionUnderline = false;
                             break;
                         case "c":
-                            _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
-                            SelectionForeground = _defaultInput;
+                            _fonts.Push(new Tuple<Font, Color>(SelectionFont, _defaultInput));
                             break;
                         case "waitkey":
                             _pendingText = src[consumed..];
                             IsWaiting = true;
-                            Append("\n(Press any key to continue)");
+                            AppendWithFont("\n(Press any key to continue)");
                             return;
                         case "/c":
                         case "/font":
-                            var (font, color) = _fonts.Peek();
-                            SelectionFont = font;
-                            SelectionForeground = color;
                             if (_fonts.Count > 1)
                                 _fonts.Pop();
                             break;
@@ -145,8 +143,7 @@ namespace FrankenDrift.Runner
                     
                     // fonts.
                     if (!currentToken.StartsWith("font")) continue;
-                    if (current.Length > 0 || !previousToken.StartsWith("font"))
-                        _fonts.Push(new Tuple<Font, Color>(SelectionFont, SelectionForeground));
+                    var (font, color) = _fonts.Peek();
                     var tokenLower = currentToken.ToLower();
                     var re = new Regex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?");
                     var col = re.Match(currentToken);
@@ -154,52 +151,52 @@ namespace FrankenDrift.Runner
                     {
                         var colorString =  ("#" + col.Groups[1].Value);
                         if (Color.TryParse(colorString, out var newColor))
-                            SelectionForeground = newColor;
+                            color = newColor;
                     }
                     else if (tokenLower.Contains("black"))
-                        SelectionForeground = Colors.Black;
+                        color = Colors.Black;
                     else if (tokenLower.Contains("blue"))
-                        SelectionForeground = Colors.Blue;
+                        color = Colors.Blue;
                     else if (tokenLower.Contains("gray"))
-                        SelectionForeground = Colors.Gray;
+                        color = Colors.Gray;
                     else if (tokenLower.Contains("darkgreen"))
-                        SelectionForeground = Colors.DarkGreen;
+                        color = Colors.DarkGreen;
                     else if (tokenLower.Contains("green"))
-                        SelectionForeground = Colors.Green;
+                        color = Colors.Green;
                     else if (tokenLower.Contains("lime"))
-                        SelectionForeground = Colors.Lime;
+                        color = Colors.Lime;
                     else if (tokenLower.Contains("magenta"))
-                        SelectionForeground = Colors.Magenta;
+                        color = Colors.Magenta;
                     else if (tokenLower.Contains("maroon"))
-                        SelectionForeground = Colors.Maroon;
+                        color = Colors.Maroon;
                     else if (tokenLower.Contains("navy"))
-                        SelectionForeground = Colors.Navy;
+                        color = Colors.Navy;
                     else if (tokenLower.Contains("olive"))
-                        SelectionForeground = Colors.Olive;
+                        color = Colors.Olive;
                     else if (tokenLower.Contains("orange"))
-                        SelectionForeground = Colors.Orange;
+                        color = Colors.Orange;
                     else if (tokenLower.Contains("pink"))
-                        SelectionForeground = Colors.Pink;
+                        color = Colors.Pink;
                     else if (tokenLower.Contains("purple"))
-                        SelectionForeground = Colors.Purple;
+                        color = Colors.Purple;
                     else if (tokenLower.Contains("red"))
-                        SelectionForeground = Colors.Red;
+                        color = Colors.Red;
                     else if (tokenLower.Contains("silver"))
-                        SelectionForeground = Colors.Silver;
+                        color = Colors.Silver;
                     else if (tokenLower.Contains("teal"))
-                        SelectionForeground = Colors.Teal;
+                        color = Colors.Teal;
                     else if (tokenLower.Contains("white"))
-                        SelectionForeground = Colors.White;
+                        color = Colors.White;
                     else if (tokenLower.Contains("yellow"))
-                        SelectionForeground = Colors.Yellow;
+                        color = Colors.Yellow;
                     else if (tokenLower.Contains("cyan"))
-                        SelectionForeground = Colors.Cyan;
+                        color = Colors.Cyan;
                     else if (tokenLower.Contains("darkolive"))
-                        SelectionForeground = Colors.DarkOliveGreen;
+                        color = Colors.DarkOliveGreen;
                     else if (tokenLower.Contains("olive"))
-                        SelectionForeground = Colors.Olive;
+                        color = Colors.Olive;
                     else if (tokenLower.Contains("tan"))
-                        SelectionForeground = Colors.Tan;
+                        color = Colors.Tan;
                     
                     re = new Regex("face ?= ?\"(.*?)\"");
                     var face = re.Match(currentToken);
@@ -207,7 +204,7 @@ namespace FrankenDrift.Runner
                     {
                         try
                         {
-                            SelectionFont = SelectionFont.WithFontFace(face.Groups[1].Value);
+                            font = font.WithFontFace(face.Groups[1].Value);
                         }
                         catch (ArgumentException ex)
                         {
@@ -217,29 +214,40 @@ namespace FrankenDrift.Runner
 
                     re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
                     var size = re.Match(currentToken);
-                    if (size.Success && !Eto.Platform.Detect.IsWinForms)
+                    if (size.Success)
                     {
                         var sizeString = size.Groups[1].Value;
                         if (sizeString.StartsWith('+'))
                         {
                             if (int.TryParse(sizeString[1..], out var sizeDelta))
-                                SelectionFont = SelectionFont.WithSize(((int) SelectionFont.Size) + sizeDelta);
+                                font = font.WithSize(((int) SelectionFont.Size) + sizeDelta);
                         }
                         else if (sizeString.StartsWith('-'))
                         {
                             if (int.TryParse(sizeString[1..], out var sizeDelta))
-                                SelectionFont = SelectionFont.WithSize(((int) SelectionFont.Size) - sizeDelta);
+                                font = font.WithSize(((int) SelectionFont.Size) - sizeDelta);
                         }
                         else
                         {
                             if (int.TryParse(sizeString, out var targetSize))
-                                SelectionFont = SelectionFont.WithSize(CalculateTextSize(targetSize));
+                                font = font.WithSize(CalculateTextSize(targetSize));
                         }
                     }
+                    _fonts.Push(new Tuple<Font, Color>(font, color));
                 }
                 else current.Append(c);
             }
-            Append(current.ToString(), true);
+            AppendWithFont(current.ToString(), true);
+        }
+
+        private void AppendWithFont(string src, bool scroll = false)
+        {
+            var (font, color) = _fonts.Peek();
+            SelectionForeground = color;
+            SelectionFont = font;
+            Append(src, scroll);
+            SelectionForeground = color;
+            SelectionFont = font;
         }
 
         internal void FinishWaiting()
