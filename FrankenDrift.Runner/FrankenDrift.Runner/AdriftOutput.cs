@@ -204,14 +204,7 @@ namespace FrankenDrift.Runner
                     var face = re.Match(currentToken);
                     if (face.Success)
                     {
-                        try
-                        {
-                            font = font.WithFontFace(face.Groups[1].Value);
-                        }
-                        catch (ArgumentException ex)
-                        {
-                            System.Diagnostics.Debug.Print(ex.Message);
-                        }
+                        font = font.WithFontFace(face.Groups[1].Value);
                     }
 
                     re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
