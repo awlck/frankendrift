@@ -44,9 +44,9 @@ namespace FrankenDrift.Runner
         private Stack<Tuple<Font, Color>> _fonts = new();
         private MainForm _main;
 
-        private int CalculateTextSize(int requestedSize)
+        private float CalculateTextSize(int requestedSize)
         {
-            return (int)(requestedSize - 12 + _defaultFont.Size);
+            return Math.Max(requestedSize - 12 + _defaultFont.Size, 1);
         }
         
         // We! Are the masters of the Jank-axy, we're the Lords of Space Jank-ee!
@@ -220,12 +220,12 @@ namespace FrankenDrift.Runner
                         if (sizeString.StartsWith('+'))
                         {
                             if (int.TryParse(sizeString[1..], out var sizeDelta))
-                                font = font.WithSize(((int) SelectionFont.Size) + sizeDelta);
+                                font = font.WithSize(SelectionFont.Size + sizeDelta);
                         }
                         else if (sizeString.StartsWith('-'))
                         {
                             if (int.TryParse(sizeString[1..], out var sizeDelta))
-                                font = font.WithSize(((int) SelectionFont.Size) - sizeDelta);
+                                font = font.WithSize(SelectionFont.Size - sizeDelta);
                         }
                         else
                         {
@@ -242,12 +242,21 @@ namespace FrankenDrift.Runner
 
         private void AppendWithFont(string src, bool scroll = false)
         {
+            var bold = SelectionBold;
+            var underline = SelectionUnderline;
+            var italics = SelectionItalic;
             var (font, color) = _fonts.Peek();
             SelectionForeground = color;
             SelectionFont = font;
+            SelectionBold = bold;
+            SelectionUnderline = underline;
+            SelectionItalic = italics;
             Append(src, scroll);
             SelectionForeground = color;
             SelectionFont = font;
+            SelectionBold = bold;
+            SelectionUnderline = underline;
+            SelectionItalic = italics;
         }
 
         internal void FinishWaiting()
