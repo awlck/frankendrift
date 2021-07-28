@@ -14,7 +14,7 @@ namespace FrankenDrift.Runner
             _main = main;
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
-            _defaultFont = SelectionFont.WithSize(10);
+            _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
             SelectionFont = _defaultFont;
             Append(" ");
             
