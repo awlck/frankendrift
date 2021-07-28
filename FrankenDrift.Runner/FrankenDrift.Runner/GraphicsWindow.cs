@@ -28,6 +28,14 @@ namespace FrankenDrift.Runner
 
             _view = new ImageView();
             Content = _view;
+
+            Closed += GraphicsWindow_Closed;
+        }
+
+        private void GraphicsWindow_Closed(object sender, System.EventArgs e)
+        {
+            _main.ReportGraphicsClosing(this);
+            this.Dispose();
         }
 
         // Needs libgdiplus on linux

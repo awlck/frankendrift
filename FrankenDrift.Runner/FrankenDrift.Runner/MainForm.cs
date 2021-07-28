@@ -361,5 +361,11 @@ namespace FrankenDrift.Runner
             foreach(var item in _secondaryWindows.Where(kvp => kvp.Value == secondaryWindow).ToList())
                 _secondaryWindows.Remove(item.Key);
         }
+
+        internal void ReportGraphicsClosing(GraphicsWindow graphics)
+        {
+            if (_graphics != graphics) throw new ArgumentException("Reporting closure of a graphics window that isn't ours", nameof(graphics));
+            _graphics = null;
+        }
     }
 }
