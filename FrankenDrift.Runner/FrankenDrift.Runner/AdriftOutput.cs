@@ -144,6 +144,8 @@ namespace FrankenDrift.Runner
                     // fonts.
                     if (!currentToken.StartsWith("font")) continue;
                     var (font, color) = _fonts.Peek();
+                    if (current.Length == 0 && previousToken.StartsWith("font"))
+                        _fonts.Pop();
                     var tokenLower = currentToken.ToLower();
                     var re = new Regex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?");
                     var col = re.Match(currentToken);
