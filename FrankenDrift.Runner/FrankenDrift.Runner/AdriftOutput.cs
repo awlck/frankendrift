@@ -12,6 +12,7 @@ namespace FrankenDrift.Runner
         public AdriftOutput(MainForm main) : base()
         {
             _main = main;
+            ReadOnly = true;
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
@@ -19,17 +20,6 @@ namespace FrankenDrift.Runner
             Append(" ");
             
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
-            ReadOnly = true;
-
-            try
-            {
-                _ = new Font("Wingdings", 12.0f);
-                _isWingdingsAvailable = true;
-            }
-            catch (ArgumentException)
-            {
-                _isWingdingsAvailable = false;
-            }
         }
         
         public void Clear()
@@ -52,8 +42,6 @@ namespace FrankenDrift.Runner
         private readonly Color _defaultBackground = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
         private readonly Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
-        private readonly bool _isWingdingsAvailable = false;
-        private bool _isAttemptingWingdings = false;
         private Stack<Tuple<Font, Color>> _fonts = new();
         private MainForm _main;
 
@@ -133,7 +121,6 @@ namespace FrankenDrift.Runner
                         case "/font":
                             if (_fonts.Count > 1)
                                 _fonts.Pop();
-                            _isAttemptingWingdings = false;
                             break;
                         case "cls":
                             Clear();
@@ -219,7 +206,6 @@ namespace FrankenDrift.Runner
                     var face = re.Match(currentToken);
                     if (face.Success)
                     {
-                        _isAttemptingWingdings = (face.Groups[1].Value == "Wingdings");
                         font = font.WithFontFace(face.Groups[1].Value);
                     }
 
@@ -246,7 +232,7 @@ namespace FrankenDrift.Runner
                     }
                     _fonts.Push(new Tuple<Font, Color>(font, color));
                 }
-                else current.Append(c == 'Ø' && _isAttemptingWingdings && !_isWingdingsAvailable ? '>' : c);
+                else current.Append(c);
             }
             AppendWithFont(current.ToString(), true);
             ReadOnly = true;
