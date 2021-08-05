@@ -12,6 +12,7 @@ namespace FrankenDrift.Runner
         public AdriftOutput(MainForm main) : base()
         {
             _main = main;
+            ReadOnly = true;
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
@@ -58,6 +59,7 @@ namespace FrankenDrift.Runner
                 _pendingText += src;
                 return;
             }
+            ReadOnly = false;
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
@@ -233,6 +235,7 @@ namespace FrankenDrift.Runner
                 else current.Append(c);
             }
             AppendWithFont(current.ToString(), true);
+            ReadOnly = true;
         }
 
         private void AppendWithFont(string src, bool scroll = false)
