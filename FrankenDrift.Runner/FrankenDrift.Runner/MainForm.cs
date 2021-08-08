@@ -340,7 +340,7 @@ namespace FrankenDrift.Runner
 
         public void SetBackgroundColour()
         {
-            output.BackgroundColor = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
+            output.BackgroundColor = output._defaultBackground;
         }
 
         public void UpdateStatusBar(string desc, string score, string user)

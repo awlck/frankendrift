@@ -38,8 +38,8 @@ namespace FrankenDrift.Runner
         private string _pendingText;
         internal bool IsWaiting { get; private set; } = false;
 
-        private readonly Color _defaultColor = Eto.Platform.Detect.IsMac ? Colors.Cyan : Colors.Black;
-        private readonly Color _defaultBackground = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
+        internal readonly Color _defaultColor = Colors.Cyan;
+        internal readonly Color _defaultBackground = Colors.Black;
         private readonly Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
         private Stack<Tuple<Font, Color>> _fonts = new();
