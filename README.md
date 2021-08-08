@@ -7,7 +7,8 @@ writing a more complete readme file, see [this IntFiction forum thread](https://
 ## Prerequisites
 
 ### Windows
-You will need to install the [.NET 5 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/5.0).
+Starting with Alpha 6, all dependencies are included in the download. (To run Alpha 5 or earlier, you will
+need to install the [.NET 5 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/5.0).)
 
 ### macOS
 Everything (including the runtime) is included in `.dmg` file.
@@ -24,7 +25,8 @@ The following features are known not to work:
 * in-line graphics (graphics always display in a separate window)
 * sound
 * the automatic map
-* font switching
+* font switching is limited (some common monospace font names are recongnized and the program will attempt to
+  substitute one that is available on your system.)
 * setting the default text font/size/color
 * save/restore menu entries (typing `save` or `restore` on the prompt works, though)
 
