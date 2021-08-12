@@ -137,29 +137,28 @@ namespace FrankenDrift.Runner
                 e.Handled = true;
                 output.FinishWaiting();
             }
-            switch (e.Key)
+
+            if (e.Key != Keys.Enter) return;
+            if (Adrift.SharedModule.Adventure is not null)
             {
-                case Keys.Enter:
-                    if (Adrift.SharedModule.Adventure is not null)
-                    {
-                        OutputHTML("<br>");
-                        if (input.Text.Length > 0)
-                        {
-                            var cmds = Adrift.SharedModule.UserSession.salCommands;
-                            cmds.Add("");
-                            cmds[^2] = input.Text;
-                            Adrift.SharedModule.Adventure.Turns++;
-                        }
-                        Adrift.SharedModule.UserSession.Process(input.Text);
-                    }
-                    #if DEBUG
-                    else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
-                    #endif
-                    else OutputHTML("(Click File > Open Game to load a game!)");
-                    input.Text = "";
-                    e.Handled = true;
-                    break;
+                OutputHTML("<br>");
+                if (input.Text.Length > 0)
+                {
+                    var cmds = Adrift.SharedModule.UserSession.salCommands;
+                    cmds.Add("");
+                    cmds[^2] = input.Text;
+                    Adrift.SharedModule.Adventure.Turns++;
+                }
+
+                Adrift.SharedModule.UserSession.Process(input.Text);
             }
+#if DEBUG
+            else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
+#endif
+            else OutputHTML("(Click File > Open Game to load a game!)");
+
+            input.Text = "";
+            e.Handled = true;
         }
 
         internal string QueryLoadPath()
