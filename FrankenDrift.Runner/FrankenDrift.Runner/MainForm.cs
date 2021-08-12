@@ -61,6 +61,7 @@ namespace FrankenDrift.Runner
             Adrift.SharedModule.fRunner = this;
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession {Map = map};
             Glue.Application.SetFrontend(this);
+            output.AppendHtml("FrankenDrift v0.1");
         }
 
         void InitializeComponent()
@@ -96,7 +97,7 @@ namespace FrankenDrift.Runner
                 ProgramName = "FrankenDrift",
                 ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
                                      "with a cross-platform UI layer (Eto.Forms) glued on top.",
-                Version = "0.1-alpha4"
+                Version = "0.1"
             }.ShowDialog(this);
 
             var settingsCommand = new Command { MenuText = "&Preferences" };
@@ -191,6 +192,9 @@ namespace FrankenDrift.Runner
             if (!string.IsNullOrWhiteSpace(toLoad))
             {
                 Adrift.SharedModule.UserSession.OpenAdventure(toLoad);
+                if (Adrift.SharedModule.Adventure is null) return;
+                saveGameCommand.Enabled = true;
+                restoreGameCommand.Enabled = true;
                 _timer.Start();
             }
         }
