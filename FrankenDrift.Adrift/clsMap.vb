@@ -36,7 +36,11 @@ Public Class MapNode
     Public Page As Integer
     Public Pinned As Boolean = False
     'Public NodeImage As Bitmap
+    #If Adravalon Then
+    Public Anchors As New Dictionary(Of DirectionsEnum, Anchor)
+#Else
     Friend Anchors As New Generic.Dictionary(Of DirectionsEnum, Anchor)
+    #End If
     Friend Links As New Generic.Dictionary(Of DirectionsEnum, MapLink)
     Private bOverlapping As Boolean = False
     Private bSeen As Boolean = False
@@ -128,9 +132,17 @@ Public Class MapLink
     Public Style As Drawing2D.DashStyle
     Public Duplex As Boolean
     Public sSource As String
+#If Adravalon Then
+    Public eSourceLinkPoint As DirectionsEnum
+#Else
     Friend eSourceLinkPoint As DirectionsEnum
+#End If
     Public sDestination As String
+#If Adravalon Then
+    Public eDestinationLinkPoint As DirectionsEnum
+#Else
     Friend eDestinationLinkPoint As DirectionsEnum
+#End If
     Public OrigMidPoints() As Point3D = {} ' In case user wishes to enhance link
     Public Points() As Point
     Public ptStartB As Point
