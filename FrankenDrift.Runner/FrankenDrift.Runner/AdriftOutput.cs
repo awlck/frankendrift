@@ -12,6 +12,7 @@ namespace FrankenDrift.Runner
         public AdriftOutput(MainForm main) : base()
         {
             _main = main;
+            ReadOnly = true;
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
@@ -37,8 +38,8 @@ namespace FrankenDrift.Runner
         private string _pendingText;
         internal bool IsWaiting { get; private set; } = false;
 
-        private readonly Color _defaultColor = Eto.Platform.Detect.IsMac ? Colors.Cyan : Colors.Black;
-        private readonly Color _defaultBackground = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
+        internal readonly Color _defaultColor = Colors.Cyan;
+        internal readonly Color _defaultBackground = Colors.Black;
         private readonly Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
         private Stack<Tuple<Font, Color>> _fonts = new();
@@ -58,6 +59,7 @@ namespace FrankenDrift.Runner
                 _pendingText += src;
                 return;
             }
+            ReadOnly = false;
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
@@ -233,6 +235,7 @@ namespace FrankenDrift.Runner
                 else current.Append(c);
             }
             AppendWithFont(current.ToString(), true);
+            ReadOnly = true;
         }
 
         private void AppendWithFont(string src, bool scroll = false)
