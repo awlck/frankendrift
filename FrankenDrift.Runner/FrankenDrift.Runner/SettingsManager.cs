@@ -20,10 +20,7 @@ namespace FrankenDrift.Runner
             else
             {
                 var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
-                if (!string.IsNullOrEmpty(dataHome))
-                    _settingsPath = Path.Combine(dataHome, "FrankenDrift");
-                else
-                    _settingsPath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".local", "share", "FrankenDrift");
+                _settingsPath = !string.IsNullOrEmpty(dataHome) ? Path.Combine(dataHome, "FrankenDrift") : Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".local", "share", "FrankenDrift");
             }
             _settingsFile = Path.Combine(_settingsPath, _fileName);
             if (File.Exists(_settingsFile))
