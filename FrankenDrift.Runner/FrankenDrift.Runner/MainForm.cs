@@ -86,10 +86,10 @@ namespace FrankenDrift.Runner
             };
 
             loadGameCommand = new Command { MenuText = "Open Game", Shortcut = Application.Instance.CommonModifier | Keys.O };
-            saveGameCommand = new Command { MenuText = "Save", Enabled = false };
-            restoreGameCommand = new Command { MenuText = "Restore", Enabled = false };
-            transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false };
-            replayCommand = new Command { MenuText = "Replay Commands", Enabled = false };
+            saveGameCommand = new Command { MenuText = "Save", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.S };
+            restoreGameCommand = new Command { MenuText = "Restore", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.R };
+            transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.T };
+            replayCommand = new Command { MenuText = "Replay Commands", Enabled = false, Shortcut = Application.Instance.CommonModifier | Application.Instance.AlternateModifier | Keys.R };
 
             var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
