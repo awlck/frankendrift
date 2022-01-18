@@ -4,6 +4,7 @@ using Eto.Drawing;
 using Eto.Forms;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Application = Eto.Forms.Application;
 
@@ -19,6 +20,7 @@ namespace FrankenDrift.Runner
         private Command saveGameCommand;
         private Command restoreGameCommand;
         private Command transcriptCommand;
+        private Command replayCommand;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
 
@@ -56,6 +58,7 @@ namespace FrankenDrift.Runner
             saveGameCommand.Executed += SaveGameCommandOnExecuted;
             restoreGameCommand.Executed += RestoreGameCommandOnExecuted;
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
+            replayCommand.Executed += ReplayCommandOnExecuted;
             _timer.Elapsed += _timer_Elapsed;
 
             input.KeyDown += Input_KeyDown;
@@ -66,8 +69,6 @@ namespace FrankenDrift.Runner
             Glue.Application.SetFrontend(this);
             output.AppendHtml("FrankenDrift v0.1");
         }
-
-        
 
         void InitializeComponent()
         {
@@ -88,6 +89,7 @@ namespace FrankenDrift.Runner
             saveGameCommand = new Command { MenuText = "Save", Enabled = false };
             restoreGameCommand = new Command { MenuText = "Restore", Enabled = false };
             transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false };
+            replayCommand = new Command { MenuText = "Replay Commands", Enabled = false };
 
             var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -112,7 +114,7 @@ namespace FrankenDrift.Runner
                 {
 					// File submenu
 					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
-                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, transcriptCommand }}
+                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, transcriptCommand, replayCommand }}
                 },
                 ApplicationItems =
                 {
@@ -145,16 +147,7 @@ namespace FrankenDrift.Runner
             if (e.Key != Keys.Enter) return;
             if (Adrift.SharedModule.Adventure is not null)
             {
-                OutputHTML("<br>");
-                if (input.Text.Length > 0)
-                {
-                    var cmds = Adrift.SharedModule.UserSession.salCommands;
-                    cmds.Add("");
-                    cmds[^2] = input.Text;
-                    Adrift.SharedModule.Adventure.Turns++;
-                }
-
-                Adrift.SharedModule.UserSession.Process(input.Text);
+                SubmitCommand(input.Text);
             }
 #if DEBUG
             else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
@@ -163,6 +156,20 @@ namespace FrankenDrift.Runner
 
             input.Text = "";
             e.Handled = true;
+        }
+        
+        public void SubmitCommand(string cmd)
+        {
+            OutputHTML("<br>");
+            if (cmd.Length > 0)
+            {
+                var cmds = Adrift.SharedModule.UserSession.salCommands;
+                cmds.Add("");
+                cmds[^2] = input.Text;
+                Adrift.SharedModule.Adventure.Turns++;
+            }
+
+            Adrift.SharedModule.UserSession.Process(cmd);
         }
 
         internal string QueryLoadPath()
@@ -199,6 +206,7 @@ namespace FrankenDrift.Runner
                 saveGameCommand.Enabled = true;
                 restoreGameCommand.Enabled = true;
                 transcriptCommand.Enabled = true;
+                replayCommand.Enabled = true;
                 _timer.Start();
             }
         }
@@ -220,6 +228,21 @@ namespace FrankenDrift.Runner
                 Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
                 transcriptCommand.MenuText = "Stop Transcript";
                 _isTranscriptActive = true;
+            }
+        }
+
+        private void ReplayCommandOnExecuted(object? sender, EventArgs e)
+        {
+            var ofd = new OpenFileDialog();
+            ofd.Filters.Add(new FileFilter { Name = "Command files", Extensions = new[] { ".txt", ".cmd" } });
+            var result = ofd.ShowDialog(this);
+            if (result != DialogResult.Ok) return;
+            var lines = File.ReadLines(ofd.FileName);
+            foreach (var line in lines)
+            {
+                if (output.IsWaiting) output.FinishWaiting();
+                if (line.StartsWith("<KEY>")) continue;
+                SubmitCommand(line);
             }
         }
 
@@ -258,10 +281,7 @@ namespace FrankenDrift.Runner
             Title = $"{name} - FrankenDrift";
         }
 
-        public bool IsTranscriptActive()
-        {
-            return _isTranscriptActive;
-        }
+        public bool IsTranscriptActive() => _isTranscriptActive;
 
         public void ScrollToEnd()
         {
@@ -379,9 +399,10 @@ namespace FrankenDrift.Runner
 
         public void SubmitCommand()
         {
-            throw new NotImplementedException();
+            SubmitCommand(input.Text);
+            input.Text = "";
         }
-
+        
         internal void ReportSecondaryClosing(SecondaryWindow secondaryWindow)
         {
             if (!_secondaryWindows.ContainsValue(secondaryWindow)) return;
