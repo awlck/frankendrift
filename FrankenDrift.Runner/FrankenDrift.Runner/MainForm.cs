@@ -208,6 +208,7 @@ namespace FrankenDrift.Runner
                 transcriptCommand.Enabled = true;
                 replayCommand.Enabled = true;
                 _timer.Start();
+                input.Focus();
             }
         }
         
@@ -345,7 +346,7 @@ namespace FrankenDrift.Runner
 
         public void InitInput()
         {
-            // Nothing to do
+            input.Focus();
         }
 
         public void ShowCoverArt(System.Drawing.Image img)
