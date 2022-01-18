@@ -218,6 +218,7 @@ namespace FrankenDrift.Runner
                 Adrift.SharedModule.UserSession.sTranscriptFile = "";
                 transcriptCommand.MenuText = "Start Transcript";
                 _isTranscriptActive = false;
+                OutputHTML("<i>Transcript stopped.</i><br><br>");
             }
             else
             {
@@ -228,6 +229,7 @@ namespace FrankenDrift.Runner
                 Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
                 transcriptCommand.MenuText = "Stop Transcript";
                 _isTranscriptActive = true;
+                OutputHTML("<i>Transcript starting.</i><br><br>");
             }
         }
 
@@ -238,6 +240,7 @@ namespace FrankenDrift.Runner
             var result = ofd.ShowDialog(this);
             if (result != DialogResult.Ok) return;
             var lines = File.ReadLines(ofd.FileName);
+            OutputHTML("<i>Replaying commands.</i><br><br>");
             foreach (var line in lines)
             {
                 if (output.IsWaiting) output.FinishWaiting();
