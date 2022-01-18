@@ -26,7 +26,6 @@ Friend Class RunnerSession
     Public iPrepProgress As Integer
     Public States As New StateStack
     Public bAutoComplete As Boolean
-    Friend sTranscriptFile As String
     Public iMarginWidth As Integer
     Public bEXE As Boolean = False
     Private listTaskKeys As New Generic.List(Of TaskKey)
@@ -37,8 +36,10 @@ Friend Class RunnerSession
     Private root, obroot, chroot As AutoComplete
 #If Not Adravalon
     Friend salCommands As New StringArrayList
+    Friend sTranscriptFile As String
 #else
     Public salCommands As New StringArrayList
+    Public sTranscriptFile As String
 #End If
     Friend iPreviousOffset As Integer
     Public sGameFolder As String

@@ -198,13 +198,29 @@ namespace FrankenDrift.Runner
                 if (Adrift.SharedModule.Adventure is null) return;
                 saveGameCommand.Enabled = true;
                 restoreGameCommand.Enabled = true;
+                transcriptCommand.Enabled = true;
                 _timer.Start();
             }
         }
         
         private void TranscriptCommandOnExecuted(object? sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            if (_isTranscriptActive)
+            {
+                Adrift.SharedModule.UserSession.sTranscriptFile = "";
+                transcriptCommand.MenuText = "Start Transcript";
+                _isTranscriptActive = false;
+            }
+            else
+            {
+                var sfd = new SaveFileDialog();
+                sfd.Filters.Add(new FileFilter { Name = "Text file", Extensions = new[] { ".txt" } });
+                var result = sfd.ShowDialog(this);
+                if (result != DialogResult.Ok) return;
+                Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
+                transcriptCommand.MenuText = "Stop Transcript";
+                _isTranscriptActive = true;
+            }
         }
 
         internal AdriftOutput GetSecondaryWindow(string name)
@@ -244,7 +260,7 @@ namespace FrankenDrift.Runner
 
         public bool IsTranscriptActive()
         {
-            return false;
+            return _isTranscriptActive;
         }
 
         public void ScrollToEnd()
