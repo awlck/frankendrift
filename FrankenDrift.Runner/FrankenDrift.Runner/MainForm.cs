@@ -18,6 +18,7 @@ namespace FrankenDrift.Runner
         private Command loadGameCommand;
         private Command saveGameCommand;
         private Command restoreGameCommand;
+        private Command transcriptCommand;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
 
@@ -31,6 +32,7 @@ namespace FrankenDrift.Runner
         private Dictionary<string, SecondaryWindow> _secondaryWindows = new();
         private GraphicsWindow _graphics = null;
         private UITimer _timer;
+        private bool _isTranscriptActive = false;
         
         internal GraphicsWindow Graphics { get
         {
@@ -50,9 +52,10 @@ namespace FrankenDrift.Runner
             map = new AdriftMap();
             _timer = new UITimer { Interval = 1.0d };
 
-            loadGameCommand.Executed += LoadGameCommand_Executed;
-            saveGameCommand.Executed += SaveGameCommand_Executed;
-            restoreGameCommand.Executed += RestoreGameCommand_Executed;
+            loadGameCommand.Executed += LoadGameCommandOnExecuted;
+            saveGameCommand.Executed += SaveGameCommandOnExecuted;
+            restoreGameCommand.Executed += RestoreGameCommandOnExecuted;
+            transcriptCommand.Executed += TranscriptCommandOnExecuted;
             _timer.Elapsed += _timer_Elapsed;
 
             input.KeyDown += Input_KeyDown;
@@ -63,6 +66,8 @@ namespace FrankenDrift.Runner
             Glue.Application.SetFrontend(this);
             output.AppendHtml("FrankenDrift v0.1");
         }
+
+        
 
         void InitializeComponent()
         {
@@ -79,13 +84,10 @@ namespace FrankenDrift.Runner
                 Rows = { new TableRow { ScaleHeight = true, Cells = { new TableCell(output) } }, input, status }
             };
 
-            // create a few commands that can be used for the menu and toolbar
-            // var clickMe = new Command { MenuText = "Click Me!", ToolBarText = "Click Me!" };
-            // clickMe.Executed += (sender, e) => MessageBox.Show(this, "I was clicked!");
-
             loadGameCommand = new Command { MenuText = "Open Game", Shortcut = Application.Instance.CommonModifier | Keys.O };
             saveGameCommand = new Command { MenuText = "Save", Enabled = false };
             restoreGameCommand = new Command { MenuText = "Restore", Enabled = false };
+            transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false };
 
             var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -109,7 +111,8 @@ namespace FrankenDrift.Runner
                 Items =
                 {
 					// File submenu
-					new SubMenuItem { Text = "&File", Items = { loadGameCommand, saveGameCommand, restoreGameCommand } },
+					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
+                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, transcriptCommand }}
                 },
                 ApplicationItems =
                 {
@@ -170,7 +173,7 @@ namespace FrankenDrift.Runner
             return result == DialogResult.Ok ? ofd.FileName : "";
         }
 
-        private void RestoreGameCommand_Executed(object sender, EventArgs e)
+        private void RestoreGameCommandOnExecuted(object sender, EventArgs e)
         {
             if (Adrift.SharedModule.Adventure is not null)
             {
@@ -178,7 +181,7 @@ namespace FrankenDrift.Runner
             }
         }
 
-        private void SaveGameCommand_Executed(object sender, EventArgs e)
+        private void SaveGameCommandOnExecuted(object sender, EventArgs e)
         {
             if (Adrift.SharedModule.Adventure is not null)
             {
@@ -186,7 +189,7 @@ namespace FrankenDrift.Runner
             }
         }
 
-        private void LoadGameCommand_Executed(object sender, EventArgs e)
+        private void LoadGameCommandOnExecuted(object sender, EventArgs e)
         {
             var toLoad = QueryLoadPath();
             if (!string.IsNullOrWhiteSpace(toLoad))
@@ -197,6 +200,11 @@ namespace FrankenDrift.Runner
                 restoreGameCommand.Enabled = true;
                 _timer.Start();
             }
+        }
+        
+        private void TranscriptCommandOnExecuted(object? sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         internal AdriftOutput GetSecondaryWindow(string name)
