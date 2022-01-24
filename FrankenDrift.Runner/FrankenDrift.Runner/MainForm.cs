@@ -237,7 +237,7 @@ namespace FrankenDrift.Runner
             if (_isTranscriptActive)
             {
                 Adrift.SharedModule.UserSession.sTranscriptFile = "";
-                transcriptCommand.MenuText = "Start Transcript";
+                Menu.Items.GetSubmenu("&Game").Items[2].Text = "Start Transcript";
                 _isTranscriptActive = false;
                 OutputHTML("<i>Transcript stopped.</i><br><br>");
             }
@@ -248,7 +248,7 @@ namespace FrankenDrift.Runner
                 var result = sfd.ShowDialog(this);
                 if (result != DialogResult.Ok) return;
                 Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
-                transcriptCommand.MenuText = "Stop Transcript";
+                Menu.Items.GetSubmenu("&Game").Items[2].Text = "Stop Transcript";
                 _isTranscriptActive = true;
                 OutputHTML("<i>Transcript starting.</i><br><br>");
             }
