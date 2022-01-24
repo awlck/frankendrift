@@ -35,6 +35,8 @@ namespace FrankenDrift.Runner
         private GraphicsWindow _graphics = null;
         private UITimer _timer;
         private bool _isTranscriptActive = false;
+        private bool _isReplaying = false;
+        private bool _shouldReplayCancel = false;
         
         internal GraphicsWindow Graphics { get
         {
@@ -60,6 +62,7 @@ namespace FrankenDrift.Runner
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
             replayCommand.Executed += ReplayCommandOnExecuted;
             _timer.Elapsed += _timer_Elapsed;
+            KeyDown += MainFormOnKeyDown;
 
             input.KeyDown += Input_KeyDown;
 
@@ -157,7 +160,15 @@ namespace FrankenDrift.Runner
             input.Text = "";
             e.Handled = true;
         }
-        
+
+        private void MainFormOnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Keys.Escape && _isReplaying)
+            {
+                _shouldReplayCancel = true;
+            }
+        }
+
         public void SubmitCommand(string cmd)
         {
             OutputHTML("<br>");
@@ -241,13 +252,19 @@ namespace FrankenDrift.Runner
             var result = ofd.ShowDialog(this);
             if (result != DialogResult.Ok) return;
             var lines = File.ReadLines(ofd.FileName);
+            _isReplaying = true;
+            _shouldReplayCancel = false;
             OutputHTML("<i>Replaying commands.</i><br><br>");
             foreach (var line in lines)
             {
                 if (output.IsWaiting) output.FinishWaiting();
                 if (line.StartsWith("<KEY>")) continue;
                 SubmitCommand(line);
+                DoEvents();
+                if (_shouldReplayCancel) break;
             }
+            _shouldReplayCancel = false;
+            _isReplaying = false;
         }
 
         internal AdriftOutput GetSecondaryWindow(string name)
