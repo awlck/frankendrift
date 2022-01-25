@@ -223,15 +223,12 @@ namespace FrankenDrift.Runner
             {
                 Adrift.SharedModule.UserSession.OpenAdventure(toLoad);
                 if (Adrift.SharedModule.Adventure is null) return;
-                saveGameCommand.Enabled = true;
-                restoreGameCommand.Enabled = true;
-                transcriptCommand.Enabled = true;
-                replayCommand.Enabled = true;
+                EnableButtons();
                 _timer.Start();
                 input.Focus();
             }
         }
-        
+
         private void TranscriptCommandOnExecuted(object? sender, EventArgs e)
         {
             if (_isTranscriptActive)
@@ -303,7 +300,10 @@ namespace FrankenDrift.Runner
 
         public void EnableButtons()
         {
-            throw new NotImplementedException();
+            saveGameCommand.Enabled = true;
+            restoreGameCommand.Enabled = true;
+            transcriptCommand.Enabled = true;
+            replayCommand.Enabled = true;
         }
 
         public void SetGameName(string name)
@@ -415,9 +415,14 @@ namespace FrankenDrift.Runner
             // pass for now
         }
 
+        // This sets way more than just the background color, but it's a convenient hook called before the game outputs
+        // any text for the first time.
         public void SetBackgroundColour()
         {
-            output.BackgroundColor = output._defaultBackground;
+            output._defaultBackground = Color.FromArgb(Adrift.SharedModule.Adventure.DeveloperDefaultBackgroundColour.ToArgb());
+            output._defaultColor = Color.FromArgb(Adrift.SharedModule.Adventure.DeveloperDefaultOutputColour.ToArgb());
+            output._defaultInput = Color.FromArgb(Adrift.SharedModule.Adventure.DeveloperDefaultInputColour.ToArgb());
+            output.Clear();
         }
 
         public void UpdateStatusBar(string desc, string score, string user)
