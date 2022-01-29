@@ -27,6 +27,7 @@ namespace FrankenDrift.Runner
             Text = "";
             _fonts.Clear();
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
+            BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             SelectionFont = _defaultFont;
         }
@@ -38,9 +39,9 @@ namespace FrankenDrift.Runner
         private string _pendingText;
         internal bool IsWaiting { get; private set; } = false;
 
-        internal readonly Color _defaultColor = Colors.Cyan;
-        internal readonly Color _defaultBackground = Colors.Black;
-        private readonly Color _defaultInput = Colors.Red;
+        internal Color _defaultColor = Colors.Cyan;
+        internal Color _defaultBackground = Colors.Black;
+        internal Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
         private Stack<Tuple<Font, Color>> _fonts = new();
         private MainForm _main;
@@ -238,6 +239,7 @@ namespace FrankenDrift.Runner
             ReadOnly = true;
         }
 
+        // For some reason formatting gets lost upon changing fonts unless we do this terribleness:
         private void AppendWithFont(string src, bool scroll = false)
         {
             var bold = SelectionBold;
