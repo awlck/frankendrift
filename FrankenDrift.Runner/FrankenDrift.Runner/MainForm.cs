@@ -37,6 +37,7 @@ namespace FrankenDrift.Runner
         private bool _isTranscriptActive = false;
         private bool _isReplaying = false;
         private bool _shouldReplayCancel = false;
+        private int _commandRecallIdx = 0;
         
         internal GraphicsWindow Graphics { get
         {
@@ -145,6 +146,23 @@ namespace FrankenDrift.Runner
                 output.FinishWaiting();
             }
 
+            if (e.Key == Keys.Up)
+            {
+                e.Handled = true;
+                _commandRecallIdx++;
+                if (_commandRecallIdx > Adrift.SharedModule.UserSession.salCommands.Count-1) return;
+                input.Text = Adrift.SharedModule.UserSession.salCommands[^(_commandRecallIdx+1)];
+                return;
+            }
+            else if (e.Key == Keys.Down)
+            {
+                e.Handled = true;
+                input.Text = Adrift.SharedModule.UserSession.salCommands[^(_commandRecallIdx)];
+                _commandRecallIdx--;
+                if (_commandRecallIdx < 0) _commandRecallIdx = 0;
+                return;
+            }
+
             if (e.Key != Keys.Enter) return;
             if (Adrift.SharedModule.Adventure is not null)
             {
@@ -185,6 +203,7 @@ namespace FrankenDrift.Runner
                 cmds.Add("");
                 cmds[^2] = cmd;
                 Adrift.SharedModule.Adventure.Turns++;
+                _commandRecallIdx = 0;
             }
 
             Adrift.SharedModule.UserSession.Process(cmd);
