@@ -183,7 +183,7 @@ namespace FrankenDrift.Runner
             {
                 var cmds = Adrift.SharedModule.UserSession.salCommands;
                 cmds.Add("");
-                cmds[^2] = input.Text;
+                cmds[^2] = cmd;
                 Adrift.SharedModule.Adventure.Turns++;
             }
 
