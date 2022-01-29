@@ -42,9 +42,11 @@ namespace FrankenDrift.Runner
         {
             if (_graphics is null)
             {
-                _graphics = new GraphicsWindow(this);
-                _graphics.Title = "Graphics - " + Title;
-                _graphics.ShowActivated = false;
+                _graphics = new GraphicsWindow(this)
+                {
+                    Title = "Graphics - " + Title,
+                    ShowActivated = false
+                };
             }
             _graphics.Show();
             return _graphics;
@@ -61,10 +63,10 @@ namespace FrankenDrift.Runner
             restoreGameCommand.Executed += RestoreGameCommandOnExecuted;
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
             replayCommand.Executed += ReplayCommandOnExecuted;
-            _timer.Elapsed += _timer_Elapsed;
+            _timer.Elapsed += TimerOnElapsed;
             KeyDown += MainFormOnKeyDown;
 
-            input.KeyDown += Input_KeyDown;
+            input.KeyDown += InputOnKeyDown;
 
             Adrift.SharedModule.Glue = this;
             Adrift.SharedModule.fRunner = this;
@@ -122,24 +124,20 @@ namespace FrankenDrift.Runner
                 ApplicationItems =
                 {
 					// application (OS X) or file menu (others)
-					// new ButtonMenuItem { Text = "&Preferences..." },
                     settingsCommand
                 },
                 QuitItem = quitCommand,
                 AboutItem = aboutCommand
             };
-
-            // create toolbar			
-            // ToolBar = new ToolBar { Items = { loadGameCommand, saveGameCommand, restoreGameCommand } };
         }
 
-        private void _timer_Elapsed(object sender, EventArgs e)
+        private void TimerOnElapsed(object sender, EventArgs e)
         {
             if (Adrift.SharedModule.UserSession != null)
                 Adrift.SharedModule.UserSession.TimeBasedStuff();
         }
 
-        private void Input_KeyDown(object sender, KeyEventArgs e)
+        private void InputOnKeyDown(object sender, KeyEventArgs e)
         {
             if (output.IsWaiting)
             {
