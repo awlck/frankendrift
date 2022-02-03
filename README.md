@@ -27,12 +27,11 @@ The following features are known not to work:
 * the automatic map
 * font switching is limited (some common monospace font names are recongnized and the program will attempt to
   substitute one that is available on your system.)
-* setting the default text font/size/color
-* save/restore menu entries (typing `save` or `restore` on the prompt works, though)
+* setting the default text font/size (color works, though)
 
 ## License
 
-The frontend (FrankenDrift.Runner) and compatibility glue (FrankenDrift.Glue) are (c) 2021 Adrian
+The frontend (FrankenDrift.Runner) and compatibility glue (FrankenDrift.Glue) are (c) 2021-22 Adrian
 Welcker and distributed under the MIT license (see LICENSE). The ADRIFT logic code
 (FrankenDrift.Adrift) is (c) Campbell Wild and distributed under a 3-clause BSD license (see
 FrankenDrift.Adrift/LICENSE.txt)
