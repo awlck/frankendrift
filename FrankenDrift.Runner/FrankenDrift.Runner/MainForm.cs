@@ -187,15 +187,6 @@ namespace FrankenDrift.Runner
 
         public void SubmitCommand(string cmd)
         {
-            if (cmd.StartsWith('#') && _isTranscriptActive)
-            {
-                var writer = new StreamWriter(Adrift.SharedModule.UserSession.sTranscriptFile, true);
-                writer.Write(cmd);
-                OutputHTML($"<br><c>{cmd}</c><br><i>Noted.</i><br><br>");
-                writer.Write("\nNoted.\n\n");
-                writer.Close();
-                return;
-            }
             OutputHTML("<br>");
             if (cmd.Length > 0)
             {
