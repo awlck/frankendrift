@@ -68,6 +68,7 @@ namespace FrankenDrift.Runner
             KeyDown += MainFormOnKeyDown;
 
             input.KeyDown += InputOnKeyDown;
+            output.KeyDown += OutputOnKeyDown;
 
             Adrift.SharedModule.Glue = this;
             Adrift.SharedModule.fRunner = this;
@@ -183,6 +184,13 @@ namespace FrankenDrift.Runner
             {
                 _shouldReplayCancel = true;
             }
+        }
+
+        private void OutputOnKeyDown(object sender, KeyEventArgs e)
+        {
+            input.Focus();
+            if (e.IsChar) input.Text += e.KeyChar.ToString();
+            e.Handled = true;
         }
 
         public void SubmitCommand(string cmd)
