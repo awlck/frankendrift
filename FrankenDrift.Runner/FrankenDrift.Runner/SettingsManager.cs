@@ -33,7 +33,7 @@ namespace FrankenDrift.Runner
                 Settings = new Settings {EnableGraphics = !RuntimeInformation.IsOSPlatform(OSPlatform.Linux)};
             }
         }
-        private static readonly Lazy<SettingsManager> lazySmgr = new Lazy<SettingsManager>(() => new SettingsManager());
+        private static readonly Lazy<SettingsManager> lazySmgr = new(() => new SettingsManager());
         public static SettingsManager Instance => lazySmgr.Value;
 
         public Settings Settings { get; }

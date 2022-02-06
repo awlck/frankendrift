@@ -31,9 +31,9 @@ namespace FrankenDrift.Runner
         public bool Locked => false;
 
         private AdriftMap map;
-        private Dictionary<string, SecondaryWindow> _secondaryWindows = new();
+        private readonly Dictionary<string, SecondaryWindow> _secondaryWindows = new();
         private GraphicsWindow _graphics = null;
-        private UITimer _timer;
+        private readonly UITimer _timer;
         private bool _isTranscriptActive = false;
         private bool _isReplaying = false;
         private bool _shouldReplayCancel = false;
@@ -292,9 +292,11 @@ namespace FrankenDrift.Runner
         internal AdriftOutput GetSecondaryWindow(string name)
         {
             if (_secondaryWindows.ContainsKey(name)) return _secondaryWindows[name].Output;
-            var win = new SecondaryWindow(this);
-            win.ShowActivated = false;
-            win.Title = name + " - " + this.Title;
+            var win = new SecondaryWindow(this)
+            {
+                ShowActivated = false,
+                Title = name + " - " + this.Title
+            };
             win.Show();
             _secondaryWindows[name] = win;
             return win.Output;
