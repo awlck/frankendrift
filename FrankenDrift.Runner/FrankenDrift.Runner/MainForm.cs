@@ -435,11 +435,13 @@ namespace FrankenDrift.Runner
         // any text for the first time.
         public void SetBackgroundColour()
         {
-            output._defaultBackground = Color.FromArgb(Adrift.SharedModule.Adventure.DeveloperDefaultBackgroundColour.ToArgb());
-            if (Adrift.SharedModule.Adventure.DeveloperDefaultOutputColour != Adrift.SharedModule.Adventure.DeveloperDefaultBackgroundColour)
-                output._defaultColor = Color.FromArgb(Adrift.SharedModule.Adventure.DeveloperDefaultOutputColour.ToArgb());
-            if (Adrift.SharedModule.Adventure.DeveloperDefaultInputColour != Adrift.SharedModule.Adventure.DeveloperDefaultBackgroundColour)
-                output._defaultInput = Color.FromArgb(Adrift.SharedModule.Adventure.DeveloperDefaultInputColour.ToArgb());
+            var adventure = Adrift.SharedModule.Adventure;
+            if (!adventure.DeveloperDefaultBackgroundColour.IsEmpty)
+                output._defaultBackground = Color.FromArgb(adventure.DeveloperDefaultBackgroundColour.ToArgb());
+            if (adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
+                output._defaultColor = Color.FromArgb(adventure.DeveloperDefaultOutputColour.ToArgb());
+            if (adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
+                output._defaultInput = Color.FromArgb(adventure.DeveloperDefaultInputColour.ToArgb());
             output.Clear();
         }
 
