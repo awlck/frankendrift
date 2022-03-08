@@ -415,7 +415,7 @@ namespace FrankenDrift.Runner
 
         public string GetExecutablePath()
         {
-            return typeof(Adrift.SharedModule).Assembly.Location;
+            return Environment.ProcessPath;
         }
 
         public string GetClaimedAdriftVersion()
