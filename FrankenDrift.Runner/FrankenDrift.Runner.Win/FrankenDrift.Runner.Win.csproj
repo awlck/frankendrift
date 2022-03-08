@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
+	  <ApplicationIcon>FrankenDrift_icon_ProtoType2.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
