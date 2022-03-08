@@ -56,7 +56,7 @@ namespace FrankenDrift.Runner
                     _view.Image = new EtoBitmap(stream.ToArray());
                 }
             }
-            else
+            else if (File.Exists(path))
             {
                 _view.Image = new EtoBitmap(path);
             }
