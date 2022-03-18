@@ -77,8 +77,6 @@ namespace FrankenDrift.Runner
                     inToken = true;
                     previousToken = currentToken; 
                     currentToken = "";
-                    AppendWithFont(current.ToString(), true);
-                    current.Clear();
                 }
                 else if (c != '>' && inToken)
                 {
@@ -87,6 +85,16 @@ namespace FrankenDrift.Runner
                 else if (c == '>' && inToken)
                 {
                     inToken = false;
+                    if (currentToken == "del")
+                    {
+                        current.Remove(current.Length - 1, 1);
+                        continue;
+                    }
+                    else
+                    {
+                        AppendWithFont(current.ToString(), true);
+                        current.Clear();
+                    }
                     switch (currentToken)
                     {
                         case "br":
