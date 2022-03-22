@@ -30,10 +30,13 @@ namespace FrankenDrift.Runner
             }
             else
             {
-                Settings = new Settings {EnableGraphics = !RuntimeInformation.IsOSPlatform(OSPlatform.Linux)};
+                Settings = new Settings {
+                    EnableGraphics = true,
+                    EnableDevColors = true
+                };
             }
         }
-        private static readonly Lazy<SettingsManager> lazySmgr = new Lazy<SettingsManager>(() => new SettingsManager());
+        private static readonly Lazy<SettingsManager> lazySmgr = new(() => new SettingsManager());
         public static SettingsManager Instance => lazySmgr.Value;
 
         public Settings Settings { get; }
@@ -50,5 +53,6 @@ namespace FrankenDrift.Runner
     public class Settings
     {
         public bool EnableGraphics { get; set; }
+        public bool EnableDevColors { get; set; }
     }
 }

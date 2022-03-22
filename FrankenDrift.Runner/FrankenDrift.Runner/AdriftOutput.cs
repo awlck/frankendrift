@@ -12,6 +12,7 @@ namespace FrankenDrift.Runner
         public AdriftOutput(MainForm main) : base()
         {
             _main = main;
+            ReadOnly = true;
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
@@ -26,6 +27,7 @@ namespace FrankenDrift.Runner
             Text = "";
             _fonts.Clear();
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
+            BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             SelectionFont = _defaultFont;
         }
@@ -37,12 +39,12 @@ namespace FrankenDrift.Runner
         private string _pendingText;
         internal bool IsWaiting { get; private set; } = false;
 
-        private readonly Color _defaultColor = Eto.Platform.Detect.IsMac ? Colors.Cyan : Colors.Black;
-        private readonly Color _defaultBackground = Eto.Platform.Detect.IsMac ? Colors.Black : Colors.LightGrey;
-        private readonly Color _defaultInput = Colors.Red;
+        internal Color _defaultColor = Colors.Cyan;
+        internal Color _defaultBackground = Colors.Black;
+        internal Color _defaultInput = Colors.Red;
         private readonly Font _defaultFont;
-        private Stack<Tuple<Font, Color>> _fonts = new();
-        private MainForm _main;
+        private readonly Stack<Tuple<Font, Color>> _fonts = new();
+        private readonly MainForm _main;
 
         private float CalculateTextSize(int requestedSize)
         {
@@ -58,6 +60,7 @@ namespace FrankenDrift.Runner
                 _pendingText += src;
                 return;
             }
+            ReadOnly = false;
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
@@ -74,8 +77,6 @@ namespace FrankenDrift.Runner
                     inToken = true;
                     previousToken = currentToken; 
                     currentToken = "";
-                    AppendWithFont(current.ToString(), true);
-                    current.Clear();
                 }
                 else if (c != '>' && inToken)
                 {
@@ -84,6 +85,16 @@ namespace FrankenDrift.Runner
                 else if (c == '>' && inToken)
                 {
                     inToken = false;
+                    if (currentToken == "del")
+                    {
+                        current.Remove(current.Length - 1, 1);
+                        continue;
+                    }
+                    else
+                    {
+                        AppendWithFont(current.ToString(), true);
+                        current.Clear();
+                    }
                     switch (currentToken)
                     {
                         case "br":
@@ -233,8 +244,10 @@ namespace FrankenDrift.Runner
                 else current.Append(c);
             }
             AppendWithFont(current.ToString(), true);
+            ReadOnly = true;
         }
 
+        // For some reason formatting gets lost upon changing fonts unless we do this terribleness:
         private void AppendWithFont(string src, bool scroll = false)
         {
             var bold = SelectionBold;

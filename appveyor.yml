@@ -1,0 +1,14 @@
+version: ci{build}
+image:
+  - Visual Studio 2022
+
+clone_depth: 5
+
+install:
+  - cd FrankenDrift.Runner/FrankenDrift.Runner.Win
+
+build_script:
+  - dotnet publish --self-contained -f net6.0-windows -r win10-x64 -p:PublishReadyToRun=true -c Release
+
+artifacts:
+  - path: FrankenDrift.Runner/FrankenDrift.Runner.Win/bin/Release/net6.0-windows/win10-x64/publish

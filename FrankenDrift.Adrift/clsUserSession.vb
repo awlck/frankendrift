@@ -1,14 +1,16 @@
 ﻿' Everything specific to the user's session that isn't stored in Adventure needs to go here
 
 Imports System.Xml
-Imports System.Drawing
 
 #If Adravalon Then
+Imports Eto.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 
 Public Class RunnerSession
 #Else
+Imports System.Drawing
+
 Friend Class RunnerSession
 #End If
 
@@ -26,7 +28,6 @@ Friend Class RunnerSession
     Public iPrepProgress As Integer
     Public States As New StateStack
     Public bAutoComplete As Boolean
-    Friend sTranscriptFile As String
     Public iMarginWidth As Integer
     Public bEXE As Boolean = False
     Private listTaskKeys As New Generic.List(Of TaskKey)
@@ -37,8 +38,10 @@ Friend Class RunnerSession
     Private root, obroot, chroot As AutoComplete
 #If Not Adravalon
     Friend salCommands As New StringArrayList
+    Friend sTranscriptFile As String
 #else
     Public salCommands As New StringArrayList
+    Public sTranscriptFile As String
 #End If
     Friend iPreviousOffset As Integer
     Public sGameFolder As String
@@ -8790,10 +8793,8 @@ FoundTask:
         Return iNoRefs
 
     End Function
-
-
-
-
+    
+#If Not Adravalon Then
     Friend Sub RunnerStartup()
         bShowShortLocations = CBool(GetSetting("ADRIFT", "Runner", "showshortroom", "-1"))
         bGraphics = CBool(GetSetting("ADRIFT", "Runner", "Graphics", "-1"))
@@ -8805,7 +8806,7 @@ FoundTask:
         DefaultFont = New Font(sFontName, iFontSize, CType(IIf(CBool(GetSetting("ADRIFT", "Runner", "FontBold", "0")), FontStyle.Bold, FontStyle.Regular), FontStyle) Or CType(IIf(CBool(GetSetting("ADRIFT", "Runner", "FontItalic", "0")), FontStyle.Italic, FontStyle.Regular), FontStyle))
 
     End Sub
-
+#End If
 
     Public Sub New()
 #If Not Adravalon Then

@@ -1,6 +1,10 @@
 ﻿Imports System.Text.Encoding
 Imports System.Xml
+#If Adravalon Then
+Imports Eto.Drawing
+#Else
 Imports System.Drawing ' Makes it explicit over Web Image etc
+#End If
 
 
 Public Class clsBlorb
@@ -1047,15 +1051,14 @@ Public Class clsBlorb
     End Function
 
 
+#If Not Adravalon Then
     Public Function OutputToFolder(ByVal sFolder As String) As Boolean
 
         Dim stmOutput As IO.FileStream = Nothing
         Dim bw As IO.BinaryWriter
 
         Try
-#If Not Adravalon Then
             Cursor.Current = Cursors.WaitCursor
-#End If
             If Not stmBlorb.CanRead Then stmBlorb = New IO.FileStream(sFilename, IO.FileMode.Open)
 
             Dim iResource As Integer = 0
@@ -1173,6 +1176,7 @@ Public Class clsBlorb
 
     End Function
 
+#End If
 
     Private Shared Function ByteToInt(ByVal byt() As Byte) As UInt32
         ' Reverse the bytes

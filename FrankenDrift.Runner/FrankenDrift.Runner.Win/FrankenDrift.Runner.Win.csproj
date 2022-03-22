@@ -2,11 +2,12 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
+	  <ApplicationIcon>FrankenDrift_icon_ProtoType2.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eto.Platform.Windows" Version="2.5.11" />
+    <PackageReference Include="Eto.Platform.Windows" Version="2.6.1" />
   </ItemGroup>
   
   <ItemGroup>
