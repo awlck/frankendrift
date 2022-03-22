@@ -1,14 +1,16 @@
 ﻿' Everything specific to the user's session that isn't stored in Adventure needs to go here
 
 Imports System.Xml
-Imports System.Drawing
 
 #If Adravalon Then
+Imports Eto.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 
 Public Class RunnerSession
 #Else
+Imports System.Drawing
+
 Friend Class RunnerSession
 #End If
 
@@ -8791,10 +8793,8 @@ FoundTask:
         Return iNoRefs
 
     End Function
-
-
-
-
+    
+#If Not Adravalon Then
     Friend Sub RunnerStartup()
         bShowShortLocations = CBool(GetSetting("ADRIFT", "Runner", "showshortroom", "-1"))
         bGraphics = CBool(GetSetting("ADRIFT", "Runner", "Graphics", "-1"))
@@ -8806,7 +8806,7 @@ FoundTask:
         DefaultFont = New Font(sFontName, iFontSize, CType(IIf(CBool(GetSetting("ADRIFT", "Runner", "FontBold", "0")), FontStyle.Bold, FontStyle.Regular), FontStyle) Or CType(IIf(CBool(GetSetting("ADRIFT", "Runner", "FontItalic", "0")), FontStyle.Italic, FontStyle.Regular), FontStyle))
 
     End Sub
-
+#End If
 
     Public Sub New()
 #If Not Adravalon Then

@@ -31,7 +31,7 @@ namespace FrankenDrift.Runner
             else
             {
                 Settings = new Settings {
-                    EnableGraphics = !RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+                    EnableGraphics = true,
                     EnableDevColors = true
                 };
             }

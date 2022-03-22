@@ -1,11 +1,7 @@
-using System.Drawing.Imaging;
 using System.IO;
-using System.Reflection;
+using Eto.Drawing;
 using FrankenDrift.Adrift;
 using Eto.Forms;
-using SysImage = System.Drawing.Image;
-using EtoBitmap = Eto.Drawing.Bitmap;
-using Size = Eto.Drawing.Size;
 
 namespace FrankenDrift.Runner
 {
@@ -49,16 +45,14 @@ namespace FrankenDrift.Runner
                 if (res > 0)
                 {
                     var scratch = "";
-                    SysImage img = SharedModule.Blorb.GetImage(res, true, ref scratch);
+                    var img = SharedModule.Blorb.GetImage(res, true, ref scratch);
                     if (img is null) return;
-                    using var stream = new MemoryStream();
-                    img.Save(stream, ImageFormat.Bmp);
-                    _view.Image = new EtoBitmap(stream.ToArray());
+                    _view.Image = img;
                 }
             }
             else if (File.Exists(path))
             {
-                _view.Image = new EtoBitmap(path);
+                _view.Image = new Bitmap(path);
             }
         }
     }

@@ -393,7 +393,7 @@ namespace FrankenDrift.Runner
             input.Focus();
         }
 
-        public void ShowCoverArt(System.Drawing.Image img)
+        public void ShowCoverArt(Image img)
         {
             throw new NotImplementedException();
         }

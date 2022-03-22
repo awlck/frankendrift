@@ -1013,7 +1013,7 @@ Module SharedModule
         Return dfDouble.ToString(sFormat, System.Globalization.CultureInfo.InvariantCulture.NumberFormat)
     End Function
 
-
+#If Not Adravalon Then
     Private Function GetDefaultFont() As Font
 #If Runner Then
         If UserSession.bUseDefaultFont Then
@@ -1029,7 +1029,7 @@ Module SharedModule
         End If
 #End If
     End Function
-
+#End If
 
     Private _AllowDevToSetColours As Boolean?
     Public Property AllowDevToSetColours As Boolean
