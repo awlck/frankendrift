@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Application = Eto.Forms.Application;
 
 namespace FrankenDrift.Runner
@@ -38,6 +39,7 @@ namespace FrankenDrift.Runner
         private bool _isReplaying = false;
         private bool _shouldReplayCancel = false;
         private int _commandRecallIdx = 0;
+        private readonly string _myVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
         
         internal GraphicsWindow Graphics { get
         {
@@ -74,7 +76,7 @@ namespace FrankenDrift.Runner
             Adrift.SharedModule.fRunner = this;
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession {Map = map};
             Glue.Application.SetFrontend(this);
-            output.AppendHtml("FrankenDrift v0.3.0");
+            output.AppendHtml($"FrankenDrift {_myVersion}");
         }
 
         void InitializeComponent()
@@ -108,7 +110,7 @@ namespace FrankenDrift.Runner
                 ProgramName = "FrankenDrift",
                 ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
                                      "with a cross-platform UI layer (Eto.Forms) glued on top.",
-                Version = "0.3.0"
+                Version = _myVersion
             }.ShowDialog(this);
 
             var settingsCommand = new Command { MenuText = "&Preferences" };
