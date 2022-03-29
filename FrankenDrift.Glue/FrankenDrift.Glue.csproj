@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>FrankenDrift.Glue</RootNamespace>
+	  <VersionPrefix>0.3.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
