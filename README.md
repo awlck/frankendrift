@@ -11,10 +11,9 @@ All dependencies are in the download.
 
 ### Linux
 You will need to install the [.NET 6 Runtime](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
-from Microsoft. If you wish to play games that use graphics, you will also need to install `libgdiplus`
-through your distribution's package manager. (Once you do that, enable graphics from the settings.)
+from Microsoft.
 
-(Versions prior to 0.3.0 use the .NET 5 runtime instead.)
+(Versions prior to 0.3.0 use the .NET 5 runtime instead, and require the `libgdiplus` package for graphics.)
 
 ## Known limitations
 
