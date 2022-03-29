@@ -395,7 +395,8 @@ namespace FrankenDrift.Runner
 
         public void ShowCoverArt(Image img)
         {
-            throw new NotImplementedException();
+            if (SettingsManager.Instance.Settings.EnableGraphics)
+                Graphics.DisplayImage(img);
         }
 
         public void DoEvents()
