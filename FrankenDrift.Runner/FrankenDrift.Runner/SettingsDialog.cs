@@ -8,6 +8,7 @@ namespace FrankenDrift.Runner
     {
         private CheckBox _graphics;
         private CheckBox _devColors;
+        private CheckBox _anyKeyPrompt;
 
         private Button _okButton;
         private Button _cancelButton;
@@ -28,6 +29,11 @@ namespace FrankenDrift.Runner
                 Checked = SettingsManager.Settings.EnableDevColors,
                 ToolTip = "Whether or not FrankenDrift should honor the developer's choice of color. (A restart is needed for this setting to take full effect.)"
             };
+            _anyKeyPrompt = new CheckBox {
+                Text = "Enable \"Press any key\" prompts",
+                Checked = SettingsManager.Settings.EnablePressAnyKey,
+                ToolTip = "Whether to show \"(Press any key to continue)\" when the game waits for a key press."
+            };
 
             Title = "Settings - FrankenDrift";
             _okButton = new Button {Text = "OK"};
@@ -37,6 +43,7 @@ namespace FrankenDrift.Runner
             Content = new StackLayout(
                 new StackLayoutItem(_graphics),
                 new StackLayoutItem(_devColors),
+                new StackLayoutItem(_anyKeyPrompt),
                 new StackLayoutItem(_okButton),
                 new StackLayoutItem(_cancelButton));
             DefaultButton = _okButton;
@@ -47,6 +54,7 @@ namespace FrankenDrift.Runner
         {
             SettingsManager.Settings.EnableGraphics = _graphics.Checked ?? false;
             SettingsManager.Settings.EnableDevColors = _devColors.Checked ?? false;
+            SettingsManager.Settings.EnablePressAnyKey = _anyKeyPrompt.Checked ?? false;
             SettingsManager.Instance.Save();
             Close();
         }

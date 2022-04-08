@@ -125,7 +125,8 @@ namespace FrankenDrift.Runner
                         case "waitkey":
                             _pendingText = src[consumed..];
                             IsWaiting = true;
-                            AppendWithFont("\n(Press any key to continue)");
+                            if (SettingsManager.Settings.EnablePressAnyKey)
+                                AppendWithFont("\n(Press any key to continue)");
                             return;
                         case "/c":
                         case "/font":

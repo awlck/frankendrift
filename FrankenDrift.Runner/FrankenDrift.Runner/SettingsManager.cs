@@ -32,7 +32,8 @@ namespace FrankenDrift.Runner
             {
                 _settings = new Settings {
                     EnableGraphics = true,
-                    EnableDevColors = true
+                    EnableDevColors = true,
+                    EnablePressAnyKey = false
                 };
             }
         }
@@ -55,5 +56,6 @@ namespace FrankenDrift.Runner
     {
         public bool EnableGraphics { get; set; }
         public bool EnableDevColors { get; set; }
+        public bool EnablePressAnyKey { get; set; }
     }
 }
