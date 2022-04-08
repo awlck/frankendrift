@@ -87,7 +87,8 @@ namespace FrankenDrift.Runner
                     inToken = false;
                     if (currentToken == "del")
                     {
-                        current.Remove(current.Length - 1, 1);
+                        if (current.Length > 0)
+                            current.Remove(current.Length - 1, 1);
                         continue;
                     }
                     else
