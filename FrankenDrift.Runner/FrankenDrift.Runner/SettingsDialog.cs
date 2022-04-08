@@ -21,11 +21,11 @@ namespace FrankenDrift.Runner
         {
             _graphics = new CheckBox {
                 Text = "Enable graphics",
-                Checked = SettingsManager.Instance.Settings.EnableGraphics
+                Checked = SettingsManager.Settings.EnableGraphics
             };
             _devColors = new CheckBox {
                 Text = "Enable author-chosen colors",
-                Checked = SettingsManager.Instance.Settings.EnableDevColors,
+                Checked = SettingsManager.Settings.EnableDevColors,
                 ToolTip = "Whether or not FrankenDrift should honor the developer's choice of color. (A restart is needed for this setting to take full effect.)"
             };
 
@@ -34,7 +34,8 @@ namespace FrankenDrift.Runner
             _okButton.Click += OkButtonOnClick;
             _cancelButton = new Button {Text = "Cancel"};
             _cancelButton.Click += (sender, args) => Close(); 
-            Content = new StackLayout(new StackLayoutItem(_graphics),
+            Content = new StackLayout(
+                new StackLayoutItem(_graphics),
                 new StackLayoutItem(_devColors),
                 new StackLayoutItem(_okButton),
                 new StackLayoutItem(_cancelButton));
@@ -44,8 +45,8 @@ namespace FrankenDrift.Runner
 
         private void OkButtonOnClick(object? sender, EventArgs e)
         {
-            SettingsManager.Instance.Settings.EnableGraphics = _graphics.Checked ?? false;
-            SettingsManager.Instance.Settings.EnableDevColors = _devColors.Checked ?? false;
+            SettingsManager.Settings.EnableGraphics = _graphics.Checked ?? false;
+            SettingsManager.Settings.EnableDevColors = _devColors.Checked ?? false;
             SettingsManager.Instance.Save();
             Close();
         }

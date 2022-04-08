@@ -26,11 +26,11 @@ namespace FrankenDrift.Runner
             if (File.Exists(_settingsFile))
             {
                 var settingsText = File.ReadAllText(_settingsFile);
-                Settings = JsonSerializer.Deserialize<Settings>(settingsText);
+                _settings = JsonSerializer.Deserialize<Settings>(settingsText);
             }
             else
             {
-                Settings = new Settings {
+                _settings = new Settings {
                     EnableGraphics = true,
                     EnableDevColors = true
                 };
@@ -38,13 +38,14 @@ namespace FrankenDrift.Runner
         }
         private static readonly Lazy<SettingsManager> lazySmgr = new(() => new SettingsManager());
         public static SettingsManager Instance => lazySmgr.Value;
+        public static Settings Settings => lazySmgr.Value._settings;
 
-        public Settings Settings { get; }
+        private Settings _settings { get; }
 
         public void Save()
         {
             var options = new JsonSerializerOptions {WriteIndented = true};
-            string jsonSettings = JsonSerializer.Serialize(Settings, options);
+            string jsonSettings = JsonSerializer.Serialize(_settings, options);
             Directory.CreateDirectory(_settingsPath);
             File.WriteAllText(_settingsFile, jsonSettings);
         }
