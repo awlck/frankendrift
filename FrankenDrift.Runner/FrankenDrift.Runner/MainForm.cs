@@ -397,7 +397,7 @@ namespace FrankenDrift.Runner
 
         public void ShowCoverArt(Image img)
         {
-            if (SettingsManager.Instance.Settings.EnableGraphics)
+            if (SettingsManager.Settings.EnableGraphics)
                 Graphics.DisplayImage(img);
         }
 
@@ -440,7 +440,7 @@ namespace FrankenDrift.Runner
         // any text for the first time.
         public void SetBackgroundColour()
         {
-            if (SettingsManager.Instance.Settings.EnableDevColors)
+            if (SettingsManager.Settings.EnableDevColors)
             {
                 var adventure = Adrift.SharedModule.Adventure;
                 if (!adventure.DeveloperDefaultBackgroundColour.IsEmpty)

@@ -125,7 +125,8 @@ namespace FrankenDrift.Runner
                         case "waitkey":
                             _pendingText = src[consumed..];
                             IsWaiting = true;
-                            AppendWithFont("\n(Press any key to continue)");
+                            if (SettingsManager.Settings.EnablePressAnyKey)
+                                AppendWithFont("\n(Press any key to continue)");
                             return;
                         case "/c":
                         case "/font":
@@ -148,7 +149,7 @@ namespace FrankenDrift.Runner
                     if (currentToken.StartsWith("img"))  // graphics.
                     {
                         var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
-                        if (imgPath.Success && SettingsManager.Instance.Settings.EnableGraphics)
+                        if (imgPath.Success && SettingsManager.Settings.EnableGraphics)
                             _main.Graphics.DisplayImage(imgPath.Groups[1].Value);
                         continue;
                     }
