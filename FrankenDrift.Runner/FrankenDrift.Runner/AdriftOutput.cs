@@ -21,10 +21,19 @@ namespace FrankenDrift.Runner
             
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
         }
+
+        // Needs to be a separate overload rather than just introducing an optional
+        // parameter due to the RichTextBox interface.
+        public void Clear() => Clear(false);
         
-        public void Clear()
+        public void Clear(bool force)
         {
             Text = "";
+            if (force)
+            {
+                IsWaiting = false;
+                _pendingText = "";
+            }
             _fonts.Clear();
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
             BackgroundColor = _defaultBackground;

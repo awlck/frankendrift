@@ -20,6 +20,7 @@ namespace FrankenDrift.Runner
         private Command loadGameCommand;
         private Command saveGameCommand;
         private Command restoreGameCommand;
+        private Command restartGameCommand;
         private Command transcriptCommand;
         private Command replayCommand;
 
@@ -64,6 +65,7 @@ namespace FrankenDrift.Runner
             loadGameCommand.Executed += LoadGameCommandOnExecuted;
             saveGameCommand.Executed += SaveGameCommandOnExecuted;
             restoreGameCommand.Executed += RestoreGameCommandOnExecuted;
+            restartGameCommand.Executed += RestartGameCommandOnExecuted;
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
             replayCommand.Executed += ReplayCommandOnExecuted;
             _timer.Elapsed += TimerOnElapsed;
@@ -78,6 +80,7 @@ namespace FrankenDrift.Runner
             Glue.Application.SetFrontend(this);
             output.AppendHtml($"FrankenDrift {_myVersion}");
         }
+
 
         void InitializeComponent()
         {
@@ -96,7 +99,8 @@ namespace FrankenDrift.Runner
 
             loadGameCommand = new Command { MenuText = "Open Game", Shortcut = Application.Instance.CommonModifier | Keys.O };
             saveGameCommand = new Command { MenuText = "Save", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.S };
-            restoreGameCommand = new Command { MenuText = "Restore", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.R };
+            restoreGameCommand = new Command { MenuText = "Restore a Saved Game", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.R };
+            restartGameCommand = new Command { MenuText = "Restart Game", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.Shift | Keys.R };
             transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.T };
             replayCommand = new Command { MenuText = "Replay Commands", Enabled = false, Shortcut = Application.Instance.CommonModifier | Application.Instance.AlternateModifier | Keys.R };
 
@@ -123,7 +127,7 @@ namespace FrankenDrift.Runner
                 {
 					// File submenu
 					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
-                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, transcriptCommand, replayCommand }}
+                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand }}
                 },
                 ApplicationItems =
                 {
@@ -247,6 +251,20 @@ namespace FrankenDrift.Runner
             }
         }
 
+        private void RestartGameCommandOnExecuted(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show(this,
+                "Are you sure you want to restart the game? Any unsaved progress will be lost!",
+                "Restart Game? - FrankenDrift", MessageBoxButtons.YesNo, MessageBoxType.Warning);
+            if (result == DialogResult.Yes)
+            {
+                output.Clear(true);
+                // Call relevant function directly rather than submitting a "restart" command to
+                // ensure that the restart occurs even if the game would normally block it
+                Adrift.SharedModule.UserSession.OpenAdventure(Adrift.SharedModule.Adventure.FullPath);
+            }
+        }
+
         private void TranscriptCommandOnExecuted(object? sender, EventArgs e)
         {
             if (_isTranscriptActive)
@@ -322,6 +340,7 @@ namespace FrankenDrift.Runner
         {
             saveGameCommand.Enabled = true;
             restoreGameCommand.Enabled = true;
+            restartGameCommand.Enabled = true;
             transcriptCommand.Enabled = true;
             replayCommand.Enabled = true;
         }
