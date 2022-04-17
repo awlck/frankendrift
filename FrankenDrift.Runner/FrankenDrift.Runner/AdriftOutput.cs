@@ -16,6 +16,8 @@ namespace FrankenDrift.Runner
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
+            if (!string.IsNullOrEmpty(SettingsManager.Settings.DefaultFontName))
+                _defaultFont = _defaultFont.WithFontFace(SettingsManager.Settings.DefaultFontName);
             SelectionFont = _defaultFont;
             Append(" ");
             
