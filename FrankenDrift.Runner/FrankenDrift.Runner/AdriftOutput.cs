@@ -88,7 +88,7 @@ namespace FrankenDrift.Runner
             }
             ReadOnly = false;
             if (!_wingdingsAvailable)
-                src = src.Replace("<font face=\"Wingdings\" size=14>Ø</font>", "<font size=+2>> </font>");
+                src = src.Replace("<font face=\"Wingdings\" size=14>Ã˜</font>", "<font size=+1>></font>");
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
