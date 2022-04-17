@@ -18,6 +18,8 @@ namespace FrankenDrift.Runner
             SelectionForeground = _defaultColor;
             if (!string.IsNullOrEmpty(SettingsManager.Settings.DefaultFontName))
                 _defaultFont = SelectionFont.WithFontFace(SettingsManager.Settings.DefaultFontName);
+            else
+                _defaultFont = SelectionFont;
             if (SettingsManager.Settings.EnableDevFont)
                 _defaultFont = _defaultFont.WithSize(SelectionFont.Size+SettingsManager.Settings.AlterFontSize);
             else
@@ -86,7 +88,7 @@ namespace FrankenDrift.Runner
             }
             ReadOnly = false;
             if (!_wingdingsAvailable)
-                src.Replace("<font face=\"Wingdings\" size=14>Ø</font>", "<font size=+2>> </font>");
+                src = src.Replace("<font face=\"Wingdings\" size=14>Ø</font>", "<font size=+2>> </font>");
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
