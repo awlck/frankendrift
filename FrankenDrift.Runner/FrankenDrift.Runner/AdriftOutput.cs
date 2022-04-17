@@ -55,6 +55,10 @@ namespace FrankenDrift.Runner
         private readonly Stack<Tuple<Font, Color>> _fonts = new();
         private readonly MainForm _main;
 
+        private bool _bold = false;
+        private bool _italic = false;
+        private bool _underline = false;
+
         private float CalculateTextSize(int requestedSize)
         {
             return Math.Max(requestedSize - 12 + _defaultFont.Size, 1);
@@ -84,6 +88,8 @@ namespace FrankenDrift.Runner
                 if (c == '<' && !inToken)
                 {
                     inToken = true;
+                    AppendWithFont(current.ToString(), true);
+                    current.Clear();
                     previousToken = currentToken; 
                     currentToken = "";
                 }
@@ -94,39 +100,28 @@ namespace FrankenDrift.Runner
                 else if (c == '>' && inToken)
                 {
                     inToken = false;
-                    if (currentToken == "del")
-                    {
-                        if (current.Length > 0)
-                            current.Remove(current.Length - 1, 1);
-                        continue;
-                    }
-                    else
-                    {
-                        AppendWithFont(current.ToString(), true);
-                        current.Clear();
-                    }
                     switch (currentToken)
                     {
                         case "br":
                             Append("\n");
                             break;
                         case "b":
-                            SelectionBold = true;
+                            _bold = true;
                             break;
                         case "/b":
-                            SelectionBold = false;
+                            _bold = false;
                             break;
                         case "i":
-                            SelectionItalic = true;
+                            _italic = true;
                             break;
                         case "/i":
-                            SelectionItalic = false;
+                            _italic = false;
                             break;
                         case "u":
-                            SelectionUnderline = true;
+                            _underline = true;
                             break;
                         case "/u":
-                            SelectionUnderline = false;
+                            _underline = false;
                             break;
                         case "c":
                             _fonts.Push(new Tuple<Font, Color>(SelectionFont, _defaultInput));
@@ -141,6 +136,9 @@ namespace FrankenDrift.Runner
                         case "/font":
                             if (_fonts.Count > 1)
                                 _fonts.Pop();
+                            break;
+                        case "del":
+                            Buffer.Delete(new Range<int>(Text.Length-1, Text.Length));
                             break;
                         case "cls":
                             Clear();
@@ -261,21 +259,13 @@ namespace FrankenDrift.Runner
         // For some reason formatting gets lost upon changing fonts unless we do this terribleness:
         private void AppendWithFont(string src, bool scroll = false)
         {
-            var bold = SelectionBold;
-            var underline = SelectionUnderline;
-            var italics = SelectionItalic;
             var (font, color) = _fonts.Peek();
             SelectionForeground = color;
             SelectionFont = font;
-            SelectionBold = bold;
-            SelectionUnderline = underline;
-            SelectionItalic = italics;
+            SelectionBold = _bold;
+            SelectionUnderline = _underline;
+            SelectionItalic = _italic;
             Append(src, scroll);
-            SelectionForeground = color;
-            SelectionFont = font;
-            SelectionBold = bold;
-            SelectionUnderline = underline;
-            SelectionItalic = italics;
         }
 
         internal void FinishWaiting()
