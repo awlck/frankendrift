@@ -24,9 +24,6 @@ The following features are known not to work:
 * in-line graphics (graphics always display in a separate window)
 * sound
 * the automatic map
-* font switching is limited (some common monospace font names are recongnized and the program will attempt to
-  substitute one that is available on your system.)
-* setting the default text font/size (color works, though)
 
 ## License
 

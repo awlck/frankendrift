@@ -4,7 +4,6 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>FrankenDrift.Runner</RootNamespace>
 	  <VersionPrefix>0.4.0</VersionPrefix>
-	  <VersionSuffix>indev</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
