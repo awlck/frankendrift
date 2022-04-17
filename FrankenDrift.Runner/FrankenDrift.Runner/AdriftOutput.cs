@@ -51,7 +51,7 @@ namespace FrankenDrift.Runner
         internal Color _defaultColor = Colors.Cyan;
         internal Color _defaultBackground = Colors.Black;
         internal Color _defaultInput = Colors.Red;
-        private readonly Font _defaultFont;
+        internal Font _defaultFont;
         private readonly Stack<Tuple<Font, Color>> _fonts = new();
         private readonly MainForm _main;
 
@@ -59,7 +59,7 @@ namespace FrankenDrift.Runner
         private bool _italic = false;
         private bool _underline = false;
 
-        private float CalculateTextSize(int requestedSize)
+        internal float CalculateTextSize(int requestedSize)
         {
             return Math.Max(requestedSize - 12 + _defaultFont.Size, 1);
         }

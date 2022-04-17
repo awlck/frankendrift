@@ -438,15 +438,19 @@ namespace FrankenDrift.Runner
         // any text for the first time.
         public void SetBackgroundColour()
         {
+            var adventure = Adrift.SharedModule.Adventure;
             if (SettingsManager.Settings.EnableDevColors)
             {
-                var adventure = Adrift.SharedModule.Adventure;
                 if (!adventure.DeveloperDefaultBackgroundColour.IsEmpty)
                     output._defaultBackground = Color.FromArgb(adventure.DeveloperDefaultBackgroundColour.ToArgb());
                 if (adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
                     output._defaultColor = Color.FromArgb(adventure.DeveloperDefaultOutputColour.ToArgb());
                 if (adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
                     output._defaultInput = Color.FromArgb(adventure.DeveloperDefaultInputColour.ToArgb());
+            }
+            if (SettingsManager.Settings.EnableDevFont && !string.IsNullOrWhiteSpace(adventure.DefaultFontName))
+            {
+                output._defaultFont = output.SelectionFont.WithFontFace(adventure.DefaultFontName).WithSize(output.CalculateTextSize(adventure.DefaultFontSize));
             }
             output.Clear();
         }
