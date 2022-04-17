@@ -317,6 +317,11 @@ namespace FrankenDrift.Runner
                 ShowActivated = false,
                 Title = name + " - " + this.Title
             };
+            win.Output._defaultBackground = output._defaultBackground;
+            win.Output._defaultColor = output._defaultColor;
+            win.Output._defaultInput = output._defaultInput;
+            win.Output._defaultFont = output._defaultFont;
+            win.Output.Clear(true);
             win.Show();
             _secondaryWindows[name] = win;
             return win.Output;
