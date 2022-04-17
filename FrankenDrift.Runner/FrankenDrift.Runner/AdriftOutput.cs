@@ -15,7 +15,12 @@ namespace FrankenDrift.Runner
             ReadOnly = true;
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
-            _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
+            if (!string.IsNullOrEmpty(SettingsManager.Settings.DefaultFontName))
+                _defaultFont = SelectionFont.WithFontFace(SettingsManager.Settings.DefaultFontName);
+            if (SettingsManager.Settings.EnableDevFont)
+                _defaultFont = _defaultFont.WithSize(SelectionFont.Size+SettingsManager.Settings.AlterFontSize);
+            else
+                _defaultFont = _defaultFont.WithSize(SettingsManager.Settings.UserFontSize);
             SelectionFont = _defaultFont;
             Append(" ");
             
@@ -61,6 +66,9 @@ namespace FrankenDrift.Runner
 
         internal float CalculateTextSize(int requestedSize)
         {
+            if (SettingsManager.Settings.EnableDevFont)
+                return requestedSize + SettingsManager.Settings.AlterFontSize;
+            // no idea why specifically, but this seems to give sensible results.
             return Math.Max(requestedSize - 12 + _defaultFont.Size, 1);
         }
         
