@@ -178,7 +178,7 @@ namespace FrankenDrift.Runner
 #if DEBUG
             else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
 #endif
-            else OutputHTML("(Click File > Open Game to load a game!)");
+            else OutputHTML("\n(Click File > Open Game to load a game!)");
 
             input.Text = "";
             e.Handled = true;
@@ -409,10 +409,7 @@ namespace FrankenDrift.Runner
 
         public void OutputHTML(string source) => output.AppendHtml(source);
 
-        public void InitInput()
-        {
-            input.Focus();
-        }
+        public void InitInput() => input.Focus();
 
         public void ShowCoverArt(Image img)
         {
@@ -420,35 +417,17 @@ namespace FrankenDrift.Runner
                 Graphics.DisplayImage(img);
         }
 
-        public void DoEvents()
-        {
-            Application.Instance.RunIteration();
-        }
+        public void DoEvents() => Application.Instance.RunIteration();
 
-        public string GetAppDataPath()
-        {
-            throw new NotImplementedException();
-        }
+        public string GetAppDataPath() => throw new NotImplementedException();
 
-        public string GetExecutableLocation()
-        {
-            return System.IO.Path.GetDirectoryName(GetExecutablePath());
-        }
+        public string GetExecutableLocation() => Path.GetDirectoryName(GetExecutablePath());
 
-        public string GetExecutablePath()
-        {
-            return Environment.ProcessPath;
-        }
+        public string GetExecutablePath() => Environment.ProcessPath;
 
-        public string GetClaimedAdriftVersion()
-        {
-            return "5.0000364";
-        }
+        public string GetClaimedAdriftVersion() => "5.0000364";
 
-        public void ReloadMacros()
-        {
-            throw new NotImplementedException();
-        }
+        public void ReloadMacros() => throw new NotImplementedException();
 
         public void SaveLayout()
         {
