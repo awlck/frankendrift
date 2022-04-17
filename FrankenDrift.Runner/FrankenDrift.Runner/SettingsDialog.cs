@@ -13,6 +13,8 @@ namespace FrankenDrift.Runner
         private CheckBox _anyKeyPrompt;
         private Label _fontPickerLabel;
         private ComboBox _fontPicker;
+        private Label _fontSizeLabel;
+        private NumericStepper _fontSize;
 
         private Button _okButton;
         private Button _cancelButton;
@@ -58,6 +60,13 @@ namespace FrankenDrift.Runner
                 ToolTip = "Whether to show \"(Press any key to continue)\" when the game waits for a key press."
             };
 
+            _fontSizeLabel = new Label {Text = SettingsManager.Settings.EnableDevFont ? "Alter default size by:" : "Use this font size:" };
+
+            _fontSize = new NumericStepper {
+                Value = SettingsManager.Settings.EnableDevFont ? SettingsManager.Settings.AlterFontSize : SettingsManager.Settings.UserFontSize,
+                MinValue = SettingsManager.Settings.EnableDevFont ? -10 : 6
+            };
+
             Title = "Settings - FrankenDrift";
             _okButton = new Button {Text = "OK"};
             _okButton.Click += OkButtonOnClick;
@@ -69,6 +78,7 @@ namespace FrankenDrift.Runner
                     _devColors,
                     _devFont,
                     new TableRow { Cells = { _fontPickerLabel, _fontPicker } },
+                    new TableRow { Cells = { _fontSizeLabel, _fontSize } },
                     _banComicSans,
                     _anyKeyPrompt,
                     new TableRow { Cells = { _okButton, _cancelButton } }
@@ -80,7 +90,20 @@ namespace FrankenDrift.Runner
 
         private void DevFontOnCheckedChanged(object sender, EventArgs e)
         {
-            _fontPickerLabel.Text = _devFont.Checked ?? false ? "If that font is unavailable, use:" : "Use this font instead:";
+            if (_devFont.Checked ?? false)
+            {
+                _fontPickerLabel.Text = "If that font is unavailable, use:";
+                _fontSizeLabel.Text = "Alter default size by:";
+                _fontSize.Value = SettingsManager.Settings.AlterFontSize;
+                _fontSize.MinValue = -10;
+            }
+            else
+            {
+                _fontPickerLabel.Text = "Use this font instead:";
+                _fontSizeLabel.Text = "Use this font size:";
+                _fontSize.Value = SettingsManager.Settings.UserFontSize;
+                _fontSize.MinValue = 6;
+            }
         }
 
         private void OkButtonOnClick(object? sender, EventArgs e)
@@ -89,6 +112,10 @@ namespace FrankenDrift.Runner
             SettingsManager.Settings.EnableDevColors = _devColors.Checked ?? false;
             SettingsManager.Settings.EnableDevFont = _devFont.Checked ?? false;
             SettingsManager.Settings.DefaultFontName = _fontPicker.Text;
+            if (SettingsManager.Settings.EnableDevFont)
+                SettingsManager.Settings.AlterFontSize = (int) _fontSize.Value;
+            else
+                SettingsManager.Settings.UserFontSize = (int) _fontSize.Value;
             SettingsManager.Settings.BanComicSans = _banComicSans.Checked ?? false;
             SettingsManager.Settings.EnablePressAnyKey = _anyKeyPrompt.Checked ?? false;
             SettingsManager.Instance.Save();

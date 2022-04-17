@@ -35,6 +35,8 @@ namespace FrankenDrift.Runner
                     EnableDevColors = true,
                     EnableDevFont = true,
                     DefaultFontName = null,
+                    UserFontSize = 10,
+                    AlterFontSize = 1,
                     BanComicSans = false,
                     EnablePressAnyKey = false
                 };
@@ -61,6 +63,8 @@ namespace FrankenDrift.Runner
         public bool EnableDevColors { get; set; }
         public bool EnableDevFont { get; set; }
         public string DefaultFontName { get; set; }
+        public int UserFontSize { get; set; }
+        public int AlterFontSize {  get; set; }
         public bool BanComicSans { get; set; }
         public bool EnablePressAnyKey { get; set; }
     }
