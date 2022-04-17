@@ -9,6 +9,7 @@ namespace FrankenDrift.Runner
         private CheckBox _graphics;
         private CheckBox _devColors;
         private CheckBox _devFont;
+        private CheckBox _banComicSans;
         private CheckBox _anyKeyPrompt;
 
         private Button _okButton;
@@ -36,6 +37,12 @@ namespace FrankenDrift.Runner
                 Checked = SettingsManager.Settings.EnableDevFont,
                 ToolTip = "Whether or not FrankenDrift should honor the developer's choice of default font.\n(A restart is needed for this setting to take full effect.)"
             };
+            _banComicSans = new CheckBox
+            {
+                Text = "Ban Comic Sans",
+                Checked = SettingsManager.Settings.BanComicSans,
+                ToolTip = "If this is checked, any and all requests to use the Comic Sans font will be ignored."
+            };
             _anyKeyPrompt = new CheckBox {
                 Text = "Enable \"Press any key\" prompts",
                 Checked = SettingsManager.Settings.EnablePressAnyKey,
@@ -51,6 +58,7 @@ namespace FrankenDrift.Runner
                 new StackLayoutItem(_graphics),
                 new StackLayoutItem(_devColors),
                 new StackLayoutItem(_devFont),
+                new StackLayoutItem(_banComicSans),
                 new StackLayoutItem(_anyKeyPrompt),
                 new StackLayoutItem(_okButton),
                 new StackLayoutItem(_cancelButton));
@@ -63,6 +71,7 @@ namespace FrankenDrift.Runner
             SettingsManager.Settings.EnableGraphics = _graphics.Checked ?? false;
             SettingsManager.Settings.EnableDevColors = _devColors.Checked ?? false;
             SettingsManager.Settings.EnableDevFont = _devFont.Checked ?? false;
+            SettingsManager.Settings.BanComicSans = _banComicSans.Checked ?? false;
             SettingsManager.Settings.EnablePressAnyKey = _anyKeyPrompt.Checked ?? false;
             SettingsManager.Instance.Save();
             Close();

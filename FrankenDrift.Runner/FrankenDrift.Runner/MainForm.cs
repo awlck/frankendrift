@@ -453,7 +453,8 @@ namespace FrankenDrift.Runner
                 if (adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
                     output._defaultInput = Color.FromArgb(adventure.DeveloperDefaultInputColour.ToArgb());
             }
-            if (SettingsManager.Settings.EnableDevFont && !string.IsNullOrWhiteSpace(adventure.DefaultFontName))
+            if (SettingsManager.Settings.EnableDevFont && !string.IsNullOrWhiteSpace(adventure.DefaultFontName)
+                && (!SettingsManager.Settings.BanComicSans || !adventure.DefaultFontName.StartsWith("Comic Sans")))
             {
                 output._defaultFont = output.SelectionFont.WithFontFace(adventure.DefaultFontName).WithSize(output.CalculateTextSize(adventure.DefaultFontSize));
             }
