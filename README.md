@@ -1,5 +1,7 @@
 # FrankenDrift
 
+[![Build status](https://ci.appveyor.com/api/projects/status/pulo20gx0tt2alhn/branch/master?svg=true)](https://ci.appveyor.com/project/awlck/frankendrift/branch/master)
+
 A cross-platform frontend for the [ADRIFT Runner](https://adrift.co), built on the
 [Eto.Forms](https://github.com/picoe/Eto) library. (Work in progress -- until I get around to
 writing a more complete readme file, see [this IntFiction forum thread](https://intfiction.org/t/frankendrift-play-adrift-games-on-mac-and-linux/51528).)
