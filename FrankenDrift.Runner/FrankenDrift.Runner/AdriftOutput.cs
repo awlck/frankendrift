@@ -224,7 +224,9 @@ namespace FrankenDrift.Runner
                     var face = re.Match(currentToken);
                     if (face.Success)
                     {
-                        font = font.WithFontFace(face.Groups[1].Value);
+                        var f = face.Groups[1].Value;
+                        if (!SettingsManager.Settings.BanComicSans || !f.StartsWith("Comic Sans"))
+                            font = font.WithFontFace(f);
                     }
 
                     re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
