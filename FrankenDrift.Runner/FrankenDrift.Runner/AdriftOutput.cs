@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
@@ -25,6 +26,7 @@ namespace FrankenDrift.Runner
             Append(" ");
             
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
+            _wingdingsAvailable = Fonts.AvailableFontFamilies.Any(f => f.Name == "Wingdings");
         }
 
         // Needs to be a separate overload rather than just introducing an optional
@@ -59,6 +61,7 @@ namespace FrankenDrift.Runner
         internal Font _defaultFont;
         private readonly Stack<Tuple<Font, Color>> _fonts = new();
         private readonly MainForm _main;
+        private readonly bool _wingdingsAvailable;
 
         private bool _bold = false;
         private bool _italic = false;
@@ -82,6 +85,8 @@ namespace FrankenDrift.Runner
                 return;
             }
             ReadOnly = false;
+            if (!_wingdingsAvailable)
+                src.Replace("<font face=\"Wingdings\" size=14>Ø</font>", "<font size=+2>> </font>");
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
