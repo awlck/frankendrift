@@ -26,15 +26,15 @@ namespace FrankenDrift.Runner
                 Checked = SettingsManager.Settings.EnableGraphics
             };
             _devColors = new CheckBox {
-                Text = "Enable author-chosen colors",
+                Text = "Enable author-chosen default colors",
                 Checked = SettingsManager.Settings.EnableDevColors,
-                ToolTip = "Whether or not FrankenDrift should honor the developer's choice of color. (A restart is needed for this setting to take full effect.)"
+                ToolTip = "Whether or not FrankenDrift should honor the developer's choice of default colors.\n(A restart is needed for this setting to take full effect.)"
             };
             _devFont = new CheckBox
             {
                 Text = "Enable author-chosen default font",
                 Checked = SettingsManager.Settings.EnableDevFont,
-                ToolTip = "Whether or not FrankenDrift should honor the developer's choice of default color. (A restart is needed for this setting to take full effect.)"
+                ToolTip = "Whether or not FrankenDrift should honor the developer's choice of default font.\n(A restart is needed for this setting to take full effect.)"
             };
             _anyKeyPrompt = new CheckBox {
                 Text = "Enable \"Press any key\" prompts",
