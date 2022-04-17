@@ -86,6 +86,7 @@ namespace FrankenDrift.Runner
         {
             Title = "FrankenDrift";
             MinimumSize = new Size(400, 400);
+            Size = new Size(600, 750);
             Padding = 10;
 
             output = new AdriftOutput(this);
