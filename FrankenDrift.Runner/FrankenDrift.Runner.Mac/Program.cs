@@ -8,6 +8,7 @@ namespace FrankenDrift.Runner.Mac
         [STAThread]
         public static void Main(string[] args)
         {
+			Eto.Mac.CrashReporter.Attach();
             new Application(Eto.Platforms.Mac64).Run(new MainForm());
         }
     }
