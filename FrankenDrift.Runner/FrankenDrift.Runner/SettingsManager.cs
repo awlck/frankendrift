@@ -27,6 +27,8 @@ namespace FrankenDrift.Runner
             {
                 var settingsText = File.ReadAllText(_settingsFile);
                 _settings = JsonSerializer.Deserialize<Settings>(settingsText);
+                if (_settings.UserFontSize < 6)
+                    _settings.UserFontSize = 6;
             }
             else
             {
