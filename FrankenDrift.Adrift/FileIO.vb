@@ -1,12 +1,15 @@
 Imports System.IO
 Imports System.Text.Encoding
 Imports System.Xml
-Imports ComponentAce.Compression.Libs.zlib
 
 #If Adravalon Then
 Imports System.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
+Imports ICSharpCode.SharpZipLib
+Imports ICSharpCode.SharpZipLib.Zip.Compression.Streams
+#Else
+Imports ComponentAce.Compression.Libs.zlib
 #End If
 
 Module FileIO
@@ -232,7 +235,11 @@ Module FileIO
                 .Flush()
 
                 Dim outStream As New MemoryStream
+#If Not Adravalon Then
                 Dim zStream As New ZOutputStream(outStream, zlibConst.Z_BEST_COMPRESSION)
+#Else
+                Dim zStream As New DeflaterOutputStream(outStream)
+#End If
 
                 Try
                     stmMemory.Position = 0
@@ -1769,7 +1776,7 @@ Module FileIO
 
     Private Function IsEqual(ByRef mb1 As Byte(), ByRef mb2 As Byte()) As Boolean
 
-        If (mb1.length <> mb2.length) Then ' make sure arrays same length
+        If (mb1.Length <> mb2.Length) Then ' make sure arrays same length
             Return False
         Else
             For i As Integer = 0 To mb1.Length - 1 ' run array length looking for miscompare
@@ -2080,7 +2087,7 @@ Module FileIO
                     End If
 
                 Case FileTypeEnum.Blorb
-#If Not Generator OrElse Debug Then
+#If Not Generator OrElse DEBUG Then
                     ' Allow
 #Else
                     ErrMsg("Blorb files can only be opened directly by Runner, or may be Imported to extract an adventure file.")
@@ -2600,11 +2607,19 @@ NextTask:
 
         If bObfuscate Then ObfuscateByteArray(bZLib, iOffset, iLength)
         Dim outStream As New System.IO.MemoryStream
-        Dim zStream As New ZOutputStream(outStream)
         If iLength = 0 Then iLength = bZLib.Length - iOffset
         Dim inStream As New System.IO.MemoryStream(bZLib, iOffset, iLength)
+#If Not Adravalon Then
+        Dim zStream As New ZOutputStream(outStream)
+#Else
+        Dim zStream As New InflaterInputStream(inStream)
+#End If
         Try
+#If Not Adravalon Then
             If Not CopyStream(inStream, zStream) Then Return Nothing
+#Else
+            If Not CopyStream(zStream, outStream) Then Return Nothing
+#End If
             Return New MemoryStream(outStream.GetBuffer)
         Catch ex As Exception
             ErrMsg("Error decompressing byte array", ex)
@@ -2616,7 +2631,6 @@ NextTask:
 
         Return Nothing
     End Function
-
 
     Private Function FileToMemoryStream(ByVal bCompressed As Boolean, ByVal iLength As Integer, ByVal bObfuscate As Boolean) As MemoryStream
 
@@ -3214,7 +3228,7 @@ NextLoc:
                             If a.htblObjects.ContainsKey(sKey) Then
                                 If a.htblObjects.ContainsKey(sKey) Then
                                     If ob.IsLibrary OrElse bLibrary Then
-                                        If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblObjects(sKey).LastUpdated Then GoTo Nextob
+                                        If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblObjects(sKey).LastUpdated Then GoTo NextOb
                                         'If ShouldWeLoadLibraryItem(sKey) Then a.htblObjects.Remove(sKey)
                                         Select Case ShouldWeLoadLibraryItem(sKey)
                                             Case LoadItemEum.Yes
@@ -4027,7 +4041,7 @@ NextSynonym:
                                         sKey = IncrementKey(sKey)
                                     End While
                                 Else
-                                    GoTo Nextudf
+                                    GoTo NextUDF
                                 End If
                             ElseIf bLibrary AndAlso ShouldWeLoadLibraryItem(sKey) = LoadItemEum.No Then
                                 GoTo NextUDF
@@ -4497,9 +4511,11 @@ NextUDF:
         Return s500Text
     End Function
 
-
-
+#If Not Adravalon Then
     Friend Function CopyStream(ByRef input As System.IO.MemoryStream, ByRef output As ZOutputStream) As Boolean
+#Else
+    Friend Function CopyStream(input As Stream, output As Stream) As Boolean
+#End If
 
         Try
             Dim iBlock As Integer = 1024
@@ -4512,13 +4528,16 @@ NextUDF:
             Loop
             output.Flush()
             Return True
+#If Not Adravalon Then
         Catch ex As ZStreamException
+#Else
+        Catch ex As SharpZipBaseException
+#End If
             ErrMsg("CopyStream error", ex)
             Return False
         End Try
 
     End Function
-
 
     Friend Sub CreateMandatoryProperties()
 
@@ -7076,10 +7095,18 @@ NextLoc:
                 ReDim bAdventure(-1)
 
                 Dim outStream As New System.IO.MemoryStream
-                Dim zStream As New ZOutputStream(outStream)
                 Dim inStream As New System.IO.MemoryStream(bAdvZLib)
+#If Not Adravalon Then
+                Dim zStream As New ZOutputStream(outStream)
+#Else
+                Dim zStream As New InflaterInputStream(inStream)
+#End If
                 Try
+#If Not Adravalon Then
                     CopyStream(inStream, zStream)
+#Else
+                    CopyStream(zStream, outStream)
+#End If
                     bAdventure = outStream.ToArray
                 Finally
                     zStream.Close()
