@@ -28,7 +28,11 @@ namespace FrankenDrift.Runner
             Append(" ");
             
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
-            _wingdingsAvailable = Fonts.AvailableFontFamilies.Any(f => f.Name == "Wingdings");
+            // Improved font availability detection: insert some text with the Wingdings font, then observe
+            // whether the selected font actually changes. (Which it doesn't on Mac, for some reason.)
+            AppendHtml("<font face=\"Wingdings\">T");
+            _wingdingsAvailable = SelectionFont.FamilyName == "Wingdings";
+            Clear(true);
         }
 
         // Needs to be a separate overload rather than just introducing an optional
