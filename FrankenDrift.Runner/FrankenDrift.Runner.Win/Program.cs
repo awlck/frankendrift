@@ -8,7 +8,13 @@ namespace FrankenDrift.Runner.Win
         [STAThread]
         public static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             new Application(Eto.Platforms.WinForms).Run(new MainForm());
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            System.Windows.Forms.MessageBox.Show("An unhandled exception has occurred, and FrankenDrift needs to shut down. Here's all we know:\n\n" + e.ExceptionObject.ToString(), "FrankenDrift Critical Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
         }
     }
 }
