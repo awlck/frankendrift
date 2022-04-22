@@ -64,7 +64,8 @@ namespace FrankenDrift.Runner
 
             _fontSize = new NumericStepper {
                 Value = SettingsManager.Settings.EnableDevFont ? SettingsManager.Settings.AlterFontSize : SettingsManager.Settings.UserFontSize,
-                MinValue = SettingsManager.Settings.EnableDevFont ? -10 : 6
+                MinValue = SettingsManager.Settings.EnableDevFont ? -10 : 6,
+                ToolTip = "(The application needs to be restarted for this setting to take effect)"
             };
 
             Title = "Settings - FrankenDrift";
