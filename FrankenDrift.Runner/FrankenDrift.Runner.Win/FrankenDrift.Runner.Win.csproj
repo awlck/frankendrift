@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
 	  <ApplicationIcon>FrankenDrift_icon_ProtoType2.ico</ApplicationIcon>
-	  <VersionPrefix>0.4.2</VersionPrefix>
+	  <VersionPrefix>0.4.3</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>

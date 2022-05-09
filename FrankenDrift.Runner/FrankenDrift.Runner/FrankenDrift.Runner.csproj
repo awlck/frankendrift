@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>FrankenDrift.Runner</RootNamespace>
-	<VersionPrefix>0.4.2</VersionPrefix>
+	<VersionPrefix>0.4.3</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
