@@ -394,7 +394,10 @@ namespace FrankenDrift.Runner
             var ofd = new OpenFileDialog { MultiSelect = false };
             ofd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = new[] { ".tas" } });
             var result = ofd.ShowDialog(this);
-            return result == DialogResult.Ok ? ofd.FileName : "";
+            if (result != DialogResult.Ok) return "";
+            // Fast-forward output only if the player did indeed commit to restoring a saved game.
+            output.FastForwardText();
+            return ofd.FileName;
         }
 
         public QueryResult QuerySaveBeforeQuit()
@@ -463,7 +466,9 @@ namespace FrankenDrift.Runner
                 }
                 output._defaultFont = output._defaultFont.WithSize(output.CalculateTextSize(adventure.DefaultFontSize));
             }
-            output.Clear();
+            // A new game is about to start, so clear the output window "with force", that is, discarding
+            // any pending text that would have been printed after a key press.
+            output.Clear(true);
         }
 
         public void UpdateStatusBar(string desc, string score, string user)

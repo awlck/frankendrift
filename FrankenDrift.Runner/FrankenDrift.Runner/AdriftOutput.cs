@@ -45,6 +45,8 @@ namespace FrankenDrift.Runner
             Text = "";
             if (force)
             {
+                // Discard all pending text and stop waiting for a key press. To be
+                // used when a new game is about to begin.
                 IsWaiting = false;
                 _pendingText = "";
             }
@@ -73,6 +75,7 @@ namespace FrankenDrift.Runner
         private bool _bold = false;
         private bool _italic = false;
         private bool _underline = false;
+        private bool _fastForward;
 
         internal float CalculateTextSize(int requestedSize)
         {
@@ -153,7 +156,7 @@ namespace FrankenDrift.Runner
                         case "c":
                             _fonts.Push(new Tuple<Font, Color>(SelectionFont, _defaultInput));
                             break;
-                        case "waitkey":
+                        case "waitkey" when !_fastForward:
                             _pendingText = src[consumed..];
                             IsWaiting = true;
                             if (SettingsManager.Settings.EnablePressAnyKey)
@@ -307,6 +310,18 @@ namespace FrankenDrift.Runner
             var theText = _pendingText;
             _pendingText = "";
             AppendHtml(theText);
+        }
+
+        // Immediately dump all pending text, ignoring any `waitkey` tags within it.
+        // Intended for use when the user chooses to restore a game while sitting on
+        // some sort of splash screen or intro where we don't necessarily want to
+        // clear out the screen but we also don't want to require the player to click
+        // through whatever is happening first.
+        internal void FastForwardText()
+        {
+            _fastForward = true;
+            FinishWaiting();
+            _fastForward = false;
         }
 
         // This can't cope with nested <window ...> tags. Too bad!
