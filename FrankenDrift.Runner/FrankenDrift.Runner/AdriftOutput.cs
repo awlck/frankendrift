@@ -5,6 +5,7 @@ using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
+using Eto;
 
 namespace FrankenDrift.Runner
 {
@@ -107,8 +108,6 @@ namespace FrankenDrift.Runner
                 if (c == '<' && !inToken)
                 {
                     inToken = true;
-                    AppendWithFont(current.ToString(), true);
-                    current.Clear();
                     previousToken = currentToken; 
                     currentToken = "";
                 }
@@ -119,6 +118,15 @@ namespace FrankenDrift.Runner
                 else if (c == '>' && inToken)
                 {
                     inToken = false;
+                    if (currentToken == "del" && current.Length > 0)
+                    {
+                        // As long as we haven't committed to displaying anything,
+                        // use the more reliable method for deleting the last character.
+                        current.Remove(current.Length - 1, 1);
+                        continue;
+                    }
+                    AppendWithFont(current.ToString(), true);
+                    current.Clear();
                     switch (currentToken)
                     {
                         case "br":
@@ -157,7 +165,11 @@ namespace FrankenDrift.Runner
                                 _fonts.Pop();
                             break;
                         case "del":
-                            Buffer.Delete(new Range<int>(Text.Length-1, Text.Length));
+                            // If the `del` case wasn't handled above, remove the last character from the
+                            // already-displayed text. This crashes on macOS for unknown reasons, so it's
+                            // disabled on that platform.
+                            if (!Application.Instance.Platform.IsMac)
+                                Buffer.Delete(new Range<int>(Text.Length - 1,1));
                             break;
                         case "cls":
                             Clear();
