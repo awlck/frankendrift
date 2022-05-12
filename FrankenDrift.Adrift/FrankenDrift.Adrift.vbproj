@@ -4,7 +4,8 @@
     <RootNamespace>FrankenDrift.Adrift</RootNamespace>
     <TargetFramework>net6.0</TargetFramework>
     <DefineConstants>Runner=True,Adravalon=True</DefineConstants>
-	<VersionPrefix>0.4.2</VersionPrefix>
+	<VersionPrefix>0.4.4</VersionPrefix>
+    <VersionSuffix>indev</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>

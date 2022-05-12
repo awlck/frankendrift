@@ -4005,9 +4005,7 @@ NextChar2:
         If bJustGame Then
             Adventure.eGameState = clsAction.EndGameEnum.Neutral
         Else
-#If Not Adravalon Then
             If Not bQuitting Then fRunner.Close()
-#End If
         End If
 
         Return True
