@@ -11,6 +11,7 @@ namespace FrankenDrift.Runner
         private CheckBox _devFont;
         private CheckBox _banComicSans;
         private CheckBox _anyKeyPrompt;
+        private CheckBox _suppressLocation;
         private Label _fontPickerLabel;
         private ComboBox _fontPicker;
         private Label _fontSizeLabel;
@@ -60,6 +61,13 @@ namespace FrankenDrift.Runner
                 ToolTip = "Whether to show \"(Press any key to continue)\" when the game waits for a key press."
             };
 
+            _suppressLocation = new CheckBox
+            {
+                Text = "Suppress display of location names",
+                Checked = SettingsManager.Settings.SuppressLocationName,
+                ToolTip = "Whether to display the names of locations as you enter them."
+            };
+
             _fontSizeLabel = new Label {Text = SettingsManager.Settings.EnableDevFont ? "Alter default size by:" : "Use this font size:" };
 
             _fontSize = new NumericStepper {
@@ -82,6 +90,7 @@ namespace FrankenDrift.Runner
                     new TableRow { Cells = { _fontSizeLabel, _fontSize } },
                     _banComicSans,
                     _anyKeyPrompt,
+                    _suppressLocation,
                     new TableRow { Cells = { _okButton, _cancelButton } }
                 }
             };
@@ -119,6 +128,9 @@ namespace FrankenDrift.Runner
                 SettingsManager.Settings.UserFontSize = (int) _fontSize.Value;
             SettingsManager.Settings.BanComicSans = _banComicSans.Checked ?? false;
             SettingsManager.Settings.EnablePressAnyKey = _anyKeyPrompt.Checked ?? false;
+            SettingsManager.Settings.SuppressLocationName = _suppressLocation.Checked ?? false;
+            if (Adrift.SharedModule.UserSession is not null)
+                Adrift.SharedModule.UserSession.bShowShortLocations = !SettingsManager.Settings.SuppressLocationName;
             SettingsManager.Instance.Save();
             Close();
         }

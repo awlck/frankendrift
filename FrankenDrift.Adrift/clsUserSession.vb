@@ -33,15 +33,16 @@ Friend Class RunnerSession
     Private listTaskKeys As New Generic.List(Of TaskKey)
     Friend iMatchedTaskCommand As Integer
     Friend dictMacros As New Generic.Dictionary(Of String, clsMacro)
-    Friend bShowShortLocations As Boolean = True
     Friend bSystemTask As Boolean = False
     Private root, obroot, chroot As AutoComplete
-#If Not Adravalon
+#If Not Adravalon Then
     Friend salCommands As New StringArrayList
     Friend sTranscriptFile As String
-#else
+    Friend bShowShortLocations As Boolean = True
+#Else
     Public salCommands As New StringArrayList
     Public sTranscriptFile As String
+    Public bShowShortLocations As Boolean = True
 #End If
     Friend iPreviousOffset As Integer
     Public sGameFolder As String

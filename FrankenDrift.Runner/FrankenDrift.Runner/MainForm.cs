@@ -78,6 +78,7 @@ namespace FrankenDrift.Runner
             Adrift.SharedModule.fRunner = this;
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession {Map = map};
             Glue.Application.SetFrontend(this);
+            Adrift.SharedModule.UserSession.bShowShortLocations = !SettingsManager.Settings.SuppressLocationName;
             output.AppendHtml($"FrankenDrift {_myVersion}");
         }
 
