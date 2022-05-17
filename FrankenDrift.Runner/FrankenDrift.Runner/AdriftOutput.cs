@@ -324,13 +324,13 @@ namespace FrankenDrift.Runner
             _fastForward = false;
         }
 
-        // This can't cope with nested <window ...> tags. Too bad!
         private int SendToAnotherWindow(string output, string tag)
         {
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
             var currentToken = "";
+            var nestingDepth = 1;
             foreach (var c in output)
             {
                 consumed++;
@@ -346,12 +346,17 @@ namespace FrankenDrift.Runner
                 else if (c == '>' && inToken)
                 {
                     inToken = false;
-                    if (currentToken == "/window")
+                    if (currentToken == "/window" && --nestingDepth == 0)
                     {
                         _main.GetSecondaryWindow(tag[7..]).AppendHtml(current.ToString());
                         return consumed;
                     }
-                    else current.Append('<').Append(currentToken).Append('>');
+                    else
+                    {
+                        if (currentToken.StartsWith("window"))
+                            nestingDepth++;
+                        current.Append('<').Append(currentToken).Append('>');
+                    }
                 }
                 else current.Append(c);
             }
