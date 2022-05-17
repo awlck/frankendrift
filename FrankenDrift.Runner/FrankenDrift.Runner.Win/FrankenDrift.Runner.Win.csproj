@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eto.Platform.Windows" Version="2.6.1" />
+    <PackageReference Include="Eto.Platform.Windows" Version="2.7.0" />
   </ItemGroup>
   
   <ItemGroup>
