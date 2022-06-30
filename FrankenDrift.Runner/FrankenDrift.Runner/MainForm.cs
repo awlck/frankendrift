@@ -196,6 +196,10 @@ namespace FrankenDrift.Runner
 
         private void OutputOnKeyDown(object sender, KeyEventArgs e)
         {
+            // Allow keyboard shortcuts, e.g. for copying selected text
+            if (e.Control || e.Alt)
+                return;
+            // ...but redirect everything else to the input bar.
             input.Focus();
             if (e.IsChar) input.Text += e.KeyChar.ToString();
             e.Handled = true;
