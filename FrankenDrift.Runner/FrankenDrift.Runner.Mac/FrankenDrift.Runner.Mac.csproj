@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
 
-    <RuntimeIdentifiers>osx-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>osx-x64;osx.11.0-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 	
   <ItemGroup>
