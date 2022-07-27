@@ -301,7 +301,8 @@ namespace FrankenDrift.Runner
             SelectionBold = _bold;
             SelectionUnderline = _underline;
             SelectionItalic = _italic;
-            Append(src, scroll);
+            var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
+            Append(text, scroll);
         }
 
         internal void FinishWaiting()
