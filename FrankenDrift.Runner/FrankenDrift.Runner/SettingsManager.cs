@@ -26,25 +26,35 @@ namespace FrankenDrift.Runner
             if (File.Exists(_settingsFile))
             {
                 var settingsText = File.ReadAllText(_settingsFile);
-                Settings = JsonSerializer.Deserialize<Settings>(settingsText);
+                _settings = JsonSerializer.Deserialize<Settings>(settingsText);
+                if (_settings.UserFontSize < 6)
+                    _settings.UserFontSize = 6;
             }
             else
             {
-                Settings = new Settings {
+                _settings = new Settings {
                     EnableGraphics = true,
-                    EnableDevColors = true
+                    EnableDevColors = true,
+                    EnableDevFont = true,
+                    DefaultFontName = null,
+                    UserFontSize = 10,
+                    AlterFontSize = 1,
+                    BanComicSans = false,
+                    EnablePressAnyKey = false,
+                    SuppressLocationName = false
                 };
             }
         }
         private static readonly Lazy<SettingsManager> lazySmgr = new(() => new SettingsManager());
         public static SettingsManager Instance => lazySmgr.Value;
+        public static Settings Settings => lazySmgr.Value._settings;
 
-        public Settings Settings { get; }
+        private Settings _settings { get; }
 
         public void Save()
         {
             var options = new JsonSerializerOptions {WriteIndented = true};
-            string jsonSettings = JsonSerializer.Serialize(Settings, options);
+            string jsonSettings = JsonSerializer.Serialize(_settings, options);
             Directory.CreateDirectory(_settingsPath);
             File.WriteAllText(_settingsFile, jsonSettings);
         }
@@ -54,5 +64,12 @@ namespace FrankenDrift.Runner
     {
         public bool EnableGraphics { get; set; }
         public bool EnableDevColors { get; set; }
+        public bool EnableDevFont { get; set; }
+        public string DefaultFontName { get; set; }
+        public int UserFontSize { get; set; }
+        public int AlterFontSize {  get; set; }
+        public bool BanComicSans { get; set; }
+        public bool EnablePressAnyKey { get; set; }
+        public bool SuppressLocationName { get; set; }
     }
 }

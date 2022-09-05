@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
+using Eto;
 
 namespace FrankenDrift.Runner
 {
@@ -15,16 +17,39 @@ namespace FrankenDrift.Runner
             ReadOnly = true;
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
-            _defaultFont = SelectionFont.WithSize(SelectionFont.Size+1);
+            if (!string.IsNullOrEmpty(SettingsManager.Settings.DefaultFontName))
+                _defaultFont = SelectionFont.WithFontFace(SettingsManager.Settings.DefaultFontName);
+            else
+                _defaultFont = SelectionFont;
+            if (SettingsManager.Settings.EnableDevFont)
+                _defaultFont = _defaultFont.WithSize(SelectionFont.Size+SettingsManager.Settings.AlterFontSize);
+            else
+                _defaultFont = _defaultFont.WithSize(SettingsManager.Settings.UserFontSize);
             SelectionFont = _defaultFont;
             Append(" ");
             
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
+            // Improved font availability detection: insert some text with the Wingdings font, then observe
+            // whether the selected font actually changes. (Which it doesn't on Mac, for some reason.)
+            AppendHtml("<font face=\"Wingdings\">T");
+            _wingdingsAvailable = SelectionFont.FamilyName == "Wingdings";
+            Clear(true);
         }
+
+        // Needs to be a separate overload rather than just introducing an optional
+        // parameter due to the RichTextBox interface.
+        public void Clear() => Clear(false);
         
-        public void Clear()
+        public void Clear(bool force)
         {
             Text = "";
+            if (force)
+            {
+                // Discard all pending text and stop waiting for a key press. To be
+                // used when a new game is about to begin.
+                IsWaiting = false;
+                _pendingText = "";
+            }
             _fonts.Clear();
             _fonts.Push(new Tuple<Font, Color>(_defaultFont, _defaultColor));
             BackgroundColor = _defaultBackground;
@@ -42,12 +67,21 @@ namespace FrankenDrift.Runner
         internal Color _defaultColor = Colors.Cyan;
         internal Color _defaultBackground = Colors.Black;
         internal Color _defaultInput = Colors.Red;
-        private readonly Font _defaultFont;
+        internal Font _defaultFont;
         private readonly Stack<Tuple<Font, Color>> _fonts = new();
         private readonly MainForm _main;
+        private readonly bool _wingdingsAvailable;
 
-        private float CalculateTextSize(int requestedSize)
+        private bool _bold = false;
+        private bool _italic = false;
+        private bool _underline = false;
+        private bool _fastForward;
+
+        internal float CalculateTextSize(int requestedSize)
         {
+            if (SettingsManager.Settings.EnableDevFont)
+                return requestedSize + SettingsManager.Settings.AlterFontSize;
+            // no idea why specifically, but this seems to give sensible results.
             return Math.Max(requestedSize - 12 + _defaultFont.Size, 1);
         }
         
@@ -61,6 +95,8 @@ namespace FrankenDrift.Runner
                 return;
             }
             ReadOnly = false;
+            if (!_wingdingsAvailable)
+                src = src.Replace("<font face=\"Wingdings\" size=14>Ø</font>", "<font size=+1>></font>");
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
@@ -85,51 +121,58 @@ namespace FrankenDrift.Runner
                 else if (c == '>' && inToken)
                 {
                     inToken = false;
-                    if (currentToken == "del")
+                    if (currentToken == "del" && current.Length > 0)
                     {
+                        // As long as we haven't committed to displaying anything,
+                        // use the more reliable method for deleting the last character.
                         current.Remove(current.Length - 1, 1);
                         continue;
                     }
-                    else
-                    {
-                        AppendWithFont(current.ToString(), true);
-                        current.Clear();
-                    }
+                    AppendWithFont(current.ToString(), true);
+                    current.Clear();
                     switch (currentToken)
                     {
                         case "br":
                             Append("\n");
                             break;
                         case "b":
-                            SelectionBold = true;
+                            _bold = true;
                             break;
                         case "/b":
-                            SelectionBold = false;
+                            _bold = false;
                             break;
                         case "i":
-                            SelectionItalic = true;
+                            _italic = true;
                             break;
                         case "/i":
-                            SelectionItalic = false;
+                            _italic = false;
                             break;
                         case "u":
-                            SelectionUnderline = true;
+                            _underline = true;
                             break;
                         case "/u":
-                            SelectionUnderline = false;
+                            _underline = false;
                             break;
                         case "c":
                             _fonts.Push(new Tuple<Font, Color>(SelectionFont, _defaultInput));
                             break;
-                        case "waitkey":
+                        case "waitkey" when !_fastForward:
                             _pendingText = src[consumed..];
                             IsWaiting = true;
-                            AppendWithFont("\n(Press any key to continue)");
+                            if (SettingsManager.Settings.EnablePressAnyKey)
+                                AppendWithFont("\n(Press any key to continue)");
                             return;
                         case "/c":
                         case "/font":
                             if (_fonts.Count > 1)
                                 _fonts.Pop();
+                            break;
+                        case "del":
+                            // If the `del` case wasn't handled above, remove the last character from the
+                            // already-displayed text. This crashes on macOS for unknown reasons, so it's
+                            // disabled on that platform.
+                            if (!Application.Instance.Platform.IsMac)
+                                Buffer.Delete(new Range<int>(Text.Length - 1,1));
                             break;
                         case "cls":
                             Clear();
@@ -147,7 +190,7 @@ namespace FrankenDrift.Runner
                     if (currentToken.StartsWith("img"))  // graphics.
                     {
                         var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
-                        if (imgPath.Success && SettingsManager.Instance.Settings.EnableGraphics)
+                        if (imgPath.Success && SettingsManager.Settings.EnableGraphics)
                             _main.Graphics.DisplayImage(imgPath.Groups[1].Value);
                         continue;
                     }
@@ -215,7 +258,9 @@ namespace FrankenDrift.Runner
                     var face = re.Match(currentToken);
                     if (face.Success)
                     {
-                        font = font.WithFontFace(face.Groups[1].Value);
+                        var f = face.Groups[1].Value;
+                        if (!SettingsManager.Settings.BanComicSans || !f.StartsWith("Comic Sans"))
+                            font = font.WithFontFace(f);
                     }
 
                     re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
@@ -250,21 +295,14 @@ namespace FrankenDrift.Runner
         // For some reason formatting gets lost upon changing fonts unless we do this terribleness:
         private void AppendWithFont(string src, bool scroll = false)
         {
-            var bold = SelectionBold;
-            var underline = SelectionUnderline;
-            var italics = SelectionItalic;
             var (font, color) = _fonts.Peek();
             SelectionForeground = color;
             SelectionFont = font;
-            SelectionBold = bold;
-            SelectionUnderline = underline;
-            SelectionItalic = italics;
-            Append(src, scroll);
-            SelectionForeground = color;
-            SelectionFont = font;
-            SelectionBold = bold;
-            SelectionUnderline = underline;
-            SelectionItalic = italics;
+            SelectionBold = _bold;
+            SelectionUnderline = _underline;
+            SelectionItalic = _italic;
+            var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
+            Append(text, scroll);
         }
 
         internal void FinishWaiting()
@@ -275,13 +313,25 @@ namespace FrankenDrift.Runner
             AppendHtml(theText);
         }
 
-        // This can't cope with nested <window ...> tags. Too bad!
+        // Immediately dump all pending text, ignoring any `waitkey` tags within it.
+        // Intended for use when the user chooses to restore a game while sitting on
+        // some sort of splash screen or intro where we don't necessarily want to
+        // clear out the screen but we also don't want to require the player to click
+        // through whatever is happening first.
+        internal void FastForwardText()
+        {
+            _fastForward = true;
+            FinishWaiting();
+            _fastForward = false;
+        }
+
         private int SendToAnotherWindow(string output, string tag)
         {
             var consumed = 0;
             var inToken = false;
             var current = new StringBuilder();
             var currentToken = "";
+            var nestingDepth = 1;
             foreach (var c in output)
             {
                 consumed++;
@@ -297,12 +347,17 @@ namespace FrankenDrift.Runner
                 else if (c == '>' && inToken)
                 {
                     inToken = false;
-                    if (currentToken == "/window")
+                    if (currentToken == "/window" && --nestingDepth == 0)
                     {
                         _main.GetSecondaryWindow(tag[7..]).AppendHtml(current.ToString());
                         return consumed;
                     }
-                    else current.Append('<').Append(currentToken).Append('>');
+                    else
+                    {
+                        if (currentToken.StartsWith("window"))
+                            nestingDepth++;
+                        current.Append('<').Append(currentToken).Append('>');
+                    }
                 }
                 else current.Append(c);
             }

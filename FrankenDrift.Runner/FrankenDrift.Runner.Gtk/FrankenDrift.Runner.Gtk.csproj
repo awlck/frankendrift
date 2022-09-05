@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.6.1" />
-    <PackageReference Include="GtkSharp" Version="3.24.24.34" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.7.0" />
+    <PackageReference Include="GtkSharp" Version="3.24.24.38" />
   </ItemGroup>
 	
 </Project>

@@ -34,7 +34,6 @@ namespace FrankenDrift.Runner
             this.Dispose();
         }
 
-        // Needs libgdiplus on linux
         public void DisplayImage(string path)
         {
             if (SharedModule.Adventure.BlorbMappings is {Count: > 0})
@@ -54,6 +53,11 @@ namespace FrankenDrift.Runner
             {
                 _view.Image = new Bitmap(path);
             }
+        }
+
+        public void DisplayImage(Image img)
+        {
+            _view.Image = img;
         }
     }
 }

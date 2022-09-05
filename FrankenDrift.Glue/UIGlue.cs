@@ -78,6 +78,8 @@ namespace FrankenDrift.Glue
 
         public void SetInput(string str) => txtInput.Text = str;
         public void SubmitCommand();
+
+        public void Close() => Eto.Forms.Application.Instance.Quit();
     }
 
     public interface RichTextBox

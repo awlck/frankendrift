@@ -3,10 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>FrankenDrift.Runner</RootNamespace>
+	<VersionPrefix>0.5.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eto.Forms" Version="2.6.1" />
+    <PackageReference Include="Eto.Forms" Version="2.7.0" />
     <ProjectReference Include="..\..\FrankenDrift.Glue\FrankenDrift.Glue.csproj" />
     <ProjectReference Include="..\..\FrankenDrift.Adrift\FrankenDrift.Adrift.vbproj" />
   </ItemGroup>

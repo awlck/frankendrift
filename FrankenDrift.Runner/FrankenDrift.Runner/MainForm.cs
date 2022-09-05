@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Application = Eto.Forms.Application;
 
 namespace FrankenDrift.Runner
@@ -19,6 +20,7 @@ namespace FrankenDrift.Runner
         private Command loadGameCommand;
         private Command saveGameCommand;
         private Command restoreGameCommand;
+        private Command restartGameCommand;
         private Command transcriptCommand;
         private Command replayCommand;
 
@@ -38,6 +40,7 @@ namespace FrankenDrift.Runner
         private bool _isReplaying = false;
         private bool _shouldReplayCancel = false;
         private int _commandRecallIdx = 0;
+        private readonly string _myVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
         
         internal GraphicsWindow Graphics { get
         {
@@ -62,6 +65,7 @@ namespace FrankenDrift.Runner
             loadGameCommand.Executed += LoadGameCommandOnExecuted;
             saveGameCommand.Executed += SaveGameCommandOnExecuted;
             restoreGameCommand.Executed += RestoreGameCommandOnExecuted;
+            restartGameCommand.Executed += RestartGameCommandOnExecuted;
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
             replayCommand.Executed += ReplayCommandOnExecuted;
             _timer.Elapsed += TimerOnElapsed;
@@ -74,13 +78,16 @@ namespace FrankenDrift.Runner
             Adrift.SharedModule.fRunner = this;
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession {Map = map};
             Glue.Application.SetFrontend(this);
-            output.AppendHtml("FrankenDrift v0.3.0-indev");
+            Adrift.SharedModule.UserSession.bShowShortLocations = !SettingsManager.Settings.SuppressLocationName;
+            output.AppendHtml($"FrankenDrift {_myVersion}");
         }
+
 
         void InitializeComponent()
         {
             Title = "FrankenDrift";
             MinimumSize = new Size(400, 400);
+            Size = new Size(600, 750);
             Padding = 10;
 
             output = new AdriftOutput(this);
@@ -94,7 +101,8 @@ namespace FrankenDrift.Runner
 
             loadGameCommand = new Command { MenuText = "Open Game", Shortcut = Application.Instance.CommonModifier | Keys.O };
             saveGameCommand = new Command { MenuText = "Save", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.S };
-            restoreGameCommand = new Command { MenuText = "Restore", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.R };
+            restoreGameCommand = new Command { MenuText = "Restore a Saved Game", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.R };
+            restartGameCommand = new Command { MenuText = "Restart Game", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.Shift | Keys.R };
             transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.T };
             replayCommand = new Command { MenuText = "Replay Commands", Enabled = false, Shortcut = Application.Instance.CommonModifier | Application.Instance.AlternateModifier | Keys.R };
 
@@ -108,7 +116,7 @@ namespace FrankenDrift.Runner
                 ProgramName = "FrankenDrift",
                 ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
                                      "with a cross-platform UI layer (Eto.Forms) glued on top.",
-                Version = "0.3.0-indev"
+                Version = _myVersion
             }.ShowDialog(this);
 
             var settingsCommand = new Command { MenuText = "&Preferences" };
@@ -121,7 +129,7 @@ namespace FrankenDrift.Runner
                 {
 					// File submenu
 					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
-                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, transcriptCommand, replayCommand }}
+                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand }}
                 },
                 ApplicationItems =
                 {
@@ -172,7 +180,7 @@ namespace FrankenDrift.Runner
 #if DEBUG
             else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
 #endif
-            else OutputHTML("(Click File > Open Game to load a game!)");
+            else OutputHTML("\n(Click File > Open Game to load a game!)");
 
             input.Text = "";
             e.Handled = true;
@@ -188,6 +196,10 @@ namespace FrankenDrift.Runner
 
         private void OutputOnKeyDown(object sender, KeyEventArgs e)
         {
+            // Allow keyboard shortcuts, e.g. for copying selected text
+            if (e.Control || e.Alt || e.Application)
+                return;
+            // ...but redirect everything else to the input bar.
             input.Focus();
             if (e.IsChar) input.Text += e.KeyChar.ToString();
             e.Handled = true;
@@ -245,12 +257,26 @@ namespace FrankenDrift.Runner
             }
         }
 
+        private void RestartGameCommandOnExecuted(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show(this,
+                "Are you sure you want to restart the game? Any unsaved progress will be lost!",
+                "Restart Game? - FrankenDrift", MessageBoxButtons.YesNo, MessageBoxType.Warning);
+            if (result == DialogResult.Yes)
+            {
+                output.Clear(true);
+                // Call relevant function directly rather than submitting a "restart" command to
+                // ensure that the restart occurs even if the game would normally block it
+                Adrift.SharedModule.UserSession.OpenAdventure(Adrift.SharedModule.Adventure.FullPath);
+            }
+        }
+
         private void TranscriptCommandOnExecuted(object? sender, EventArgs e)
         {
             if (_isTranscriptActive)
             {
                 Adrift.SharedModule.UserSession.sTranscriptFile = "";
-                Menu.Items.GetSubmenu("&Game").Items[2].Text = "Start Transcript";
+                Menu.Items.GetSubmenu("&Game").Items[3].Text = "Start Transcript";
                 _isTranscriptActive = false;
                 OutputHTML("<i>Transcript stopped.</i><br><br>");
             }
@@ -261,7 +287,7 @@ namespace FrankenDrift.Runner
                 var result = sfd.ShowDialog(this);
                 if (result != DialogResult.Ok) return;
                 Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
-                Menu.Items.GetSubmenu("&Game").Items[2].Text = "Stop Transcript";
+                Menu.Items.GetSubmenu("&Game").Items[3].Text = "Stop Transcript";
                 _isTranscriptActive = true;
                 OutputHTML("<i>Transcript starting.</i><br><br>");
             }
@@ -297,6 +323,11 @@ namespace FrankenDrift.Runner
                 ShowActivated = false,
                 Title = name + " - " + this.Title
             };
+            win.Output._defaultBackground = output._defaultBackground;
+            win.Output._defaultColor = output._defaultColor;
+            win.Output._defaultInput = output._defaultInput;
+            win.Output._defaultFont = output._defaultFont;
+            win.Output.Clear(true);
             win.Show();
             _secondaryWindows[name] = win;
             return win.Output;
@@ -320,6 +351,7 @@ namespace FrankenDrift.Runner
         {
             saveGameCommand.Enabled = true;
             restoreGameCommand.Enabled = true;
+            restartGameCommand.Enabled = true;
             transcriptCommand.Enabled = true;
             replayCommand.Enabled = true;
         }
@@ -367,7 +399,10 @@ namespace FrankenDrift.Runner
             var ofd = new OpenFileDialog { MultiSelect = false };
             ofd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = new[] { ".tas" } });
             var result = ofd.ShowDialog(this);
-            return result == DialogResult.Ok ? ofd.FileName : "";
+            if (result != DialogResult.Ok) return "";
+            // Fast-forward output only if the player did indeed commit to restoring a saved game.
+            output.FastForwardText();
+            return ofd.FileName;
         }
 
         public QueryResult QuerySaveBeforeQuit()
@@ -388,45 +423,25 @@ namespace FrankenDrift.Runner
 
         public void OutputHTML(string source) => output.AppendHtml(source);
 
-        public void InitInput()
-        {
-            input.Focus();
-        }
+        public void InitInput() => input.Focus();
 
         public void ShowCoverArt(Image img)
         {
-            throw new NotImplementedException();
+            if (SettingsManager.Settings.EnableGraphics)
+                Graphics.DisplayImage(img);
         }
 
-        public void DoEvents()
-        {
-            Application.Instance.RunIteration();
-        }
+        public void DoEvents() => Application.Instance.RunIteration();
 
-        public string GetAppDataPath()
-        {
-            throw new NotImplementedException();
-        }
+        public string GetAppDataPath() => throw new NotImplementedException();
 
-        public string GetExecutableLocation()
-        {
-            return System.IO.Path.GetDirectoryName(GetExecutablePath());
-        }
+        public string GetExecutableLocation() => Path.GetDirectoryName(GetExecutablePath());
 
-        public string GetExecutablePath()
-        {
-            return Environment.ProcessPath;
-        }
+        public string GetExecutablePath() => Environment.ProcessPath;
 
-        public string GetClaimedAdriftVersion()
-        {
-            return "5.0000364";
-        }
+        public string GetClaimedAdriftVersion() => "5.0000364";
 
-        public void ReloadMacros()
-        {
-            throw new NotImplementedException();
-        }
+        public void ReloadMacros() => throw new NotImplementedException();
 
         public void SaveLayout()
         {
@@ -437,9 +452,9 @@ namespace FrankenDrift.Runner
         // any text for the first time.
         public void SetBackgroundColour()
         {
-            if (SettingsManager.Instance.Settings.EnableDevColors)
+            var adventure = Adrift.SharedModule.Adventure;
+            if (SettingsManager.Settings.EnableDevColors)
             {
-                var adventure = Adrift.SharedModule.Adventure;
                 if (!adventure.DeveloperDefaultBackgroundColour.IsEmpty)
                     output._defaultBackground = Color.FromArgb(adventure.DeveloperDefaultBackgroundColour.ToArgb());
                 if (adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
@@ -447,7 +462,18 @@ namespace FrankenDrift.Runner
                 if (adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
                     output._defaultInput = Color.FromArgb(adventure.DeveloperDefaultInputColour.ToArgb());
             }
-            output.Clear();
+            if (SettingsManager.Settings.EnableDevFont && !string.IsNullOrWhiteSpace(adventure.DefaultFontName)
+)
+            {
+                if ((!SettingsManager.Settings.BanComicSans || !adventure.DefaultFontName.StartsWith("Comic Sans")))
+                {
+                    output._defaultFont = output.SelectionFont.WithFontFace(adventure.DefaultFontName);
+                }
+                output._defaultFont = output._defaultFont.WithSize(output.CalculateTextSize(adventure.DefaultFontSize));
+            }
+            // A new game is about to start, so clear the output window "with force", that is, discarding
+            // any pending text that would have been printed after a key press.
+            output.Clear(true);
         }
 
         public void UpdateStatusBar(string desc, string score, string user)
