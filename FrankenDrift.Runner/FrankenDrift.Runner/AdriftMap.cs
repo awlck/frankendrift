@@ -264,19 +264,19 @@ namespace FrankenDrift.Runner
                 case SharedModule.DirectionsEnum.North:
 					return Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y, node.Location.Z);
 				case SharedModule.DirectionsEnum.NorthEast:
-					return node.Points[1].ToEtoPoint();
+					return node.Points[1];
 				case SharedModule.DirectionsEnum.East:
 					return Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y + node.Height / 2, node.Location.Z);
 				case SharedModule.DirectionsEnum.SouthEast:
-					return node.Points[2].ToEtoPoint();
+					return node.Points[2];
 				case SharedModule.DirectionsEnum.South:
 					return Planes.GetPoint2D(node.Location.X + node.Width/2, node.Location.Y + node.Height, node.Location.Z);
 				case SharedModule.DirectionsEnum.SouthWest:
-					return node.Points[3].ToEtoPoint();
+					return node.Points[3];
 				case SharedModule.DirectionsEnum.West:
 					return Planes.GetPoint2D(node.Location.X, node.Location.Y + (node.Height / 2), node.Location.Z);
 				case SharedModule.DirectionsEnum.NorthWest:
-					return node.Points[0].ToEtoPoint();
+					return node.Points[0];
 				case SharedModule.DirectionsEnum.Up:
 				case SharedModule.DirectionsEnum.Down:
 					return Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y + node.Height / 2, node.Location.Z);
@@ -548,7 +548,7 @@ namespace FrankenDrift.Runner
 
 			var _ = "";
 			var link = node.Links[dir];
-			if (link.Style == System.Drawing.Drawing2D.DashStyle.Dot && !SharedModule.Adventure.Player.HasRouteInDirection(dir, false, node.Key, ref _))
+			if (link.Style == DashStyles.Dot && !SharedModule.Adventure.Player.HasRouteInDirection(dir, false, node.Key, ref _))
 				return;
 			if (link.sDestination is null || !SharedModule.Adventure.htblLocations[link.sDestination].get_SeenBy(SharedModule.Adventure.Player.Key))
 				return;
@@ -562,15 +562,7 @@ namespace FrankenDrift.Runner
 			else
                 linkPen = new Pen(new Color(_linkColor, 30), _scale / 5);
 
-			linkPen.DashStyle = link.Style switch
-			{
-				System.Drawing.Drawing2D.DashStyle.Solid => DashStyles.Solid,
-				System.Drawing.Drawing2D.DashStyle.Dash => DashStyles.Dash,
-				System.Drawing.Drawing2D.DashStyle.Dot => DashStyles.Dot,
-				System.Drawing.Drawing2D.DashStyle.DashDot => DashStyles.DashDot,
-				System.Drawing.Drawing2D.DashStyle.DashDotDot => DashStyles.DashDotDot,
-				_ => DashStyles.Solid  // whatever
-            };
+			linkPen.DashStyle = link.Style;
 			linkPen.LineCap = PenLineCap.Square;
 			// todo: Account for non-bidirectional connections and draw arrow tips accordingly
 
@@ -583,11 +575,11 @@ namespace FrankenDrift.Runner
 			if (link.Points is not null && !(link.Points.Length == 3 && link.Points[2].X != 0 && link.Points[2].Y != 0))
 			{
 				if (link.Points.Length == 3 && link.sDestination == "")
-					gfx.DrawBezier(linkPen, link.Points[0].ToEtoPoint(), link.Points[1].ToEtoPoint(), link.Points[2].ToEtoPoint(), link.Points[2].ToEtoPoint());
+					gfx.DrawBezier(linkPen, link.Points[0], link.Points[1], link.Points[2], link.Points[2]);
 				else if (link.Points.Length == 4 && link.OrigMidPoints.Length == 0)
-					gfx.DrawBezier(linkPen, link.Points.Select(pt => pt.ToEtoPoint()).ToArray());
+					gfx.DrawBezier(linkPen, link.Points);
 				else
-					gfx.DrawCurve(linkPen, link.Points.Select(pt => pt.ToEtoPoint()).ToArray());
+					gfx.DrawCurve(linkPen, link.Points);
 			}
 
 			if (dest is not null && (dir == SharedModule.DirectionsEnum.Out || dir == SharedModule.DirectionsEnum.In))

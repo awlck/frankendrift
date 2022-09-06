@@ -1,5 +1,5 @@
 ﻿#If Adravalon Then
-Imports System.Drawing
+Imports Eto.Drawing
 #End If
 
 Public Class Point3D
@@ -52,7 +52,7 @@ Public Class MapNode
     Friend bDrawIn, bDrawOut As Boolean
 #Else
     Public eInEdge, eOutEdge As DirectionsEnum
-    Public ptIn, ptOut As Point
+    Public ptIn, ptOut As Eto.Drawing.Point
     Public bHasUp, bHasDown, bHasIn, bHasOut As Boolean
     Public bDrawIn, bDrawOut As Boolean
 #End If
@@ -137,7 +137,11 @@ End Class
 
 
 Public Class MapLink
+#If Adravalon Then
+    Public Style As DashStyle
+#Else
     Public Style As Drawing2D.DashStyle
+#End If
     Public Duplex As Boolean
     Public sSource As String
 #If Adravalon Then
@@ -687,7 +691,11 @@ Public Class clsMap
                         link.sDestination = sLocKey
                         link.eDestinationLinkPoint = d
                         If DottedLink(loc.arlDirections(d)) Then
+#If Not Adravalon Then
                             link.Style = Drawing2D.DashStyle.Dot
+#Else
+                            link.Style = DashStyles.Dot
+#End If
                         End If
                         link.Duplex = True
                         If Pages(node.Page).GetNode(sLocKey).Anchors.ContainsKey(d) Then Pages(node.Page).GetNode(sLocKey).Anchors(d).HasLink = True
@@ -728,11 +736,19 @@ Public Class clsMap
         link.sSource = nodeSource.Key
         link.sDestination = sDest
         link.Duplex = False
+#If Not Adravalon Then
         If DottedLink(loc.arlDirections(eSourcePoint)) Then
             link.Style = Drawing2D.DashStyle.Dot
         Else
             link.Style = Drawing2D.DashStyle.Solid
         End If
+#Else
+        If DottedLink(loc.arlDirections(eSourcePoint)) Then
+            link.Style = DashStyles.Dot
+        Else
+            link.Style = DashStyles.Solid
+        End If
+#End If
         link.eSourceLinkPoint = eSourcePoint
         ' Make assumption that end point is opposite of this one
         link.sDestination = sDest
