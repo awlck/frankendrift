@@ -5,7 +5,11 @@ Imports System.Drawing
 Public Class clsAdventure
 
     Friend dictAllItems As ItemDictionary
+#If Not Adravalon Then
     Friend htblLocations As LocationHashTable
+#Else
+    Public htblLocations As LocationHashTable
+#End If
     Friend htblObjects As ObjectHashTable
     Friend htblTasks As TaskHashTable
     Friend htblEvents As EventHashTable

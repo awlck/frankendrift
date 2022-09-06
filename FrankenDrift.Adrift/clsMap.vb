@@ -36,18 +36,26 @@ Public Class MapNode
     Public Page As Integer
     Public Pinned As Boolean = False
     'Public NodeImage As Bitmap
-    #If Adravalon Then
+#If Adravalon Then
     Public Anchors As New Dictionary(Of DirectionsEnum, Anchor)
+    Public Links As New Generic.Dictionary(Of DirectionsEnum, MapLink)
 #Else
     Friend Anchors As New Generic.Dictionary(Of DirectionsEnum, Anchor)
-    #End If
     Friend Links As New Generic.Dictionary(Of DirectionsEnum, MapLink)
+#End If
     Private bOverlapping As Boolean = False
     Private bSeen As Boolean = False
+#If Not Adravalon Then
     Friend eInEdge, eOutEdge As DirectionsEnum
     Friend ptIn, ptOut As Point
     Friend bHasUp, bHasDown, bHasIn, bHasOut As Boolean
     Friend bDrawIn, bDrawOut As Boolean
+#Else
+    Public eInEdge, eOutEdge As DirectionsEnum
+    Public ptIn, ptOut As Point
+    Public bHasUp, bHasDown, bHasIn, bHasOut As Boolean
+    Public bDrawIn, bDrawOut As Boolean
+#End If
 
     Public Property Overlapping() As Boolean
         Get

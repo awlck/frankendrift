@@ -15,8 +15,11 @@ Public Class clsLocation
     Private oShortDesc As Description
     Private oLongDesc As Description
     'Private sKey As String
-
+#If Not Adravalon Then
     Friend arlDirections As New DirectionArrayList
+#Else
+    Public arlDirections As New DirectionArrayList
+#End If
 #If Not www Then
     Public MapNode As MapNode
 #End If
