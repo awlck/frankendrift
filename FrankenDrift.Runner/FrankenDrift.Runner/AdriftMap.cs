@@ -11,6 +11,7 @@ using GShark.Fitting;
 using FrankenDrift.Adrift;
 using FrankenDrift.Glue;
 using System.Reflection.Metadata.Ecma335;
+using System.ComponentModel.Design;
 
 namespace FrankenDrift.Runner
 {
@@ -121,7 +122,6 @@ namespace FrankenDrift.Runner
 		private MapLink _newLink;
 		private MapLink _selectedLink;
 		private bool _dragged = false;
-		private MapPlanes _planes;
 		private Size _sizeImage;
 		private List<MapNode> _selectedNodes = new();
 
@@ -219,6 +219,8 @@ namespace FrankenDrift.Runner
 		private Color _linkSelected = Color.FromArgb(200, 150, 0);
 
 		private MapContent _imgMap;
+		internal Point CurrentCenter { get; private set; }
+		internal int Scale => _scale;
 
 		public AdriftMap()
 		{
@@ -238,26 +240,159 @@ namespace FrankenDrift.Runner
 
 			if (node.Key is null) return;
 
-			//node.Points = new System.Drawing.Point[]
-			//{
-			//	Planes.GetPoint2D(node.Location),
-			//};
+			node.Points = new Point[]
+			{
+				Planes.GetPoint2D(node.Location),
+				Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y, node.Location.Z),
+				Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y + node.Height, node.Location.Z),
+				Planes.GetPoint2D(node.Location.X, node.Location.Y + node.Height, node.Location.Z)
+			};
+
+			node.ptUp = Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y + node.Location.Y, node.Location.Z - 6);
+			node.ptDown = Planes.GetPoint2D(node.Location.X + node.Width/2, node.Location.Y + node.Location.Y, node.Location.Z + 6);
+
+			RecalculateLinks(node);
+			if (Page is not null)
+			{
+				foreach (var otherNode in Page.Nodes)
+					foreach (var link in otherNode.Links.Values)
+						if (link.sDestination == node.Key) RecalculateLinks(otherNode);
+			}
+			if (node.Links.ContainsKey(SharedModule.DirectionsEnum.In))
+			{
+				var dest = Page.GetNode(node.Links[SharedModule.DirectionsEnum.In].sDestination);
+				if (dest is not null) RecalculateLinks(dest);
+			}
+            if (node.Links.ContainsKey(SharedModule.DirectionsEnum.Out))
+            {
+                var dest = Page.GetNode(node.Links[SharedModule.DirectionsEnum.Out].sDestination);
+                if (dest is not null) RecalculateLinks(dest);
+            }
         }
+
+		internal void RecalculateLinks(MapNode node)
+		{
+			var theMap = SharedModule.Adventure.Map;
+			if (theMap is null) return;
+
+			foreach (var link in node.Links.Values)
+			{
+				if (Page is null) Page = theMap.Pages[node.Page];
+				var dest = Page.GetNode(link.sDestination);
+				var ptStart = GetLinkPoint(node, link.eSourceLinkPoint, dest) ?? new Point(0,0);
+				Point? ptEnd = null;
+				int dist;
+
+				if (dest is not null)
+				{
+					ptEnd = GetLinkPoint(dest, link.eDestinationLinkPoint, node).Value;
+					dist = (int) ptEnd.Value.Distance(ptStart);
+					if (link.eDestinationLinkPoint == SharedModule.DirectionsEnum.In && dest.CompareTo(node) > 0)
+						dest.bDrawIn = true;
+					if (link.eDestinationLinkPoint == SharedModule.DirectionsEnum.Out && dest.CompareTo(node) > 0)
+						dest.bDrawOut = true;
+				}
+				else
+				{
+					dist = (node.Points[1].X - node.Points[0].X) * 3;
+				}
+
+				var midStart = 2;
+				if (dest is null)
+				{
+					link.Points = new Point[2];
+				}
+				else if (link.OrigMidPoints.Length == 0)
+				{
+					link.Points = new Point[3];
+				}
+				else
+				{
+					link.Points = new Point[link.OrigMidPoints.Length + 1];
+					midStart = 1;
+				}
+
+				link.Points[0] = ptStart;
+				if (link.OrigMidPoints.Length == 0)
+					link.Points[1] = GetBezierAssister(node, link.eSourceLinkPoint, dist);
+				if (link.sDestination == "")
+				{
+					for (var i = 0; i < link.OrigMidPoints.Length-1; i++)
+					{
+						var ptMid = new Point(link.OrigMidPoints[i].X * _scale, link.OrigMidPoints[i].Y * _scale);
+						link.Points[midStart + i] = ptMid;
+					}
+				}
+
+				if (dest is not null)
+				{
+					if (link.Points.Length == 4 && link.OrigMidPoints.Length == 0)
+						link.Points[^2] = GetBezierAssister(dest, link.eDestinationLinkPoint, dist);
+					link.Points[^1] = ptEnd.Value;
+				}
+
+				if (link.eSourceLinkPoint == SharedModule.DirectionsEnum.In && link.sDestination != "")
+				{
+					dest ??= theMap.FindNode(link.sDestination);
+					if (dest is not null && link.Duplex)
+						dest.bDrawOut = true;
+				}
+				else if (link.eSourceLinkPoint == SharedModule.DirectionsEnum.Out && link.sDestination != "")
+				{
+					dest ??= theMap.FindNode(link.sDestination);
+                    if (dest is not null && link.Duplex)
+                        dest.bDrawIn = true;
+                }
+			}
+
+			if (node.bHasOut)
+			{
+				node.ptOut = node.eOutEdge switch
+				{
+                    SharedModule.DirectionsEnum.North => new Point(3 * node.Width * _scale / 4, 0),
+                    SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, 3 * node.Height * _scale / 4),
+					SharedModule.DirectionsEnum.South => new Point(node.Width * _scale/4, node.Height*_scale),
+					SharedModule.DirectionsEnum.West => new Point(0, node.Height*_scale/4),
+					_ => new Point(0, 0)
+                };
+			}
+			if (node.bHasIn)
+			{
+				node.ptIn = node.eInEdge switch
+				{
+                    SharedModule.DirectionsEnum.North => new Point(node.Width * _scale / 4, 0),
+                    SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, node.Height * _scale / 4),
+                    SharedModule.DirectionsEnum.South => new Point(3 * node.Width * _scale / 4, node.Height * _scale),
+                    SharedModule.DirectionsEnum.West => new Point(0, 3 * node.Height * _scale / 4),
+                    _ => new Point(0,0)
+				};
+			}
+		}
 
         public void SelectNode(string key)
         {
-			// Pass for now
+			var theMap = SharedModule.Adventure.Map;
+			if (theMap is null) return;
+			_selectedNodes.Clear();
+            foreach (var p in theMap.Pages.Values)
+			{
+				if (p.GetNode(key) is null) continue;
+				var node = p.GetNode(key);
+				Page = p;
+				ActiveNode = node;
+				break;
+			}
+			if (LockPlayerCenter && _selectedNodes.Count > 0)
+				CenterOnNode(_selectedNodes[0]);
+			_imgMap.Invalidate();
 		}
 
-		internal void RecalculateNodes(int page = -1)
+		private void CenterOnNode(MapNode node)
 		{
-			// pass for now
+			CurrentCenter = new Point((node.Location.X + (node.Width / 2))*_scale, (node.Location.Y + (node.Height / 2))*_scale);
 		}
-		internal void RecalculateLinks(MapNode node)
-		{
-			// pass for now
-		}
-        internal Point? GetLinkPoint(MapNode node, SharedModule.DirectionsEnum d, MapNode dest = null)
+
+		internal Point? GetLinkPoint(MapNode node, SharedModule.DirectionsEnum d, MapNode dest = null)
         {
             switch (d)
             {
@@ -333,6 +468,7 @@ namespace FrankenDrift.Runner
 		{
 			if (!node.Seen) return;
 			if (SharedModule.Adventure.htblLocations[node.Key].HideOnMap) return;
+			System.Diagnostics.Debug.WriteLine($"Drawing node {node.Key}.");
 			int x = node.Location.X * _scale;   // left edge
 			int y = node.Location.Y * _scale;   // top edge
 			int x2 = x + node.Width * _scale;   // right edge
@@ -342,6 +478,8 @@ namespace FrankenDrift.Runner
 			Brush nodeBackgroundBrush;
 			Pen nodeBorderPen;
 			byte alpha = 255;
+
+			var theMap = SharedModule.Adventure.Map;
 
 			if (_selectedNodes.Contains(node))
 			{
@@ -377,7 +515,7 @@ namespace FrankenDrift.Runner
             foreach (var dir in theDirs)
             {
                 if (!node.Links.ContainsKey(dir)) continue;
-				MapNode dest = FindNode(node.Links[dir].sDestination);
+				MapNode dest = theMap.FindNode(node.Links[dir].sDestination);
 				if (dest is null) continue;
 				int cmp = dest.CompareTo(node);
 				if (cmp < 0 || (dir == SharedModule.DirectionsEnum.Down && cmp == 0))
@@ -393,7 +531,6 @@ namespace FrankenDrift.Runner
 			gfx.FillPolygon(nodeBackgroundBrush, thePoints);
 
 			if (!Planes.ContainsKey(node.Location.Z)) return;
-			//var transformNone = gfx.CurrentTransform;
 			var textRect = new RectangleF(x+1, y+1, x2 - x - 1, y2 - y - 1);
 			gfx.DrawText(Fonts.Sans(8.0f), nodeTextBrush, textRect, node.Text, alignment: FormattedTextAlignment.Center, trimming: FormattedTextTrimming.CharacterEllipsis);
 			gfx.DrawPolygon(nodeBorderPen, thePoints);
@@ -404,7 +541,7 @@ namespace FrankenDrift.Runner
 				if (node.Links.ContainsKey(dir))
 				{
 					if (node.Links[dir].sDestination != "")
-						dest = FindNode(node.Links[dir].sDestination);
+						dest = theMap.FindNode(node.Links[dir].sDestination);
 					if (!(node == dest && dir == SharedModule.DirectionsEnum.Down))
 						if (node.Links[dir].sDestination == "" || (dest is not null && dest.CompareTo(node) >= 0))
 							DrawLinks(gfx, node, dir);
@@ -431,10 +568,10 @@ namespace FrankenDrift.Runner
 			if (dir == SharedModule.DirectionsEnum.In && !node.bHasIn) return;
 			if (dir == SharedModule.DirectionsEnum.Out && !node.bHasOut) return;
 
-			int circleWidth = _scale / 2;
-			// var ptInOut = new Point();
+            //int circleWidth = _scale / 2;
+            int circleWidth = _scale;
 
-			foreach (var n in new MapNode[] {node, dest})
+            foreach (var n in new MapNode[] {node, dest})
 			{
 				if (n is null) continue;
 				var inOut = n == node ? dir : SharedModule.OppositeDirection(dir);
@@ -443,7 +580,7 @@ namespace FrankenDrift.Runner
 				if (inOut == SharedModule.DirectionsEnum.Out && !n.bHasOut) continue;
 				if (inOut == SharedModule.DirectionsEnum.In && !n.bHasIn) continue;
 
-				var ptInOut = inOut == SharedModule.DirectionsEnum.Out ? n.ptOut : n.ptIn;
+				var ptInOut = (inOut == SharedModule.DirectionsEnum.Out ? n.ptOut : n.ptIn) * _scale;
 				var rectInOut = new Rectangle(ptInOut.X - circleWidth, ptInOut.Y - circleWidth, circleWidth*2, circleWidth*2);
 				//var txtInOut = inOut == SharedModule.DirectionsEnum.Out ? "OUT" : "IN";
 				string txtInOut;
@@ -596,12 +733,6 @@ namespace FrankenDrift.Runner
 			if (alpha == 0) alpha = (byte)c.Ab;
 			return Color.FromArgb(Math.Max(c.Rb - 30, 0), Math.Max(c.Gb - 30, 0), Math.Max(c.Bb - 30, 0), alpha);
 		}
-
-		private MapNode FindNode(string key)
-		{
-			// pass for now
-			return null;
-		}
 	}
 
 	class MapPlane
@@ -691,13 +822,21 @@ namespace FrankenDrift.Runner
 		{
 			this.theMap = theMap;
 			Paint += MapContentOnPaint;
+			MouseDown += MapContent_MouseDown;
+		}
+
+		private void MapContent_MouseDown(object sender, MouseEventArgs e)
+		{
+			System.Diagnostics.Debug.WriteLine($"Screen Space: {e.Location}, Control Space: ${PointFromScreen(e.Location)}");
 		}
 
 		private void MapContentOnPaint(object sender, PaintEventArgs e)
 		{
-			//throw new NotImplementedException();
+			if (theMap.Page is null) return;
 			var gfx = e.Graphics;
-			foreach (var node in theMap.Page.Nodes)
+			gfx.TranslateTransform(-theMap.CurrentCenter);
+			gfx.TranslateTransform(Width / 2, Height / 2);
+            foreach (var node in theMap.Page.Nodes)
 				theMap.DrawNode(gfx, node);
 		}
 	}

@@ -29,7 +29,11 @@ Public Class clsAdventure
 #If Generator Then
     Friend dictFolders As FolderDictionary
 #End If
+#If Not Adravalon Then
     Friend Map As clsMap
+#Else
+    Public Map As clsMap
+#End If
 
     Private oIntroduction As Description
     Private oWinningText As Description

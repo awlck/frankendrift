@@ -823,8 +823,11 @@ Public Class clsMap
     End Sub
 
 
-
+#If Not Adravalon Then
     Friend Function FindNode(ByVal sLocKey As String) As MapNode
+#Else
+    Public Function FindNode(ByVal sLocKey As String) As MapNode
+#End If
         For Each page As MapPage In Pages.Values
             For Each node As MapNode In page.Nodes
                 If node.Key = sLocKey Then Return node
