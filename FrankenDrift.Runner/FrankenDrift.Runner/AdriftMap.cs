@@ -36,7 +36,8 @@ namespace FrankenDrift.Runner
 
 			return new Point((int)x2, (int)y2);
 		}
-		
+
+#if false
 		public static Point TranslateToScreen(this Point3D pt3D)
 		{
 			int x = pt3D.X * AdriftMap._scale;
@@ -47,6 +48,11 @@ namespace FrankenDrift.Runner
 			pt2D.X -= AdriftMap._boundX;
 			pt2D.Y -= AdriftMap._boundY;
 			return pt2D;
+		}
+#endif
+		public static Point TranslateToScreen(this Point3D pt3D)
+		{
+			return new Point { X = pt3D.X, Y = pt3D.Y } * AdriftMap._scale;
 		}
 
 		//public static explicit operator Eto.Drawing.Point(System.Drawing.Point p) => new Eto.Drawing.Point(p.X, p.Y);
@@ -95,11 +101,11 @@ namespace FrankenDrift.Runner
 		// it gets worse!
 		public static void DrawCurve(this Graphics gfx, Pen pen, Point[] pts)
 		{
-			var curve = Curve.Interpolated(pts.Select(pt => new GShark.Geometry.Point3(pt.X, pt.Y, 0)).ToList(), 3);
+			var curve = Curve.Interpolated(pts.Select(pt => new GShark.Geometry.Point3(pt.X, pt.Y, 0)).ToList(), pts.Length-1);
 			var start = pts[0];
-			for (int step = 0; step < 100; step++)
+			for (int step = 1; step <= 10; step++)
 			{
-				var nextPt = curve.PointAt(step / 100);
+				var nextPt = curve.PointAt((double)step / 10);
 				var end = new Point((int)nextPt.X, (int)nextPt.Y);
 				gfx.DrawLine(pen, start, end);
 				start = end;
@@ -580,7 +586,7 @@ namespace FrankenDrift.Runner
 				if (inOut == SharedModule.DirectionsEnum.Out && !n.bHasOut) continue;
 				if (inOut == SharedModule.DirectionsEnum.In && !n.bHasIn) continue;
 
-				var ptInOut = (inOut == SharedModule.DirectionsEnum.Out ? n.ptOut : n.ptIn) * _scale;
+				var ptInOut = inOut == SharedModule.DirectionsEnum.Out ? n.ptOut : n.ptIn;
 				var rectInOut = new Rectangle(ptInOut.X - circleWidth, ptInOut.Y - circleWidth, circleWidth*2, circleWidth*2);
 				//var txtInOut = inOut == SharedModule.DirectionsEnum.Out ? "OUT" : "IN";
 				string txtInOut;
@@ -600,7 +606,7 @@ namespace FrankenDrift.Runner
 				}
 				gfx.FillEllipse(backgroundBrush, rectInOut);
 				gfx.DrawEllipse(borderPen, rectInOut);
-				gfx.DrawText(Fonts.Sans(6), new SolidBrush(HotTrackColor(Colors.Black, alpha)), rectInOut, txtInOut, FormattedTextWrapMode.None, FormattedTextAlignment.Center, FormattedTextTrimming.None);
+				gfx.DrawText(Fonts.Sans(5), new SolidBrush(HotTrackColor(Colors.Black, alpha)), new RectangleF(ptInOut.X - circleWidth, ptInOut.Y - circleWidth/2, circleWidth*2, circleWidth), txtInOut, FormattedTextWrapMode.None, FormattedTextAlignment.Center, FormattedTextTrimming.None);
 			}
 		}
 
@@ -709,12 +715,15 @@ namespace FrankenDrift.Runner
 				return;
 			}
 
-			if (link.Points is not null && !(link.Points.Length == 3 && link.Points[2].X != 0 && link.Points[2].Y != 0))
+			if (link.Points is not null && !(link.Points.Length == 3 && link.Points[2].X == 0 && link.Points[2].Y == 0))
 			{
 				if (link.Points.Length == 3 && link.sDestination == "")
 					gfx.DrawBezier(linkPen, link.Points[0], link.Points[1], link.Points[2], link.Points[2]);
 				else if (link.Points.Length == 4 && link.OrigMidPoints.Length == 0)
 					gfx.DrawBezier(linkPen, link.Points);
+				else if (link.Points.All(pt => pt.X == link.Points[0].X) || link.Points.All(pt => pt.Y == link.Points[0].Y))
+					// if all points are on a line, simply draw that line
+					gfx.DrawLine(linkPen, link.Points[0], link.Points[^1]);
 				else
 					gfx.DrawCurve(linkPen, link.Points);
 			}

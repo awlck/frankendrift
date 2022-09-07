@@ -220,6 +220,9 @@ namespace FrankenDrift.Runner
             }
 
             Adrift.SharedModule.UserSession.Process(cmd);
+            // just to be extra sure, redraw the map each time a command
+            // is done processing.
+            map.Invalidate();
         }
 
         internal string QueryLoadPath()
