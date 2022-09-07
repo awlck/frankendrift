@@ -118,6 +118,7 @@ namespace FrankenDrift.Runner
                 ProgramName = "FrankenDrift",
                 ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
                                      "with a cross-platform UI layer (Eto.Forms) glued on top.",
+                License = Licenses.LicenseText,
                 Version = _myVersion
             }.ShowDialog(this);
 
