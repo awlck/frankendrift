@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using Eto.Drawing;
 using Eto.Forms;
 using GShark.Fitting;
 using FrankenDrift.Adrift;
 using FrankenDrift.Glue;
-using System.Reflection.Metadata.Ecma335;
-using System.ComponentModel.Design;
 
 namespace FrankenDrift.Runner
 {
-	public static class PointExtensions
+    // a more or less straightforward port of the code in Adrift's Map.vb
+    // see: https://github.com/jcwild/ADRIFT-5/blob/master/ADRIFT/Map.vb
+
+    public static class PointExtensions
 	{
 		public static Point Convert3DtoScreen(int x, int y, int z)
 		{
@@ -29,34 +26,16 @@ namespace FrankenDrift.Runner
 
 			double x1 = x0 * Math.Cos(ry) - z0 * Math.Sin(ry);
 			double y1 = y0;
-			// double z1 = z0 * Math.Cos(ry) + x0 * Math.Sin(ry);
 
 			double x2 = x1 * Math.Cos(rz) + y1 * Math.Sin(rz);
 			double y2 = y1 * Math.Cos(rz) - x1 * Math.Sin(rz);
 
 			return new Point((int)x2, (int)y2);
 		}
-
-#if false
-		public static Point TranslateToScreen(this Point3D pt3D)
-		{
-			int x = pt3D.X * AdriftMap._scale;
-			int y = pt3D.Y * AdriftMap._scale;
-			int z = pt3D.Z * AdriftMap._scale;
-
-			Point pt2D = Convert3DtoScreen(x, y, z);
-			pt2D.X -= AdriftMap._boundX;
-			pt2D.Y -= AdriftMap._boundY;
-			return pt2D;
-		}
-#endif
 		public static Point TranslateToScreen(this Point3D pt3D)
 		{
 			return new Point { X = pt3D.X, Y = pt3D.Y } * AdriftMap._scale;
 		}
-
-		//public static explicit operator Eto.Drawing.Point(System.Drawing.Point p) => new Eto.Drawing.Point(p.X, p.Y);
-		public static Eto.Drawing.Point ToEtoPoint(this System.Drawing.Point p) => new Eto.Drawing.Point(p.X, p.Y);
 	}
 
 	public static class CollectionExtensions
@@ -134,26 +113,6 @@ namespace FrankenDrift.Runner
 		internal MapPage Page { get; set; }
 		internal MapPlanes Planes = new();
 
-		private MapLink NewLink
-		{
-			get => _newLink;
-			set
-			{
-				if (value == _newLink) return;
-				if (_newLink is not null)
-				{
-					MapNode nodeSource = Page.GetNode(_newLink.sSource);
-					if (nodeSource != ActiveNode)
-						nodeSource.Anchors[_newLink.eSourceLinkPoint].Visible = false;
-					MapNode nodeDest = Page.GetNode(_newLink.sDestination);
-					if (nodeDest != null && nodeDest != ActiveNode)
-						nodeDest.Anchors[_newLink.eDestinationLinkPoint].Visible = false;
-				}
-				_newLink = value;
-				if (SelectedLink == value) SelectedLink = null;
-				_imgMap.Invalidate();
-			}
-		}
 		private MapLink SelectedLink
 		{
 			get => _selectedLink;
@@ -199,11 +158,6 @@ namespace FrankenDrift.Runner
 			get => _hotTrackedNode;
 			set { _hotTrackedNode = value; _imgMap.Invalidate(); }
 		}
-		private MapLink HotTrackedLink
-		{
-			get => _hotTrackedLink;
-			set { _hotTrackedLink = value; _imgMap.Invalidate(); }
-		}
 		internal Anchor HotTrackedAnchor
 		{
 			get => _hotTrackedAnchor;
@@ -226,7 +180,6 @@ namespace FrankenDrift.Runner
 
 		private MapContent _imgMap;
 		internal Point CurrentCenter { get; private set; }
-		internal int Scale => _scale;
 
 		public AdriftMap()
 		{
@@ -588,7 +541,6 @@ namespace FrankenDrift.Runner
 
 				var ptInOut = inOut == SharedModule.DirectionsEnum.Out ? n.ptOut : n.ptIn;
 				var rectInOut = new Rectangle(ptInOut.X - circleWidth, ptInOut.Y - circleWidth, circleWidth*2, circleWidth*2);
-				//var txtInOut = inOut == SharedModule.DirectionsEnum.Out ? "OUT" : "IN";
 				string txtInOut;
 				Brush backgroundBrush;
 				Pen borderPen;
