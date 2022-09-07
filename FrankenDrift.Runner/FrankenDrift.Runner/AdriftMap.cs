@@ -170,7 +170,7 @@ namespace FrankenDrift.Runner
 		internal bool ShowAxes => false;
 		internal bool ShowGrid => false;
 
-		private Color _mapBackground = Color.FromArgb(230, 255, 255);
+		internal Color _mapBackground = Color.FromArgb(230, 255, 255);
 		private Color _nodeBackground = Color.FromArgb(100, 200, 255);
 		private Color _nodeSelected = Color.FromArgb(255, 255, 0);
 		private Color _nodeBorder = Color.FromArgb(100, 150, 200);
@@ -797,6 +797,8 @@ namespace FrankenDrift.Runner
 			var gfx = e.Graphics;
 			gfx.TranslateTransform(-theMap.CurrentCenter);
 			gfx.TranslateTransform(Width / 2, Height / 2);
+			// clear the screen before redraw
+			gfx.Clear(new SolidBrush(theMap._mapBackground));
             foreach (var node in theMap.Page.Nodes)
 				theMap.DrawNode(gfx, node);
 		}
