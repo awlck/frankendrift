@@ -14,34 +14,19 @@ Public Class clsLocation
 
     Private oShortDesc As Description
     Private oLongDesc As Description
-    'Private sKey As String
-#If Not Adravalon Then
-    Friend arlDirections As New DirectionArrayList
-#Else
     Public arlDirections As New DirectionArrayList
-#End If
-#If Not www Then
     Public MapNode As MapNode
-#End If
-
-    'Public Structure DirectionStruct
-    '    Public LocationKey As String
-    '    Friend Restrictions As RestrictionArrayList
-    'End Structure
-
 
     ' For displaying in Listboxes
     Public Overrides Function ToString() As String
         Return Me.ShortDescription.ToString
     End Function
 
-
     Protected Overrides ReadOnly Property PropertyGroupType() As clsGroup.GroupTypeEnum
         Get
             Return clsGroup.GroupTypeEnum.Locations
         End Get
     End Property
-
 
     Private _HideOnMap As Boolean
     Public Property HideOnMap As Boolean
@@ -52,43 +37,6 @@ Public Class clsLocation
             _HideOnMap = value
         End Set
     End Property
-
-    'Public Property Key() As String
-    '    Get
-    '        Return sKey
-    '    End Get
-    '    Set(ByVal Value As String)
-    '        If Not KeyExists(Value) Then
-    '            sKey = Value
-    '        Else
-    '            Throw New Exception("Key " & sKey & " already exists")
-    '        End If
-    '    End Set
-    'End Property
-
-    'Private bIsLibrary As Boolean
-    'Public Property IsLibrary() As Boolean
-    '    Get
-    '        Return bIsLibrary
-    '    End Get
-    '    Set(ByVal value As Boolean)
-    '        bIsLibrary = value
-    '    End Set
-    'End Property
-
-    'Private dtLastUpdated As Date
-    'Friend Property LastUpdated() As Date
-    '    Get
-    '        If dtLastUpdated > Date.MinValue Then
-    '            Return dtLastUpdated
-    '        Else
-    '            Return Now
-    '        End If
-    '    End Get
-    '    Set(ByVal value As Date)
-    '        dtLastUpdated = value
-    '    End Set
-    'End Property
 
     Public Property SeenBy(ByVal sCharKey As String) As Boolean
         Get
@@ -113,20 +61,15 @@ Public Class clsLocation
 
     Friend Property ShortDescription() As Description
         Get
-#If Runner Then
             If HasProperty(SHORTLOCATIONDESCRIPTION) Then
                 Dim descShortDesc As Description = oShortDesc.Copy
                 For Each sd As SingleDescription In GetProperty(SHORTLOCATIONDESCRIPTION).StringData
                     descShortDesc.Add(sd)
                 Next
                 Return descShortDesc
-#Else
-            If False Then
-                Return Nothing
-#End If
             Else
-                Return oShortDesc
-            End If
+                    Return oShortDesc
+                End If
         End Get
         Set(ByVal Value As Description)
             oShortDesc = Value
@@ -135,20 +78,15 @@ Public Class clsLocation
 
     Friend Property LongDescription() As Description
         Get
-#If Runner Then
             If HasProperty(LONGLOCATIONDESCRIPTION) Then
                 Dim descLongDesc As Description = oLongDesc.Copy
                 For Each sd As SingleDescription In GetProperty(LONGLOCATIONDESCRIPTION).StringData
                     descLongDesc.Add(sd)
                 Next
                 Return descLongDesc
-#Else
-            If False Then
-                Return Nothing
-#End If
             Else
-                Return oLongDesc
-            End If
+                    Return oLongDesc
+                End If
         End Get
         Set(ByVal Value As Description)
             oLongDesc = Value
@@ -182,8 +120,6 @@ Public Class clsLocation
     Public ReadOnly Property ViewLocation() As String
         Get
             Dim sView As String = LongDescription.ToString
-#If Runner Then
-
 
             ' Do any specific listed objects
             Dim htblObjects As ObjectHashTable = ObjectsInLocation(WhichObjectsToListEnum.AllSpecialListedObjects, True)
@@ -219,8 +155,6 @@ Public Class clsLocation
                 Else
                     sIsHereDesc = sName & " is here."
                 End If
-                'Dim sIsHereDesc As String = ReplaceFunctions(ch.IsHereDesc)
-                'If sIsHereDesc = "" Then sIsHereDesc = sName & " is here."
                 If sIsHereDesc <> "" Then
                     Dim sDescWithoutName As String = ReplaceIgnoreCase(sIsHereDesc, sName, "##CHARNAME##")
                     If Not dCharDesc.ContainsKey(sDescWithoutName) Then dCharDesc.Add(sDescWithoutName, New StringArrayList)
@@ -236,34 +170,10 @@ Public Class clsLocation
                     sView &= sDesc.Replace("##CHARNAME##", .List)
                 End With
             Next
-            'Dim htblCharacters As New CharacterHashTable
-            'Dim htblCharsOwnDesc As New CharacterHashTable
-            'For Each sKey As String In CharactersInLocation.Keys
-            '    Dim ch As clsCharacter = Adventure.htblCharacters(sKey)
-            '    If ch.IsHereDesc <> "" AndAlso ch.IsHereDesc <> "%CharacterName% is here." AndAlso ch.IsHereDesc <> "%CharacterName[" & ch.Key & "]% is here." AndAlso ch.IsHereDesc <> ch.ProperName & " is here." Then
-            '        htblCharsOwnDesc.Add(ch, sKey)
-            '    Else
-            '        htblCharacters.Add(ch, sKey)
-            '    End If
-            'Next
-            'If htblCharacters.Count > 0 Then
-            '    pSpace(sView)
-            '    Dim sCharList As String = htblCharacters.List
-            '    sView &= UCase(sCharList(0)) & sCharList.Substring(1)
-            '    If htblCharacters.Count > 1 Then
-            '        sView &= " are here."
-            '    Else
-            '        sView &= " is here."
-            '    End If
-            'End If
-            'For Each ch As clsCharacter In htblCharsOwnDesc.Values
-            '    pSpace(sView)
-            '    sView &= ch.IsHereDesc
-            'Next
 
             If Adventure.ShowExits Then
                 Dim iExitCount As Integer = 0
-                Dim sListExists As String = Adventure.Player.ListExits(Me.Key, iExitCount) ' ListExits
+                Dim sListExists As String = Adventure.Player.ListExits(Me.Key, iExitCount)
                 pSpace(sView)
                 If iExitCount > 1 Then
                     sView &= "Exits are " & sListExists & "."
@@ -278,12 +188,9 @@ Public Class clsLocation
                 sView = "<b>" & ShortDescription.ToString & "</b>" & vbCrLf & sView
                 If Adventure.dVersion >= 5 Then sView = vbCrLf & sView
             End If
-#End If
             Return sView
         End Get
     End Property
-    '    Public Direction(11) As New DirectionStruct
-
 
     Public Sub New()
 
@@ -309,8 +216,6 @@ Public Class clsLocation
 
             For Each ob As clsObject In Adventure.htblObjects.Values
                 If ob.ExistsAtLocation(Key, bDirectly) Then
-                    'If ob.Location.Key = Me.Key Then
-                    'If ob.Location.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.InLocation OrElse ob.Location.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.SingleLocation Then
                     Select Case ListWhat
                         Case WhichObjectsToListEnum.AllGeneralListedObjects ' Dynamic objects not excluded plus static objects explicitly included, unless specially listed
                             If ((Not ob.IsStatic AndAlso Not ob.ExplicitlyExclude) OrElse (ob.IsStatic AndAlso ob.ExplicitlyList)) Then
@@ -327,14 +232,12 @@ Public Class clsLocation
                                 If ob.ListDescription <> "" Then htblObjectsInLocation.Add(ob, ob.Key)
                             End If
                     End Select
-                    'End If
                 End If
             Next
 
             Return htblObjectsInLocation
         End Get
     End Property
-
 
     ' Characters directly in the location
     Friend ReadOnly Property CharactersDirectlyInLocation(Optional ByVal bIncludePlayer As Boolean = False) As CharacterHashTable
@@ -350,31 +253,25 @@ Public Class clsLocation
         End Get
     End Property
 
-
     ' Characters visible in location (can be in open objects, on objects etc)
     Friend ReadOnly Property CharactersVisibleAtLocation(Optional ByVal bIncludePlayer As Boolean = False) As CharacterHashTable
         Get
             Dim htblCharactersInLocation As New CharacterHashTable
 
-#If Runner Then
             'Dim sLoc As String = Adventure.Player.Location.LocationKey
             For Each ch As clsCharacter In Adventure.htblCharacters.Values
                 If ch IsNot Adventure.Player AndAlso ch.IsVisibleAtLocation(Me.Key) Then htblCharactersInLocation.Add(ch, ch.Key)
             Next
-#End If
 
             Return htblCharactersInLocation
-
         End Get
     End Property
-
 
     Public Overrides ReadOnly Property Clone() As clsItem
         Get
             Return CType(Me.MemberwiseClone, clsLocation)
         End Get
     End Property
-
 
     Public Function IsAdjacent(ByVal sKey As String) As Boolean
 
@@ -384,7 +281,6 @@ Public Class clsLocation
         Return False
 
     End Function
-
 
     Public Function DirectionTo(ByVal sKey As String) As String
 
@@ -418,15 +314,11 @@ Public Class clsLocation
         Return "nowhere"
 
     End Function
-
-
     Public Overrides ReadOnly Property CommonName() As String
         Get
             Return ShortDescription.ToString
         End Get
     End Property
-
-
     Friend Overrides ReadOnly Property AllDescriptions() As System.Collections.Generic.List(Of SharedModule.Description)
         Get
             Dim all As New Generic.List(Of Description)
@@ -438,25 +330,13 @@ Public Class clsLocation
             Return all
         End Get
     End Property
-
-
     Friend Overrides Function FindStringLocal(sSearchString As String, Optional sReplace As String = Nothing, Optional bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
         Dim iCount As Integer = iReplacements
         '
         Return iReplacements - iCount
     End Function
 
-
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fLocation As New frmLocation(Me, True)
-#End If
-    End Sub
-
-
     Public Overrides Function ReferencesKey(ByVal sKey As String) As Integer
-
         Dim iCount As Integer = 0
         For Each d As Description In AllDescriptions
             iCount += d.ReferencesKey(sKey)
@@ -468,12 +348,10 @@ Public Class clsLocation
         iCount += htblActualProperties.ReferencesKey(sKey)
 
         Return iCount
-
     End Function
 
 
     Public Overrides Function DeleteKey(ByVal sKey As String) As Boolean
-
         For Each d As Description In AllDescriptions
             If Not d.DeleteKey(sKey) Then Return False
         Next
@@ -488,9 +366,7 @@ Public Class clsLocation
         If Not htblActualProperties.DeleteKey(sKey) Then Return False
 
         Return True
-
     End Function
-
 
     Friend Overrides ReadOnly Property Parent As String
         Get

@@ -2,7 +2,6 @@ Imports FrankenDrift.Glue
 
 Public Class clsEvent
     Inherits clsItem
-
     Public Enum EventTypeEnum As Integer
         TurnBased = 0
         TimeBased = 1
@@ -38,7 +37,6 @@ Public Class clsEvent
         End Sub
 
     End Class
-
 
     Public Enum StatusEnum
         NotYetStarted = 0
@@ -96,8 +94,6 @@ Public Class clsEvent
             Return CType(Me.Clone, SubEvent)
         End Function
 
-#If Runner Then
-#If Adravalon Then
         Public WithEvents tmrTrigger As System.Timers.Timer
         Public dtStart As DateTime
         Public iMilliseconds As Integer
@@ -106,18 +102,6 @@ Public Class clsEvent
             tmrTrigger.Stop()
             UserSession.TriggerTimerEvent(sParentKey, Me)
         End Sub
-#Else
-        Public WithEvents tmrTrigger As System.Windows.Forms.Timer
-        Public dtStart As DateTime
-        Public iMilliseconds As Integer
-
-        Private Sub tmrTrigger_Tick(sender As Object, e As System.EventArgs) Handles tmrTrigger.Tick
-            tmrTrigger.Enabled = False
-            tmrTrigger.Stop()
-            UserSession.TriggerTimerEvent(sParentKey, Me)
-        End Sub
-#End If
-#End If
 
     End Class
 
@@ -144,8 +128,6 @@ Public Class clsEvent
             Return ev
         End Get
     End Property
-
-#If Runner Then
 
     Public Function LookText() As String
 
@@ -181,12 +163,12 @@ Public Class clsEvent
             iTimerToEndOfEvent = value
 
             ' If the timer has ticked down and we're ready to start
-            If Status = StatusEnum.CountingDownToStart AndAlso TimerFromStartOfEvent = 0 Then ' AndAlso iStartValue < 0 Then
+            If Status = StatusEnum.CountingDownToStart AndAlso TimerFromStartOfEvent = 0 Then
                 Start(True)
             End If
 
             ' If we've reached the end of the timer
-            If Status = StatusEnum.Running AndAlso iTimerToEndOfEvent = 0 Then ' iTimerToEndOfEvent < 0 AndAlso iStartValue > iTimerToEndOfEvent Then
+            If Status = StatusEnum.Running AndAlso iTimerToEndOfEvent = 0 Then
                 lStop(True)
             End If
 
@@ -245,12 +227,7 @@ Public Class clsEvent
             ' WHAT TO DO HERE?
             ' If it's length 0, we need to run our start actions
             ' if it's length 2 we don't want it being set to 1 immediately from the incrementtimer
-            'Dim bRunBefore As Boolean = False
-            'If Length.Value = 0 Then bRunBefore = True
-            'If bRunBefore Then DoAnySubEvents() ' Because setting TimerToEnd below will trigger a stop for 0 legnth event
-            TimerToEndOfEvent = Length.Value '+ 1 ' Needs to be +1 because we'll increment it the same turn we start it
-            'If Not bRunBefore Then DoAnySubEvents()
-            ''If Length.Value > 0 Then DoAnySubEvents()
+            TimerToEndOfEvent = Length.Value
             If TimerFromStartOfEvent = 0 Then DoAnySubEvents() ' To run 'after 0 turns' subevents
 
             If WhenStart = WhenStartEnum.Immediately Then WhenStart = WhenStartEnum.BetweenXandYTurns ' So we get 'after 0 turns' on any repeats
@@ -354,9 +331,6 @@ Public Class clsEvent
 
         If Status = StatusEnum.Running OrElse Status = StatusEnum.CountingDownToStart Then UserSession.DebugPrint(ItemEnum.Event, Key, DebugDetailLevelEnum.High, "Event " & Description & " [" & TimerFromStartOfEvent + 1 & "/" & Length.Value & "]")
 
-        ' Why are we running subevents before we've incremented the timer?
-        'If TimerToEndOfEvent > 0 AndAlso TimerFromStartOfEvent > 0 Then DoAnySubEvents()
-
         ' Split this into 2 case statements, as changing timer here may change status
         Select Case Status
             Case StatusEnum.NotYetStarted
@@ -371,16 +345,9 @@ Public Class clsEvent
         If Not bJustStarted Then DoAnySubEvents()
 
         bJustStarted = False
-        'If Status = StatusEnum.Running Then DebugPrint(ItemEnum.Event, Key, DebugDetailLevelEnum.High, "Event " & Description & " [" & TimerFromStartOfEvent & "/" & Length.Value & "]")
 
     End Sub
 
-
-    'Friend Enum WhatSubEvent
-    '    Starting
-    '    Stopping
-    '    Running
-    'End Enum
     Friend Sub DoAnySubEvents()
 
         Select Case Status
@@ -439,11 +406,7 @@ Public Class clsEvent
                     With SubEvents(i)
                         If .eMeasure = SubEvent.MeasureEnum.Seconds AndAlso EventType = EventTypeEnum.TurnBased Then
                             If .eWhen = SubEvent.WhenEnum.FromLastSubEvent Then
-#If Not Adravalon Then
-                                .tmrTrigger = New System.Windows.Forms.Timer
-#Else
                                 .tmrTrigger = New System.Timers.Timer
-#End If
                                 If .ftTurns.Value > 0 Then
                                     .tmrTrigger.Interval = .ftTurns.Value * 1000
                                     .tmrTrigger.Start()
@@ -460,8 +423,6 @@ Public Class clsEvent
         Next
     End Sub
 
-
-#End If
 
     Public Overrides ReadOnly Property CommonName() As String
         Get
@@ -486,13 +447,6 @@ Public Class clsEvent
         iReplacements += MyBase.FindStringInStringProperty(Description, sSearchString, sReplace, bFindAll)
         Return iReplacements - iCount
     End Function
-
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fEvent As New frmEvent(Me, True)
-#End If
-    End Sub
 
     Public Overrides Function ReferencesKey(ByVal sKey As String) As Integer
 

@@ -3,10 +3,8 @@
 
     Public Sub New(ByVal sKey As String)
         MyBase.New()
-
         Key = sKey
     End Sub
-
 
     Private sTitle As String
     Public Property Title() As String
@@ -48,17 +46,6 @@
             sIFID = value
         End Set
     End Property
-#If Not Adravalon Then
-    Private kShortcut As Shortcut = Windows.Forms.Shortcut.None
-    Public Property Shortcut() As Shortcut
-        Get
-            Return kShortcut
-        End Get
-        Set(ByVal value As Shortcut)
-            kShortcut = value
-        End Set
-    End Property
-#End If
     Public Function Clone() As Object Implements System.ICloneable.Clone
         Return Me.MemberwiseClone
     End Function

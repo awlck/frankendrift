@@ -1,5 +1,4 @@
-﻿#If Adravalon Then
-Friend Class AutoCompleteSortedArrayList
+﻿Friend Class AutoCompleteSortedArrayList
     Inherits Generic.List(Of AutoComplete) ' ArrayList
 
     ' We want to store values by arbritray key, so need a hashtable to lookup the index in the arraylist
@@ -57,7 +56,6 @@ Friend Class AutoCompleteSortedArrayList
 End Class
 
 Friend Class AutoComplete
-    'Implements IComparable
     Implements IComparable(Of AutoComplete)
 
     Public sWord As String
@@ -82,7 +80,7 @@ Friend Class AutoComplete
     ' Order these by most children, so most common words appear first
     Public Function CompareTo(ByVal ac As AutoComplete) As Integer Implements System.IComparable(Of AutoComplete).CompareTo
         If iPriority <> ac.iPriority Then
-            Return iPriority.CompareTo(ac.iPriority) ' ac.iPriority.CompareTo(iPriority)
+            Return iPriority.CompareTo(ac.iPriority)
         Else
             If salTasks.Count = ac.salTasks.Count Then
                 If sWord.Length = ac.sWord.Length Then
@@ -95,6 +93,4 @@ Friend Class AutoComplete
             End If
         End If
     End Function
-
 End Class
-#End If

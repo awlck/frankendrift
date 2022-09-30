@@ -2,21 +2,14 @@ Imports System.IO
 Imports System.Text.Encoding
 Imports System.Xml
 
-#If Adravalon Then
 Imports Eto.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 Imports ICSharpCode.SharpZipLib
 Imports ICSharpCode.SharpZipLib.Zip.Compression.Streams
-#Else
-Imports ComponentAce.Compression.Libs.zlib
-Imports System.Drawing
-#End If
 
 Module FileIO
 
-    'Private WithEvents zi As DotZLib.Inflater
-    'Private WithEvents zd As DotZLib.Deflater
     Private br As BinaryReader
     Private bw As BinaryWriter
     Private sLoadString As String
@@ -66,7 +59,6 @@ Module FileIO
                 .WriteStartElement("Description") ' SingleDescription
                 If sd.Restrictions.Count > 0 Then SaveRestrictions(xmlWriter, sd.Restrictions)
                 .WriteElementString("DisplayWhen", sd.eDisplayWhen.ToString)
-                'If sd.Description = " " Then sd.Description = "&nbsp;" ' XML converts " " to Null when reading back
                 .WriteElementString("Text", sd.Description)
                 If sd.DisplayOnce Then .WriteElementString("DisplayOnce", "1")
                 If sd.ReturnToDefault Then .WriteElementString("ReturnToDefault", "1")
@@ -80,7 +72,6 @@ Module FileIO
     End Sub
 
 
-#If Runner Then
     ' Write a state to file
     Friend Function SaveState(ByVal state As clsGameState, ByVal sFilePath As String) As Boolean
 
@@ -111,7 +102,6 @@ Module FileIO
                     For Each sDisplayedKey As String In locs.htblDisplayedDescriptions.Keys
                         .WriteElementString("Displayed", sDisplayedKey)
                     Next
-                    '.WriteElementString("Seen", CInt(locs.bSeen).ToString)
                     .WriteEndElement()
                 Next
 
@@ -192,7 +182,6 @@ Module FileIO
                         .WriteElementString("Value", props.Value)
                         .WriteEndElement()
                     Next
-                    'If chs.Location.ObjectKey <> "" Then .WriteElementString("ObjectKey", chs.Location.ObjectKey)
                     For Each sDisplayedKey As String In chs.htblDisplayedDescriptions.Keys
                         .WriteElementString("Displayed", sDisplayedKey)
                     Next
@@ -212,7 +201,6 @@ Module FileIO
                             If vars.Value(i) <> "" Then .WriteElementString("Value_" & i, vars.Value(i))
                         End If
                     Next
-                    '.WriteElementString("Value", vars.Value)
                     For Each sDisplayedKey As String In vars.htblDisplayedDescriptions.Keys
                         .WriteElementString("Displayed", sDisplayedKey)
                     Next
@@ -236,11 +224,7 @@ Module FileIO
                 .Flush()
 
                 Dim outStream As New MemoryStream
-#If Not Adravalon Then
-                Dim zStream As New ZOutputStream(outStream, zlibConst.Z_BEST_COMPRESSION)
-#Else
                 Dim zStream As New DeflaterOutputStream(outStream)
-#End If
 
                 Try
                     stmMemory.Position = 0
@@ -267,211 +251,6 @@ Module FileIO
         End Try
 
     End Function
-#End If
-
-#If Generator Then
-    Public Function SaveFileToStream(ByVal stm As IO.Stream, ByVal bCompress As Boolean, Optional ByVal lLength As Long = 0, Optional ByVal bBlorb As Boolean = False, Optional bSelectedOnly As Boolean = False) As Boolean
-
-        Dim bAppend As Boolean = lLength > 0
-
-        If Not Save500(bCompress, bBlorb, bSelectedOnly) Then Return False
-
-        bw = New BinaryWriter(stm)
-
-        'system.Text.Encoding.        
-        If bCompress Then bw.Write(Dencode("Version " & DoubleToString(dVersion, "0.00"), 0)) ' dVersion.ToString("0.00"), 0))
-        Dim iBabelLength As Integer = 0
-        If bCompress AndAlso Not bBlorb Then
-            Dim sCoverImage As String = Adventure.CoverFilename
-            Adventure.CoverFilename = Nothing ' Because we don't want to save Cover info in compressed TAF
-            Dim bBabel As Byte() = System.Text.Encoding.UTF8.GetBytes(Adventure.BabelTreatyInfo.ToString(False))
-            Adventure.CoverFilename = sCoverImage
-            iBabelLength = bBabel.Length + 4
-            Dim sLen As String = Hex(iBabelLength - 4)
-            While sLen.Length < 4
-                sLen = "0" & sLen
-            End While
-            bw.Write(System.Text.Encoding.UTF8.GetBytes(sLen))
-            bw.Write(bBabel)
-        End If
-        If bBlorb Then
-            bw.Write(System.Text.Encoding.UTF8.GetBytes("0000"))
-            iBabelLength = 4
-        End If
-        bw.Write(bAdventure)
-        If bCompress Then
-            If Adventure.Password Is Nothing Then Adventure.Password = "        "
-            While Adventure.Password.Length < 8
-                Adventure.Password &= " "
-            End While
-            bw.Write(Dencode(sLeft(Adventure.Password, 4) & "Wild" & sMid(Adventure.Password, 5, 4), bAdventure.Length + 13 + iBabelLength)) ' For compatibility
-            bw.Write(New Byte() {&HD, &HA})
-        End If
-
-        If bAppend Then
-            ' Write the size of Runner to the end of the file for reference later
-            bw.Write(String.Format("{0:X6}", lLength))
-        End If
-
-        Return True
-
-    End Function
-
-
-    ' Assumes overwrite checking already done etc
-    Public Function SaveFile(ByVal sFilename As String, ByVal bCompress As Boolean, Optional ByVal lLength As Long = 0, Optional bSelectedOnly As Boolean = False) As Boolean
-
-        Dim stmNewFile As IO.FileStream = Nothing
-        Dim bAppend As Boolean = lLength > 0
-
-        Cursor.Current = Cursors.WaitCursor
-
-        If Not bAppend Then
-            If bCompress Then
-                If Not sFilename.ToLower.EndsWith(".taf") Then sFilename &= ".taf"
-            Else
-                If Not (sFilename.ToLower.EndsWith(".amf") OrElse sFilename.ToLower.EndsWith(".xml")) Then sFilename &= ".amf"
-            End If
-        End If
-
-        Try
-
-            If bAppend Then
-                stmNewFile = New IO.FileStream(sFilename, FileMode.Append)
-            Else
-                stmNewFile = New IO.FileStream(sFilename, FileMode.Create)
-            End If
-
-            If SaveFileToStream(stmNewFile, bCompress, bSelectedOnly:=bSelectedOnly) Then
-
-                With Adventure
-                    .dVersion = dVersion ' 5
-                    If bCompress Then
-                        .Filename = Path.GetFileName(sFilename)
-                        .FullPath = sFilename
-                    End If
-                End With
-
-                fGenerator.StatusBar1.Panels(1).Text = "File size: " & GetFileSize(sFilename)
-                fGenerator.Text = Adventure.Title & " - ADRIFT Developer - [" & Adventure.Filename & "]"
-                fGenerator.StatusBar1.Panels(0).Text = "File version: " & Adventure.Version
-                If bCompress Then Adventure.Changed = False
-                Return True
-            Else
-                Return False
-            End If
-
-        Catch exUAE As UnauthorizedAccessException
-            ErrMsg("You do not have permission to save """ & sFilename & """." & vbCrLf & "Please check that it is not read only, and that you have permissions for that directory.")
-            Return False
-        Catch exIO As IOException
-            If exIO.Message.Contains("The process cannot access the file") Then
-                ErrMsg("Error accessing file """ & sFilename & """.  Please check it is not open in another application.")
-            Else
-                ErrMsg("I/O Error saving " & sFilename, exIO)
-            End If
-            Return False
-        Catch ex As Exception
-            ErrMsg("Error saving " & sFilename, ex)
-            Return False
-        Finally
-            If Not bw Is Nothing Then bw.Close()
-            bw = Nothing
-            If Not stmNewFile Is Nothing Then stmNewFile.Close()
-            stmNewFile = Nothing
-            Cursor.Current = Cursors.Arrow
-        End Try
-
-    End Function
-
-
-    Public Function SaveiFictionRecord(ByVal sFilename As String) As Boolean
-
-        Try
-            Dim stmWriter As New IO.StreamWriter(sFilename, False, System.Text.Encoding.UTF8)
-            stmWriter.Write(Adventure.BabelTreatyInfo.ToString)
-            stmWriter.Close()
-            Return True
-        Catch ex As Exception
-            ErrMsg("Error saving iFiction record", ex)
-            Return False
-        End Try
-
-    End Function
-
-
-
-    Public Function SaveBlorb(ByVal sFilename As String, Optional ByVal mode As IO.FileMode = FileMode.Create) As Boolean
-
-        Dim stmNewFile As IO.FileStream = Nothing
-
-        Try
-            Cursor.Current = Cursors.WaitCursor
-
-            stmNewFile = New IO.FileStream(sFilename, mode)
-
-            Dim blorbSave As New clsBlorb
-            blorbSave.SaveBlorb(stmNewFile)
-
-            Return True
-
-        Catch exUAE As UnauthorizedAccessException
-            ErrMsg("You do not have permission to save """ & sFilename & """." & vbCrLf & "Please check that it is not read only, and that you have permissions for that directory.")
-            Return False
-        Catch exIO As IOException
-            If exIO.Message.Contains("The process cannot access the file") Then
-                ErrMsg("Error accessing file """ & sFilename & """.  Please check it is not open in another application.")
-            Else
-                ErrMsg("I/O Error saving " & sFilename, exIO)
-            End If
-            Return False
-        Catch ex As Exception
-            ErrMsg("Error saving Blorb " & sFilename, ex)
-            Return False
-        Finally
-            If bw IsNot Nothing Then bw.Close()
-            bw = Nothing
-            If stmNewFile IsNot Nothing Then stmNewFile.Close()
-            stmNewFile.Dispose()
-            stmNewFile = Nothing
-            Cursor.Current = Cursors.Arrow
-        End Try
-
-    End Function
-
-
-
-    Public Function LoadBlorb(ByVal sFilename As String) As clsBlorb
-
-        Dim stmBlorb As IO.FileStream = Nothing
-        Dim blorbNew As New clsBlorb
-
-        Try
-            Cursor.Current = Cursors.WaitCursor
-            Application.DoEvents()
-            stmBlorb = New IO.FileStream(sFilename, FileMode.Open)
-            If Not blorbNew.LoadBlorb(stmBlorb, sFilename) Then
-                Cursor.Current = Cursors.Arrow
-                ErrMsg("Error loading blorb " & sFilename)
-            Else
-                Return blorbNew
-            End If
-
-        Catch ex As Exception
-        Finally
-            If stmBlorb IsNot Nothing Then
-                stmBlorb.Close()
-                stmBlorb.Dispose()
-            End If
-            Cursor.Current = Cursors.Arrow
-        End Try
-
-        Return Nothing
-
-    End Function
-
-#End If
-
 
     Friend Function LoadActions(ByVal nodContainerXML As XmlElement) As ActionArrayList
 
@@ -482,18 +261,9 @@ Module FileIO
         For Each nod As XmlNode In nodContainerXML.Item("Actions").ChildNodes
             If TypeOf nod Is XmlElement Then
                 Dim nodAct As XmlElement = CType(nod, XmlElement)
-                'For Each nodAct As XmlElement In nodContainerXML.Item("Actions").ChildNodes
-                'For Each nodAct As XmlElement In nodContainerXML.GetElementsByTagName("Actions") 'nodContainerXML.SelectNodes("Actions") ' 
                 Dim act As New clsAction
                 Dim sAct As String
                 Dim sType As String = Nothing
-                'If Not nodAct.Item("EndGame") Is Nothing Then sType = "EndGame"
-                'If Not nodAct.Item("MoveCharacter") Is Nothing Then sType = "MoveCharacter"
-                'If Not nodAct.Item("MoveObject") Is Nothing Then sType = "MoveObject"
-                'If Not nodAct.Item("SetProperty") Is Nothing Then sType = "SetProperty"
-                'If Not nodAct.Item("Score") Is Nothing Then sType = "Score"
-                'If Not nodAct.Item("SetTasks") Is Nothing Then sType = "SetTasks"
-                'If Not nodAct.Item("SetVariable") Is Nothing Then sType = "SetVariable"
                 sType = nodAct.Name
 
                 If sType Is Nothing Then Return Actions
@@ -625,11 +395,6 @@ Module FileIO
                         act.StringValue = sValue
                         act.sPropertyValue = sValue
                     Case "Score"
-                        'rest.eItem = clsRestriction.ItemEnum.Character
-                        'rest.sKey1 = sElements(0)
-                        'rest.eMust = CType([Enum].Parse(GetType(clsRestriction.MustEnum), sElements(1)), clsRestriction.MustEnum)
-                        'rest.eCharacter = CType([Enum].Parse(GetType(clsRestriction.CharacterEnum), sElements(2)), clsRestriction.CharacterEnum)
-                        'rest.sKey2 = sElements(3)
                     Case "SetTasks"
                         act.eItem = clsAction.ItemEnum.SetTasks
                         Dim iStartIndex As Integer = 0
@@ -650,12 +415,8 @@ Module FileIO
                             act.StringValue &= sElements(iElement)
                         Next
                         If act.StringValue IsNot Nothing Then
-#If Generator Then
-                            act.StringValue = act.StringValue
-#Else
                             ' Simplify Runner so it only has to deal with multiple, or specific refs
                             act.StringValue = FixInitialRefs(act.StringValue)
-#End If
                             If act.StringValue.StartsWith("(") Then act.StringValue = sRight(act.StringValue, act.StringValue.Length - 1)
                             If act.StringValue.EndsWith(")") Then act.StringValue = sLeft(act.StringValue, act.StringValue.Length - 1)
                         End If
@@ -785,14 +546,11 @@ Module FileIO
 
         Dim Restrictions As New RestrictionArrayList
 
-        'If nodContainerXML.GetElementsByTagName("Restrictions").Count = 0 Then Return Restrictions ' This doesn't work as it can return the restrictions within description for example when we're just looking at task restrictions
         If nodContainerXML.SelectNodes("Restrictions").Count = 0 Then Return Restrictions
 
-        'Debug.WriteLine(nodContainerXML.NodeType)
-        Dim nodRestrictions As XmlElement = CType(nodContainerXML.SelectNodes("Restrictions")(0), XmlElement) 'CType(nodContainerXML.GetElementsByTagName("Restrictions")(0), XmlElement)
+        Dim nodRestrictions As XmlElement = CType(nodContainerXML.SelectNodes("Restrictions")(0), XmlElement)
 
-        'Debug.WriteLine("Rest1: " & Now.ToString("mm:ss.fff"))
-        For Each nodRest As XmlElement In nodRestrictions.SelectNodes("Restriction") 'GetElementsByTagName("Restriction")
+        For Each nodRest As XmlElement In nodRestrictions.SelectNodes("Restriction")
             Dim rest As New clsRestriction
             Dim sRest As String
             Dim sType As String = Nothing
@@ -809,7 +567,6 @@ Module FileIO
             If nodRest.Item(sType) Is Nothing Then Exit For
 
             sRest = nodRest.Item(sType).InnerText
-            'Debug.WriteLine("Rest2: " & Now.ToString("mm:ss.fff"))
             Dim sElements() As String = Split(sRest, " ")
             Select Case sType
                 Case "Location"
@@ -906,44 +663,27 @@ Module FileIO
                     rest.StringValue = sValue
 
             End Select
-            'Debug.WriteLine("Rest3: " & Now.ToString("mm:ss.fff"))
-            rest.oMessage = LoadDescription(nodRest, "Message") ' nodRest.Item("Message").InnerText
-            'Debug.WriteLine("Rest4: " & Now.ToString("mm:ss.fff"))
-
-            'rest.StringValue = FixInitialRefs(rest.StringValue)
+            rest.oMessage = LoadDescription(nodRest, "Message")
             Restrictions.Add(rest)
 
         Next
-        'Debug.WriteLine("Rest5: " & Now.ToString("mm:ss.fff"))
-        'Restrictions.BracketSequence = nodContainerXML.GetElementsByTagName("BracketSequence")(0).InnerText ' x.SelectSingleNode("BracketSequence").InnerText ' nodContainerXML.SelectSingleNode("Restrictions/BracketSequence").InnerText
         Restrictions.BracketSequence = nodRestrictions.SelectNodes("BracketSequence")(0).InnerText ' GetElementsByTagName("BracketSequence")(0).InnerText
 
         If Not bAskedAboutBrackets AndAlso dFileVersion < 5.000026 AndAlso Restrictions.BracketSequence.Contains("#A#O#") Then
-#If Not Adravalon Then
-            bCorrectBracketSequences = MessageBox.Show("There was a logic correction in version 5.0.26 which means OR restrictions after AND restrictions were not evaluated.  Would you like to auto-correct these tasks?" & vbCrLf & vbCrLf & "You may not wish to do so if you have already used brackets around any OR restrictions following AND restrictions.", "Adventure Upgrade", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes
-#Else
             bCorrectBracketSequences = Glue.AskYesNoQuestion("There was a logic correction in version 5.0.26 which means OR restrictions after AND restrictions were not evaluated.  Would you like to auto-correct these tasks?" & vbCrLf & vbCrLf & "You may not wish to do so if you have already used brackets around any OR restrictions following AND restrictions.", "Adventure Upgrade")
-#End If
             bAskedAboutBrackets = True
         End If
         If bCorrectBracketSequences Then Restrictions.BracketSequence = CorrectBracketSequence(Restrictions.BracketSequence)
 
-#If Runner Then
         Restrictions.BracketSequence = Restrictions.BracketSequence.Replace("[", "((").Replace("]", "))")
-#End If
-        'Debug.WriteLine("Rest6: " & Now.ToString("mm:ss.fff"))
         Return Restrictions
 
     End Function
 
 
     Private Function FixInitialRefs(ByVal sCommand As String) As String
-#If Runner Then
         If sCommand Is Nothing Then Return ""
         Return sCommand.Replace("%object%", "%object1%").Replace("%character%", "%character1%").Replace("%location%", "%location1%").Replace("%number%", "%number1%").Replace("%text%", "%text1%").Replace("%item%", "%item1%").Replace("%direction%", "%direction1%")
-#Else
-        Return sCommand
-#End If
     End Function
 
 
@@ -1028,13 +768,10 @@ Module FileIO
         With xmlWriter
             .WriteStartElement("Actions")
             For Each act As clsAction In Actions
-                '.WriteStartElement("Action")
-                '.WriteElementString("Type", act.eItem.ToString)
                 Select Case act.eItem
                     Case clsAction.ItemEnum.EndGame
                         .WriteElementString("EndGame", WriteEnum(act.eEndgame))
                     Case clsAction.ItemEnum.MoveCharacter, clsAction.ItemEnum.AddCharacterToGroup, clsAction.ItemEnum.RemoveCharacterFromGroup
-                        '.WriteElementString("MoveCharacter", act.sKey1 & " " & WriteEnum(act.eMoveCharacterTo) & " " & act.sKey2)
                         .WriteElementString(act.eItem.ToString, act.eMoveCharacterWho.ToString & " " & act.sKey1 & " " & IIf(act.sPropertyValue <> "", act.sPropertyValue & " ", "").ToString & WriteEnum(act.eMoveCharacterTo) & " " & act.sKey2)
                     Case clsAction.ItemEnum.MoveObject, clsAction.ItemEnum.AddObjectToGroup, clsAction.ItemEnum.RemoveObjectFromGroup
                         .WriteElementString(act.eItem.ToString, act.eMoveObjectWhat.ToString & " " & act.sKey1 & " " & IIf(act.sPropertyValue <> "", act.sPropertyValue & " ", "").ToString & WriteEnum(act.eMoveObjectTo) & " " & act.sKey2)
@@ -1058,11 +795,6 @@ Module FileIO
                             If Not act.sKey2 Is Nothing Then
                                 sAction &= "[" & act.sKey2 & "]"
                             End If
-                            'If var.Type = clsVariable.VariableTypeEnum.Numeric Then
-                            '    sAction &= " = " & act.StringValue
-                            'Else
-                            '    sAction &= " = " & act.StringValue ' This should contain an expression, which may be quoted
-                            'End If
                             sAction &= " = """ & act.StringValue & """"
                         Else
                             sAction = "FOR Loop = " & act.IntValue & " TO " & act.sKey2 & " : SET " & act.sKey1 & "[Loop] = " & act.StringValue & " : NEXT Loop"
@@ -1095,684 +827,12 @@ Module FileIO
                     Case clsAction.ItemEnum.Time
                         .WriteElementString("Time", "Skip """ & act.StringValue & """ turns")
                 End Select
-                '.WriteEndElement()
             Next
             .WriteEndElement()
         End With
 
 
     End Sub
-
-
-
-#If Generator Then
-    Friend ExportList As List(Of String)
-
-    Private Function IsItemSelected(ByVal sKey As String) As Boolean
-
-        If ExportList Is Nothing Then
-            For Each folder As frmFolder In fGenerator.MDIFolders
-                For Each item As Infragistics.Win.UltraWinListView.UltraListViewItem In folder.Folder.lstContents.SelectedItems
-                    If item.SubItems(3).Text = sKey Then Return True
-                Next
-            Next
-        Else
-            Return ExportList.Contains(sKey)
-        End If
-
-        Return False
-
-    End Function
-
-    Friend Function Save500(ByVal bCompress As Boolean, ByVal bBlorb As Boolean, Optional bSelectedOnly As Boolean = False) As Boolean
-
-        Dim stmMemory As New MemoryStream
-        Dim xmlWriter As New System.Xml.XmlTextWriter(stmMemory, System.Text.Encoding.UTF8)
-        Dim a As clsAdventure = Adventure ' Shorter name
-
-        If Not IsRegistered AndAlso bCompress Then
-            ' Make sure we have no more than 25 non-library items.  
-            Dim iNonLibrary As Integer = 0
-            For Each itm As clsItem In Adventure.dictAllItems.Values
-                If Not itm.IsLibrary Then iNonLibrary += 1
-            Next
-            If iNonLibrary > 25 Then
-                ErrMsg("Sorry.  The unregistered version of ADRIFT will only allow you to save adventures with a maximum of 25 items." & vbCrLf _
-                       & "So that you don't lose any work, try exporting the file as a module.")
-                Return False
-            End If
-        End If
-
-        With xmlWriter
-            .Formatting = Xml.Formatting.Indented
-            If bCompress Then
-                .Indentation = 0
-            Else
-                .Indentation = 4
-            End If
-
-            .WriteStartDocument()
-
-            .WriteStartElement("Adventure")
-            Dim version As Version = New Version(Application.ProductVersion)
-            .WriteElementString("Version", version.Major & "." & Format(version.Minor, "000") & Format(version.Build, "000") & version.Revision)
-            .WriteElementString("LastUpdated", SetDate(Now)) ' Now.ToString("yyyy-MM-dd HH:mm:ss"))
-            .WriteElementString("Title", a.Title)
-            .WriteElementString("Author", a.Author)
-
-            If a.DefaultFontName <> "Arial" Then .WriteElementString("FontName", a.DefaultFontName)
-            If a.DefaultFontSize <> 12 Then .WriteElementString("FontSize", a.DefaultFontSize.ToString)
-            If a.DeveloperDefaultBackgroundColour <> Color.FromArgb(DEFAULT_BACKGROUNDCOLOUR) Then .WriteElementString("BackgroundColour", ColorTranslator.ToOle(a.DeveloperDefaultBackgroundColour).ToString)
-            If a.DeveloperDefaultInputColour <> Color.FromArgb(DEFAULT_INPUTCOLOUR) Then .WriteElementString("InputColour", ColorTranslator.ToOle(a.DeveloperDefaultInputColour).ToString)
-            If a.DeveloperDefaultOutputColour <> Color.FromArgb(DEFAULT_OUTPUTCOLOUR) Then .WriteElementString("OutputColour", ColorTranslator.ToOle(a.DeveloperDefaultOutputColour).ToString)
-            If a.DeveloperDefaultLinkColour <> Color.FromArgb(DEFAULT_LINKCOLOUR) Then .WriteElementString("LinkColour", ColorTranslator.ToOle(a.DeveloperDefaultLinkColour).ToString)
-            If a.sUserStatus <> "" Then .WriteElementString("UserStatus", a.sUserStatus)
-            If Not bCompress AndAlso a.BabelTreatyInfo IsNot Nothing AndAlso a.BabelTreatyInfo.Stories.Length = 1 AndAlso a.BabelTreatyInfo.Stories(0).Bibliographic IsNot Nothing AndAlso a.BabelTreatyInfo.Stories(0).Bibliographic.Description <> "" Then
-                .WriteElementString("Description", a.BabelTreatyInfo.Stories(0).Bibliographic.Description)
-            End If
-            '.WriteElementString("Introduction", a.Introduction)
-            SaveDescription(xmlWriter, a.Introduction, "Introduction")
-
-            ' We don't want to save these settings in any modules
-            If bCompress Then
-                .WriteElementString("ShowFirstLocation", SafeInt(a.ShowFirstRoom).ToString)
-                .WriteElementString("ShowExits", SafeInt(a.ShowExits).ToString)
-                .WriteElementString("EnableMenu", SafeInt(a.EnableMenu).ToString)
-                If Not a.EnableDebugger Then .WriteElementString("EnableDebugger", SafeInt(a.EnableDebugger).ToString)
-                .WriteElementString("Elapsed", a.iElapsed.ToString)
-            End If
-
-            If Adventure.CoverFilename <> "" Then .WriteElementString("Cover", Adventure.CoverFilename)
-            SaveDescription(xmlWriter, a.WinningText, "EndGameText")
-            If a.TaskExecution <> clsAdventure.TaskExecutionEnum.HighestPriorityTask Then .WriteElementString("TaskExecution", a.TaskExecution.ToString)
-            If a.WaitTurns <> 3 Then .WriteElementString("WaitTurns", a.WaitTurns.ToString)
-            If a.KeyPrefix <> "" Then .WriteElementString("KeyPrefix", a.KeyPrefix)
-
-            If a.sDirectionsRE(DirectionsEnum.North) <> "North/N" Then .WriteElementString("DirectionNorth", a.sDirectionsRE(DirectionsEnum.North))
-            If a.sDirectionsRE(DirectionsEnum.NorthEast) <> "NorthEast/NE/North-East/N-E" Then .WriteElementString("DirectionNorthEast", a.sDirectionsRE(DirectionsEnum.NorthEast))
-            If a.sDirectionsRE(DirectionsEnum.East) <> "East/E" Then .WriteElementString("DirectionEast", a.sDirectionsRE(DirectionsEnum.East))
-            If a.sDirectionsRE(DirectionsEnum.SouthEast) <> "SouthEast/SE/South-East/S-E" Then .WriteElementString("DirectionSouthEast", a.sDirectionsRE(DirectionsEnum.SouthEast))
-            If a.sDirectionsRE(DirectionsEnum.South) <> "South/S" Then .WriteElementString("DirectionSouth", a.sDirectionsRE(DirectionsEnum.South))
-            If a.sDirectionsRE(DirectionsEnum.SouthWest) <> "SouthWest/SW/South-West/S-W" Then .WriteElementString("DirectionSouthWest", a.sDirectionsRE(DirectionsEnum.SouthWest))
-            If a.sDirectionsRE(DirectionsEnum.West) <> "West/W" Then .WriteElementString("DirectionWest", a.sDirectionsRE(DirectionsEnum.West))
-            If a.sDirectionsRE(DirectionsEnum.NorthWest) <> "NorthWest/NW/North-West/N-W" Then .WriteElementString("DirectionNorthWest", a.sDirectionsRE(DirectionsEnum.NorthWest))
-            If a.sDirectionsRE(DirectionsEnum.Up) <> "Up/U" Then .WriteElementString("DirectionUp", a.sDirectionsRE(DirectionsEnum.Up))
-            If a.sDirectionsRE(DirectionsEnum.Down) <> "Down/D" Then .WriteElementString("DirectionDown", a.sDirectionsRE(DirectionsEnum.Down))
-            If a.sDirectionsRE(DirectionsEnum.In) <> "In/Inside" Then .WriteElementString("DirectionIn", a.sDirectionsRE(DirectionsEnum.In))
-            If a.sDirectionsRE(DirectionsEnum.Out) <> "Out/O/Outside" Then .WriteElementString("DirectionOut", a.sDirectionsRE(DirectionsEnum.Out))
-
-            For Each folder As clsFolder In a.dictFolders.Values
-                If Not bSelectedOnly OrElse IsItemSelected(folder.Key) Then
-                    .WriteStartElement("Folder")
-                    .WriteElementString("Key", folder.Key)
-                    .WriteElementString("Name", folder.Name)
-                    For Each sKey As String In folder.Members
-                        .WriteElementString("Member", sKey)
-                    Next
-                    If Not folder.Expanded Then .WriteElementString("Expanded", "0")
-                    If folder.Size.Width > 0 Then
-                        .WriteElementString("Height", folder.Size.Height.ToString)
-                        .WriteElementString("Width", folder.Size.Width.ToString)
-                    End If
-                    If folder.Visible Then .WriteElementString("Visible", SafeInt(folder.Visible).ToString)
-                    .WriteElementString("X", folder.Location.X.ToString)
-                    .WriteElementString("Y", folder.Location.Y.ToString)
-                    If folder.ViewType <> Infragistics.Win.UltraWinListView.UltraListViewStyle.Details Then .WriteElementString("Type", folder.ViewType.ToString)
-                    If folder.SortColumn <> -1 Then .WriteElementString("SortColumn", folder.SortColumn.ToString)
-                    If folder.SortDirection <> Infragistics.Win.UltraWinListView.Sorting.None Then .WriteElementString("SortDirection", folder.SortDirection.ToString)
-                    If folder.GroupBy <> 0 Then .WriteElementString("GroupBy", folder.GroupBy.ToString)
-                    If folder.GroupDirection <> Infragistics.Win.UltraWinListView.Sorting.None Then .WriteElementString("GroupDirection", folder.GroupDirection.ToString)
-                    If folder.ShowCreatedDate Then .WriteElementString("ShowCreatedDate", "1")
-                    If folder.ShowModifiedDate Then .WriteElementString("ShowModifiedDate", "1")
-                    If folder.ShowType Then .WriteElementString("ShowType", "1")
-                    If folder.ShowKey Then .WriteElementString("ShowKey", "1")
-                    If folder.ShowPriority Then .WriteElementString("ShowPriority", "1")
-
-                    If folder.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(folder.LastUpdated))
-                    .WriteElementString("Created", SetDate(folder.Created))
-
-                    .WriteEndElement() ' Folder
-                End If
-
-            Next
-
-            For Each prop As clsProperty In a.htblAllProperties.Values
-                If Not bSelectedOnly OrElse IsItemSelected(prop.Key) Then
-                    .WriteStartElement("Property")
-                    .WriteElementString("Key", prop.Key)
-                    .WriteElementString("Description", prop.Description)
-                    If prop.Mandatory Then .WriteElementString("Mandatory", SafeInt(prop.Mandatory).ToString)
-                    .WriteElementString("PropertyOf", WriteEnum(prop.PropertyOf))
-                    .WriteElementString("Type", WriteEnum(prop.Type))
-                    Select Case prop.Type
-                        Case clsProperty.PropertyTypeEnum.StateList
-                            For Each sState As String In prop.arlStates
-                                .WriteElementString("State", sState)
-                            Next
-                            If prop.AppendToProperty IsNot Nothing Then .WriteElementString("AppendTo", prop.AppendToProperty)
-                        Case clsProperty.PropertyTypeEnum.ValueList
-                            For Each sKey As String In prop.ValueList.Keys
-                                .WriteStartElement("ValueList")
-                                .WriteElementString("Label", sKey)
-                                .WriteElementString("Value", prop.ValueList(sKey).ToString)
-                                .WriteEndElement()
-                            Next
-                    End Select
-                    If prop.PrivateTo <> "" Then .WriteElementString("PrivateTo", prop.PrivateTo)
-                    If prop.PopupDescription <> "" Then .WriteElementString("Tooltip", prop.PopupDescription)
-
-                    If Not prop.DependentKey Is Nothing AndAlso prop.DependentKey.Length > 0 Then
-                        .WriteElementString("DependentKey", prop.DependentKey)
-                        If Not prop.DependentValue Is Nothing AndAlso prop.DependentValue.Length > 0 Then .WriteElementString("DependentValue", prop.DependentValue)
-                    End If
-                    If Not prop.RestrictProperty Is Nothing AndAlso prop.RestrictProperty.Length > 0 Then
-                        .WriteElementString("RestrictProperty", prop.RestrictProperty)
-                        If Not prop.RestrictValue Is Nothing AndAlso prop.RestrictValue.Length > 0 Then .WriteElementString("RestrictValue", prop.RestrictValue)
-                    End If
-                    If prop.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(prop.LastUpdated))
-                    .WriteElementString("Created", SetDate(prop.Created))
-
-                    .WriteEndElement()
-                End If
-            Next
-
-
-            For Each loc As clsLocation In a.htblLocations.Values
-                If Not bSelectedOnly OrElse IsItemSelected(loc.Key) Then
-                    .WriteStartElement("Location")
-                    .WriteElementString("Key", loc.Key)
-                    SaveDescription(xmlWriter, loc.ShortDescription, "ShortDescription")
-                    SaveDescription(xmlWriter, loc.LongDescription, "LongDescription")
-                    For di As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest
-                        Dim dtn As clsDirection = loc.arlDirections(di)
-                        If dtn.LocationKey <> "" Then
-                            .WriteStartElement("Movement")
-                            .WriteElementString("Direction", WriteEnum(di))
-                            .WriteElementString("Destination", dtn.LocationKey)
-                            SaveRestrictions(xmlWriter, dtn.Restrictions)
-                            .WriteEndElement() ' Movement
-                        End If
-                    Next di
-                    For Each prop As clsProperty In loc.htblActualProperties.Values
-                        .WriteStartElement("Property")
-                        .WriteElementString("Key", prop.Key)
-                        Select Case prop.Type
-                            Case clsProperty.PropertyTypeEnum.Text
-                                SaveDescription(xmlWriter, prop.StringData, "Value")
-                            Case clsProperty.PropertyTypeEnum.SelectionOnly
-                                ' Do nothing
-                            Case Else
-                                .WriteElementString("Value", prop.Value)
-                        End Select
-                        .WriteEndElement() ' Property
-                    Next
-                    If loc.HideOnMap Then .WriteElementString("Hide", "1")
-                    If loc.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(loc.LastUpdated))
-                    .WriteElementString("Created", SetDate(loc.Created))
-
-                    .WriteEndElement() ' Location
-                End If
-            Next loc
-
-
-            For Each ob As clsObject In a.htblObjects.Values
-                If Not bSelectedOnly OrElse IsItemSelected(ob.Key) Then
-                    .WriteStartElement("Object")
-                    .WriteElementString("Key", ob.Key)
-                    .WriteElementString("Article", ob.Article)
-                    .WriteElementString("Prefix", ob.Prefix)
-                    For Each sName As String In ob.arlNames
-                        .WriteElementString("Name", sName)
-                    Next
-                    '.WriteElementString("Description", ob.Description)
-                    SaveDescription(xmlWriter, ob.Description, "Description")
-                    ' store key to property, plus value
-                    For Each prop As clsProperty In ob.htblActualProperties.Values
-                        '.WriteElementString("Property", prop.Key, prop.Value)                                        
-                        .WriteStartElement("Property")
-                        .WriteElementString("Key", prop.Key)
-                        Select Case prop.Type
-                            Case clsProperty.PropertyTypeEnum.Text
-                                SaveDescription(xmlWriter, prop.StringData, "Value")
-                            Case clsProperty.PropertyTypeEnum.SelectionOnly
-                                ' Do nothing
-                            Case Else
-                                .WriteElementString("Value", prop.Value)
-                        End Select
-                        .WriteEndElement() ' Property
-                    Next
-
-                    If ob.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(ob.LastUpdated))
-                    .WriteElementString("Created", SetDate(ob.Created))
-
-                    .WriteEndElement()
-                End If
-            Next
-
-
-            For Each tas As clsTask In a.htblTasks.Values
-                If Not bSelectedOnly OrElse IsItemSelected(tas.Key) Then
-                    .WriteStartElement("Task")
-                    .WriteElementString("Key", tas.Key)
-                    .WriteElementString("Priority", tas.Priority.ToString)
-                    If tas.AutoFillPriority <> 10 AndAlso tas.TaskType = clsTask.TaskTypeEnum.General Then .WriteElementString("AutoFillPriority", tas.AutoFillPriority.ToString)
-                    .WriteElementString("Type", WriteEnum(tas.TaskType))
-                    Select Case tas.TaskType
-                        Case clsTask.TaskTypeEnum.General
-                            For Each sCommand As String In tas.arlCommands
-                                .WriteElementString("Command", sCommand)
-                            Next
-                        Case clsTask.TaskTypeEnum.Specific
-                            .WriteElementString("GeneralTask", tas.GeneralKey)
-                            If tas.Specifics IsNot Nothing Then
-                                For Each spec As clsTask.Specific In tas.Specifics
-                                    .WriteStartElement("Specific")
-                                    .WriteElementString("Type", WriteEnum(spec.Type))
-                                    .WriteElementString("Multiple", SafeInt(spec.Multiple).ToString)
-                                    For Each sKey As String In spec.Keys
-                                        .WriteElementString("Key", sKey)
-                                    Next
-                                    .WriteEndElement()
-                                Next
-                            End If
-                        Case clsTask.TaskTypeEnum.System
-                            If tas.RunImmediately Then .WriteElementString("RunImmediately", SafeInt(tas.RunImmediately).ToString)
-                            If tas.LocationTrigger <> "" Then .WriteElementString("LocationTrigger", tas.LocationTrigger)
-                    End Select
-
-                    .WriteElementString("Description", tas.Description)
-                    '.WriteElementString("CompletionMessage", tas.CompletionMessage)
-                    SaveDescription(xmlWriter, tas.CompletionMessage, "CompletionMessage")
-                    .WriteElementString("Repeatable", SafeInt(tas.Repeatable).ToString)
-                    '.WriteElementString("Continue", tas.ContinueToExecuteLowerPriority.ToString)
-                    If tas.ContinueToExecuteLowerPriority Then .WriteElementString("Continue", "ContinueAlways")
-                    If tas.LowPriority Then .WriteElementString("LowPriority", SafeInt(tas.LowPriority).ToString)
-                    If tas.PreventOverriding Then .WriteElementString("PreventOverriding", SafeInt(tas.PreventOverriding).ToString)
-                    If tas.ReplaceDuplicateKey Then .WriteElementString("ReplaceTask", SafeInt(tas.ReplaceDuplicateKey).ToString)
-                    If tas.TaskType = clsTask.TaskTypeEnum.Specific Then .WriteElementString("SpecificOverrideType", tas.SpecificOverrideType.ToString)
-                    If tas.FailOverride.ToString <> "" Then SaveDescription(xmlWriter, tas.FailOverride, "FailOverride")
-                    If tas.eDisplayCompletion <> clsTask.BeforeAfterEnum.Before Then .WriteElementString("MessageBeforeOrAfter", WriteEnum(tas.eDisplayCompletion))
-                    SaveRestrictions(xmlWriter, tas.arlRestrictions)
-                    SaveActions(xmlWriter, tas.arlActions)
-                    If tas.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(tas.LastUpdated))
-                    .WriteElementString("Created", SetDate(tas.Created))
-                    If Not tas.AggregateOutput Then .WriteElementString("Aggregate", "0")
-
-                    .WriteEndElement() ' Task
-                End If
-            Next
-
-
-
-            For Each ev As clsEvent In a.htblEvents.Values
-                If Not bSelectedOnly OrElse IsItemSelected(ev.Key) Then
-                    .WriteStartElement("Event")
-                    .WriteElementString("Key", ev.Key)
-                    .WriteElementString("Description", ev.Description)
-                    .WriteElementString("Type", ev.EventType.ToString)
-                    .WriteElementString("WhenStart", ev.WhenStart.ToString)
-                    If ev.WhenStart = clsEvent.WhenStartEnum.BetweenXandYTurns Then
-                        .WriteElementString("StartDelay", ev.StartDelay.ToString)
-                    End If
-                    .WriteElementString("Length", ev.Length.ToString)
-                    If ev.Repeating Then .WriteElementString("Repeating", SafeInt(ev.Repeating).ToString)
-                    If ev.RepeatCountdown Then .WriteElementString("RepeatCountdown", CInt(ev.RepeatCountdown).ToString)
-
-                    ' Controls
-                    For Each ctl As EventOrWalkControl In ev.EventControls
-                        .WriteElementString("Control", ctl.eControl.ToString & " " & ctl.eCompleteOrNot.ToString & " " & ctl.sTaskKey)
-                    Next
-                    ' SubEvents
-                    For Each se As clsEvent.SubEvent In ev.SubEvents
-                        .WriteStartElement("SubEvent")
-                        .WriteElementString("When", se.ftTurns.ToString & " " & se.eWhen.ToString)
-                        .WriteElementString("What", WriteEnum(se.eWhat))
-                        .WriteElementString("Measure", WriteEnum(se.eMeasure))
-                        Select Case se.eWhat
-                            Case clsEvent.SubEvent.WhatEnum.DisplayMessage, clsEvent.SubEvent.WhatEnum.SetLook
-                                SaveDescription(xmlWriter, se.oDescription, "Action")
-                                If se.sKey <> "" Then .WriteElementString("OnlyApplyAt", se.sKey)
-                            Case clsEvent.SubEvent.WhatEnum.ExecuteTask, clsEvent.SubEvent.WhatEnum.UnsetTask
-                                .WriteElementString("Action", se.eWhat.ToString & " " & se.sKey)
-                        End Select
-
-                        .WriteEndElement() ' SubEvent
-                    Next
-
-                    If ev.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(ev.LastUpdated))
-                    .WriteElementString("Created", SetDate(ev.Created))
-
-                    .WriteEndElement() ' Event
-                End If
-            Next
-
-
-
-            For Each ch As clsCharacter In a.htblCharacters.Values
-                If Not bSelectedOnly OrElse IsItemSelected(ch.Key) Then
-                    .WriteStartElement("Character")
-                    .WriteElementString("Key", ch.Key)
-                    .WriteElementString("Name", ch.ProperName)
-                    .WriteElementString("Article", ch.Article)
-                    .WriteElementString("Prefix", ch.Prefix)
-                    For Each sAlias As String In ch.arlDescriptors
-                        .WriteElementString("Descriptor", sAlias)
-                    Next
-                    .WriteElementString("Type", WriteEnum(ch.CharacterType))
-                    If ch.Perspective <> PerspectiveEnum.ThirdPerson Then .WriteElementString("Perspective", ch.Perspective.ToString)
-                    SaveDescription(xmlWriter, ch.Description, "Description")
-                    '.WriteElementString("Location", chr.Location)
-                    ' store key to property, plus value
-                    For Each prop As clsProperty In ch.htblActualProperties.Values
-                        '.WriteElementString("Property", prop.Key, prop.Value)
-                        .WriteStartElement("Property")
-                        .WriteElementString("Key", prop.Key)
-                        Select Case prop.Type
-                            Case clsProperty.PropertyTypeEnum.Text
-                                SaveDescription(xmlWriter, prop.StringData, "Value")
-                            Case clsProperty.PropertyTypeEnum.SelectionOnly
-                                ' Do nothing
-                            Case Else
-                                .WriteElementString("Value", prop.Value)
-                        End Select
-                        .WriteEndElement() ' Property
-                    Next
-                    For Each walk As clsWalk In ch.arlWalks
-                        .WriteStartElement("Walk")
-                        .WriteElementString("Description", walk.Description)
-                        'If walk.FromDesc <> "" Then .WriteElementString("FromDesc", walk.FromDesc)
-                        .WriteElementString("Loops", SafeInt(walk.Loops).ToString)
-                        '.WriteElementString("ShowMove", walk.ShowMove.ToString)
-                        .WriteElementString("StartActive", SafeInt(walk.StartActive).ToString)
-                        'If walk.ToDesc <> "" Then .WriteElementString("ToDesc", walk.ToDesc)
-                        For Each [step] As clsWalk.clsStep In walk.arlSteps
-                            .WriteElementString("Step", [step].sLocation & " " & [step].ftTurns.ToString)
-                        Next
-                        ' Controls
-                        For Each ctl As EventOrWalkControl In walk.WalkControls
-                            .WriteElementString("Control", ctl.eControl.ToString & " " & ctl.eCompleteOrNot.ToString & " " & ctl.sTaskKey)
-                        Next
-                        ' SubWalks
-                        For Each sw As clsWalk.SubWalk In walk.SubWalks
-                            .WriteStartElement("Activity")
-                            Select Case sw.eWhen
-                                Case clsWalk.SubWalk.WhenEnum.ComesAcross
-                                    .WriteElementString("When", sw.eWhen.ToString & " " & sw.sKey)
-                                Case Else
-                                    .WriteElementString("When", sw.ftTurns.ToString & " " & sw.eWhen.ToString)
-                            End Select
-
-                            Select Case sw.eWhat
-                                Case clsWalk.SubWalk.WhatEnum.DisplayMessage
-                                    SaveDescription(xmlWriter, sw.oDescription, "Action")
-                                Case clsWalk.SubWalk.WhatEnum.ExecuteTask, clsWalk.SubWalk.WhatEnum.UnsetTask
-                                    .WriteElementString("Action", sw.eWhat.ToString & " " & sw.sKey2)
-                            End Select
-
-                            If sw.sKey3 <> "" Then .WriteElementString("OnlyApplyAt", sw.sKey3)
-
-                            .WriteEndElement() ' Activity
-                        Next
-                        .WriteEndElement()
-                    Next
-                    For Each topic As clsTopic In ch.htblTopics.Values
-                        .WriteStartElement("Topic")
-                        .WriteElementString("Key", topic.Key)
-                        If topic.ParentKey <> "" Then .WriteElementString("ParentKey", topic.ParentKey)
-                        .WriteElementString("Summary", topic.Summary)
-                        .WriteElementString("Keywords", topic.Keywords)
-                        SaveDescription(xmlWriter, topic.oConversation, "Description")
-                        If topic.bAsk Then .WriteElementString("IsAsk", SafeInt(topic.bAsk).ToString)
-                        If topic.bCommand Then .WriteElementString("IsCommand", SafeInt(topic.bCommand).ToString)
-                        If topic.bFarewell Then .WriteElementString("IsFarewell", SafeInt(topic.bFarewell).ToString)
-                        If topic.bIntroduction Then .WriteElementString("IsIntro", SafeInt(topic.bIntroduction).ToString)
-                        If topic.bTell Then .WriteElementString("IsTell", SafeInt(topic.bTell).ToString)
-                        If topic.bStayInNode Then .WriteElementString("StayInNode", SafeInt(topic.bStayInNode).ToString)
-                        SaveRestrictions(xmlWriter, topic.arlRestrictions)
-                        SaveActions(xmlWriter, topic.arlActions)
-                        .WriteEndElement() ' Topic
-                    Next
-                    If ch.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(ch.LastUpdated))
-                    .WriteElementString("Created", SetDate(ch.Created))
-
-                    .WriteEndElement() ' Character
-                End If
-            Next
-
-
-            For Each var As clsVariable In a.htblVariables.Values
-                If Not bSelectedOnly OrElse IsItemSelected(var.Key) Then
-                    .WriteStartElement("Variable")
-                    .WriteElementString("Key", var.Key)
-                    .WriteElementString("Name", var.Name)
-                    .WriteElementString("Type", WriteEnum(var.Type))
-                    If var.Type = clsVariable.VariableTypeEnum.Text Then
-                        .WriteElementString("InitialValue", var.StringValue)
-                    ElseIf (var.Type = clsVariable.VariableTypeEnum.Numeric AndAlso var.Length > 1 AndAlso var.StringValue.Contains(",")) Then
-                        .WriteElementString("InitialValue", var.StringValue)
-                    Else
-                        .WriteElementString("InitialValue", var.IntValue.ToString)
-                    End If
-                    If var.Length > 1 Then .WriteElementString("ArrayLength", var.Length.ToString)
-                    If var.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(var.LastUpdated))
-                    .WriteElementString("Created", SetDate(var.Created))
-
-                    .WriteEndElement() ' Variable
-                End If
-            Next
-
-
-            For Each grp As clsGroup In a.htblGroups.Values
-                If Not bSelectedOnly OrElse IsItemSelected(grp.Key) Then
-                    .WriteStartElement("Group")
-                    .WriteElementString("Key", grp.Key)
-                    .WriteElementString("Type", WriteEnum(grp.GroupType))
-                    .WriteElementString("Name", grp.Name)
-                    For Each sMember As String In grp.arlMembers
-                        .WriteElementString("Member", sMember)
-                    Next
-                    For Each prop As clsProperty In grp.htblProperties.Values
-                        .WriteStartElement("Property")
-                        .WriteElementString("Key", prop.Key)
-                        Select Case prop.Type
-                            Case clsProperty.PropertyTypeEnum.Text
-                                SaveDescription(xmlWriter, prop.StringData, "Value")
-                            Case clsProperty.PropertyTypeEnum.SelectionOnly
-                                ' Do nothing
-                            Case Else
-                                .WriteElementString("Value", prop.Value)
-                        End Select
-                        .WriteEndElement() ' Property
-                    Next
-                    If grp.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(grp.LastUpdated))
-                    .WriteElementString("Created", SetDate(grp.Created))
-
-                    .WriteEndElement() ' Group
-                End If
-            Next
-
-
-            For Each alr As clsALR In a.htblALRs.Values
-                If Not bSelectedOnly OrElse IsItemSelected(alr.Key) Then
-                    .WriteStartElement("TextOverride")
-                    .WriteElementString("Key", alr.Key)
-                    .WriteElementString("OldText", alr.OldText)
-                    SaveDescription(xmlWriter, alr.NewText, "NewText")
-                    If alr.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(alr.LastUpdated))
-                    .WriteElementString("Created", SetDate(alr.Created))
-                    .WriteEndElement() ' TextOverride
-                End If
-            Next
-
-
-            For Each hint As clsHint In a.htblHints.Values
-                If Not bSelectedOnly OrElse IsItemSelected(hint.Key) Then
-                    .WriteStartElement("Hint")
-                    .WriteElementString("Key", hint.Key)
-                    .WriteElementString("Question", hint.Question)
-                    SaveDescription(xmlWriter, hint.SubtleHint, "Subtle")
-                    SaveDescription(xmlWriter, hint.SledgeHammerHint, "Sledgehammer")
-                    SaveRestrictions(xmlWriter, hint.arlRestrictions)
-                    If hint.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(hint.LastUpdated))
-                    .WriteElementString("Created", SetDate(hint.Created))
-                    .WriteEndElement() ' Hint
-                End If
-            Next
-
-
-            For Each syn As clsSynonym In a.htblSynonyms.Values
-                If Not bSelectedOnly OrElse IsItemSelected(syn.Key) Then
-                    .WriteStartElement("Synonym")
-                    .WriteElementString("Key", syn.Key)
-                    For Each sFrom As String In syn.ChangeFrom
-                        .WriteElementString("From", sFrom)
-                    Next
-                    .WriteElementString("To", syn.ChangeTo)
-                    .WriteEndElement() ' Synonym
-                End If
-            Next
-
-
-            For Each udf As clsUserFunction In a.htblUDFs.Values
-                If Not bSelectedOnly OrElse IsItemSelected(udf.Key) Then
-                    .WriteStartElement("Function")
-                    .WriteElementString("Key", udf.Key)
-                    .WriteElementString("Name", udf.Name)
-                    SaveDescription(xmlWriter, udf.Output, "Output")
-                    For Each arg As clsUserFunction.Argument In udf.Arguments
-                        .WriteStartElement("Argument")
-                        .WriteElementString("Name", arg.Name)
-                        .WriteElementString("Type", arg.Type.ToString)
-                        .WriteEndElement() ' Argument
-                    Next
-                    If udf.IsLibrary Then .WriteElementString("Library", "1")
-                    .WriteElementString("LastUpdated", SetDate(udf.LastUpdated))
-                    .WriteElementString("Created", SetDate(udf.Created))
-                    .WriteEndElement() ' Function
-                End If
-            Next
-
-
-            For Each sExclude As String In a.listExcludedItems
-                .WriteElementString("Exclude", sExclude)
-            Next
-
-
-            If Not bSelectedOnly Then
-                Dim w As XmlWriter = xmlWriter
-                .WriteStartElement("Map")
-                With a.Map.Pages
-                    For Each iPage As Integer In .Keys
-                        w.WriteStartElement("Page")
-                        w.WriteElementString("Key", iPage.ToString)
-                        If a.Map.SelectedPage = iPage.ToString Then w.WriteElementString("Selected", "1")
-                        With .Item(iPage)
-                            w.WriteElementString("Label", .Label)
-                            For Each node As MapNode In .Nodes
-                                With node
-                                    w.WriteStartElement("Node")
-                                    w.WriteElementString("Key", .Key)
-                                    w.WriteElementString("X", .Location.X.ToString)
-                                    w.WriteElementString("Y", .Location.Y.ToString)
-                                    w.WriteElementString("Z", .Location.Z.ToString)
-                                    If .Height <> 4 Then w.WriteElementString("Height", .Height.ToString)
-                                    If .Width <> 6 Then w.WriteElementString("Width", .Width.ToString)
-                                    For Each link As MapLink In .Links.Values
-                                        With link
-                                            w.WriteStartElement("Link")
-                                            w.WriteElementString("SourceAnchor", .eSourceLinkPoint.ToString)
-                                            w.WriteElementString("DestinationAnchor", .eDestinationLinkPoint.ToString)
-                                            If .OrigMidPoints.Length > 0 Then
-                                                For Each p As Point3D In .OrigMidPoints
-                                                    w.WriteStartElement("Anchor")
-                                                    w.WriteElementString("X", p.X.ToString)
-                                                    w.WriteElementString("Y", p.Y.ToString)
-                                                    w.WriteElementString("Z", p.Z.ToString)
-                                                    w.WriteEndElement() ' Anchor                                                
-                                                Next
-                                            End If
-                                            w.WriteEndElement() ' Link
-                                        End With
-                                    Next
-                                    w.WriteEndElement() ' Node
-                                End With
-                            Next
-                        End With
-                        w.WriteEndElement() ' Page
-                    Next
-                End With
-                .WriteEndElement() ' Map
-            End If
-
-
-            If bBlorb Then
-                Dim lImages As List(Of String) = Adventure.Images
-                Dim lSounds As List(Of String) = Adventure.Sounds
-                If lImages.Count + lSounds.Count > 0 Then
-                    .WriteStartElement("FileMappings")
-                    Dim iResource As Integer = 1
-                    For Each sImage As String In lImages
-                        .WriteStartElement("Mapping")
-                        .WriteElementString("Resource", iResource.ToString)
-                        .WriteElementString("File", sImage)
-                        .WriteEndElement() ' Mapping
-                        iResource += 1
-                    Next
-                    For Each sSound As String In lSounds
-                        .WriteStartElement("Mapping")
-                        .WriteElementString("Resource", iResource.ToString)
-                        .WriteElementString("File", sSound)
-                        .WriteEndElement() ' Mapping
-                        iResource += 1
-                    Next
-                    .WriteEndElement() ' FileMappings
-                End If
-            End If
-
-            .WriteEndElement() ' Adventure
-
-            .WriteEndDocument()
-            .Flush()
-            ' Finished writing to memory stream
-
-            ReDim bAdventure(-1)
-            If bCompress Then
-                Dim outStream As New System.IO.MemoryStream
-                Dim zStream As New ZOutputStream(outStream, zlibConst.Z_BEST_COMPRESSION)
-
-                Try
-                    stmMemory.Position = 0
-                    CopyStream(stmMemory, zStream)
-                Finally
-                    zStream.Close()
-                    bAdventure = outStream.ToArray
-                    ObfuscateByteArray(bAdventure)
-                    outStream.Close()
-                    'inStream.Close()
-                End Try
-            Else
-                ' Redirect the memory stream direct to our binary output
-                bAdventure = stmMemory.ToArray
-            End If
-
-            .Close()
-        End With
-
-        Return True
-
-    End Function
-#End If
 
 
     Private Function IsEqual(ByRef mb1 As Byte(), ByRef mb2 As Byte()) As Boolean
@@ -1818,144 +878,6 @@ Module FileIO
     End Sub
 
 
-#If Generator Then
-    Friend Function ImportTrizbort(ByVal sFilename As String) As Boolean
-
-        Try
-            If Not IO.File.Exists(sFilename) Then
-                ErrMsg("File '" & sFilename & "' not found.")
-                Return False
-            End If
-
-            Dim oXML As New System.Xml.Serialization.XmlSerializer(GetType(trizbort))
-            Dim stmFile As New IO.FileStream(sFilename, IO.FileMode.Open, FileAccess.Read)
-            Dim trizbort As trizbort = CType(oXML.Deserialize(stmFile), trizbort)
-            Return fGenerator.Map1.ImportTrizbort(trizbort)
-
-        Catch ex As Exception
-            ErrMsg("Error importing Trizbort map", ex)
-            Return False
-        End Try
-
-    End Function
-
-
-    Friend Function ImportALR(ByVal sFilename As String) As Boolean
-
-        Try
-            If Not IO.File.Exists(sFilename) Then
-                ErrMsg("File '" & sFilename & "' not found.")
-                Return False
-            End If
-
-            If Adventure Is Nothing Then Return False
-
-            Dim i As Integer
-            For Each sLine As String In IO.File.ReadAllLines(sFilename)
-                If sLine.Length > 0 Then
-                    If Not sLine.StartsWith("#") AndAlso sLine.Contains("|") Then
-                        Dim sData() As String = sLine.Split("|"c)
-                        If sData.Length = 2 Then
-                            Dim alr As New clsALR
-                            alr.Key = alr.GetNewKey ' Adventure.GetNewKey("Override")
-                            alr.OldText = sData(0)
-                            alr.NewText = New Description(sData(1))
-                            alr.LastUpdated = Now
-                            Adventure.htblALRs.Add(alr, alr.Key)
-                            UpdateListItem(alr.Key, alr.OldText)
-                            i += 1
-                        End If
-                    End If
-                End If
-            Next
-
-            If i > 0 Then MessageBox.Show(i & " records imported", "Import Text Overrides", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
-            Return True
-
-        Catch ex As Exception
-            ErrMsg("Error importing Language Resource File", ex)
-            Return False
-        End Try
-
-    End Function
-
-
-    Friend Function ExportALR(ByVal sFilename As String) As Boolean
-
-        Try
-            If Adventure Is Nothing Then Return False
-            If Adventure.htblALRs.Count = 0 Then
-                ErrMsg("Nothing to export")
-                Return False
-            End If
-
-            Dim sLines(Adventure.htblALRs.Count - 1) As String
-            Dim i As Integer = 0
-
-            ' Should this output as XML, to retain Description?
-            For Each alr As clsALR In Adventure.htblALRs.Values
-                sLines(i) = alr.OldText.Replace("|", "") & "|" & alr.NewText.ToString.Replace("|", "")
-                i += 1
-            Next
-            IO.File.WriteAllLines(sFilename, sLines)
-
-            MessageBox.Show(i & " records exported", "Export Text Overrides", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
-            Return True
-        Catch ex As Exception
-            ErrMsg("Error exporting Language Resource File", ex)
-            Return False
-        End Try
-
-    End Function
-
-#End If
-
-
-    Private Function Authenticate(ByVal oStream As Stream, ByVal iFileLen As Long) As Boolean
-
-        Try
-            oStream.Seek(iFileLen - 14, SeekOrigin.Begin)
-            br = New BinaryReader(oStream)
-            Dim bPass As Byte() = Dencode(br.ReadBytes(12), iFileLen - 13)
-            Dim sPassString As String = System.Text.Encoding.UTF8.GetString(bPass)
-            Adventure.Password = (sLeft(sPassString, 4) & sRight(sPassString, 4)).Trim
-
-#If Generator Then
-            If sPassString <> "    Wild    " Then
-                Dim fPassword As New Password
-                fPassword.Text = "Open Adventure"
-                fPassword.lblText.Text = "Please enter password:"
-                fPassword.PictureBox1.Image = My.Resources.imgLock32
-#If DEBUG Then
-                fPassword.txtPassword.Text = Adventure.Password.TrimEnd
-#End If
-                If fPassword.ShowDialog = DialogResult.OK Then
-                    Dim sPasswordCheck As String = fPassword.txtPassword.Text
-                    If sLeft(sPasswordCheck, 8).TrimEnd <> Adventure.Password.TrimEnd Then
-                        ErrMsg("Incorrect password.  Unable to load this adventure.")
-#If DEBUG Then
-                        ' Allow
-#Else
-                            Return False
-#End If
-                    End If
-                Else
-                    Return False
-                End If
-            End If
-#End If
-            Return True
-
-        Catch ex As Exception
-            Return False
-        End Try
-
-    End Function
-
-
-
     ' This loads from file into our data structure
     ' Assumes file exists
     '
@@ -1967,63 +889,17 @@ Module FileIO
         Blorb
         Exe
     End Enum
-#If Runner Then
+
     Friend Function LoadFile(ByVal sFilename As String, ByVal eFileType As FileTypeEnum, ByVal eLoadWhat As LoadWhatEnum, ByVal bLibrary As Boolean, Optional ByVal dtAdvDate As Date = #1/1/1900#, Optional ByRef state As clsGameState = Nothing, Optional ByVal lOffset As Long = 0, Optional ByVal bSilentError As Boolean = False) As Boolean
-#Else
-    Friend Function LoadFile(ByVal sFilename As String, ByVal eFileType As FileTypeEnum, ByVal eLoadWhat As LoadWhatEnum, ByVal bLibrary As Boolean, Optional ByVal dtAdvDate As Date = #1/1/1900#, Optional ByVal lOffset As Long = 0, Optional ByVal bSilentError As Boolean = False) As Boolean
-#End If
 
         Dim stmOriginalFile As IO.FileStream = Nothing
-#If Not Adravalon Then
-        Cursor.Current = Cursors.WaitCursor
-#End If
 
         Try
             If Not IO.File.Exists(sFilename) Then
-                'ErrMsg(IO.Directory.GetCurrentDirectory & ", " & sFilename)
                 ErrMsg("File '" & sFilename & "' not found.")
-#If Not www Then
                 RemoveFileFromList(sFilename)
-#End If
                 Return False
             End If
-
-            '            If lOffset = 0 AndAlso sFilename.ToUpper.EndsWith(".EXE") Then
-            '                Try
-            '                    ' Work out whether we have a TAF appended on the end.  If so, run that in Executable mode
-            '                    ' Grab out the last 8 bytes, and see if it converts to a size
-            '                    Dim bData(5) As Byte
-            '                    Dim fStream As New IO.FileStream(sFilename, IO.FileMode.Open, IO.FileAccess.Read)
-            '                    fStream.Seek(fStream.Length - 6, IO.SeekOrigin.Begin)
-            '                    fStream.Read(bData, 0, 6)
-            '                    fStream.Close()
-
-            '                    Dim sFileSize As String = (New System.Text.ASCIIEncoding).GetString(bData).ToUpper
-            '                    If IsHex(sFileSize) Then
-            '                        Dim lFileSize As Long = CLng("&H" & sFileSize)
-            '                        If lFileSize > 0 Then
-            '                            ' Ok, check the offset to see that the appended data is really a TAF...
-            '                            fStream = New IO.FileStream(sFilename, IO.FileMode.Open, IO.FileAccess.Read)
-            '                            fStream.Seek(lFileSize, IO.SeekOrigin.Begin)
-            '                            ReDim bData(11)
-            '                            fStream.Read(bData, 0, 12)
-            '                            fStream.Close() 
-            '                            Dim sVersion As String = System.Text.Encoding.Default.GetString(Dencode(System.Text.Encoding.Default.GetString(bData), 1))
-            '                            If sVersion = "Version 5.00" Then
-            '#If Runner Then
-            '                                Return LoadFile(sFilename, eFileType, eLoadWhat, bLibrary, dtAdvDate, state, lFileSize, bSilentError)
-            '#Else
-            '                                Return LoadFile(sFilename, eFileType, eLoadWhat, bLibrary, dtAdvDate, lFileSize, bSilentError)
-            '#End If
-            '                            End If
-            '                        End If
-            '                    End If
-
-            '                Catch ex As Exception
-            '                    If Not bSilentError Then ErrMsg("Error loading EXE", ex)
-            '                    Return False
-            '                End Try
-            '            End If
 
             stmOriginalFile = New IO.FileStream(sFilename, IO.FileMode.Open, FileAccess.Read)
 
@@ -2033,36 +909,8 @@ Module FileIO
                 br = New BinaryReader(stmOriginalFile)
                 Dim bPass As Byte() = Dencode(br.ReadBytes(12), FileLen(sFilename) - 13)
                 Dim sPassString As String = System.Text.Encoding.UTF8.GetString(bPass)
-                'Dim encodingEuropean As System.Text.Encoding = System.Text.Encoding.GetEncoding(1252)
-                'Dim sPassString As String = encodingEuropean.GetString(Dencode(encodingEuropean.GetString(br.ReadBytes(12)), FileLen(sFilename) - 13))
-                'Dim sPassString As String = System.Text.Encoding.UTF8.GetString(Dencode(System.Text.Encoding.UTF8.GetString(br.ReadBytes(12)), FileLen(sFilename) - 13))
-                'Dim sPassString As String = System.Text.Encoding.Default.GetString(Dencode(System.Text.Encoding.Default.GetString(br.ReadBytes(12)), FileLen(sFilename) - 13))
                 Adventure.Password = (sLeft(sPassString, 4) & sRight(sPassString, 4)).Trim
 
-#If Generator Then
-                If sPassString <> "    Wild    " Then
-                    Dim fPassword As New Password
-                    fPassword.Text = "Open Adventure"
-                    fPassword.lblText.Text = "Please enter password:"
-                    fPassword.PictureBox1.Image = My.Resources.imgLock32
-#If DEBUG Then
-                    fPassword.txtPassword.Text = Adventure.Password.TrimEnd
-#End If
-                    If fPassword.ShowDialog = DialogResult.OK Then
-                        Dim sPasswordCheck As String = fPassword.txtPassword.Text
-                        If sLeft(sPasswordCheck, 8).TrimEnd <> Adventure.Password.TrimEnd Then
-                            ErrMsg("Incorrect password.  Unable to load this adventure.")
-#If DEBUG Then
-                            ' Allow
-#Else
-                            Return False
-#End If
-                        End If
-                    Else
-                        Return False
-                    End If
-                End If
-#End If
             End If
 
             If lOffset > 0 Then
@@ -2088,12 +936,6 @@ Module FileIO
                     End If
 
                 Case FileTypeEnum.Blorb
-#If Not Generator OrElse DEBUG Then
-                    ' Allow
-#Else
-                    ErrMsg("Blorb files can only be opened directly by Runner, or may be Imported to extract an adventure file.")
-                    Return False
-#End If
                     Blorb = New clsBlorb
                     If Blorb.LoadBlorb(stmOriginalFile, sFilename) Then
 
@@ -2116,9 +958,7 @@ Module FileIO
                             Return False
                         End If
 
-#If Runner Then
                         UserSession.ShowUserSplash()
-#End If
 
                         With Adventure
                             .dVersion = Double.Parse(sVersion.Replace("Version ", ""), Globalization.CultureInfo.InvariantCulture.NumberFormat) 'CDbl(sVersion.Replace("Version ", ""))
@@ -2151,20 +991,7 @@ Module FileIO
                     Else
                         sVersion = System.Text.Encoding.UTF8.GetString(Dencode(bVersion, 1))
                     End If
-                    'Dim sVersion As String = System.Text.Encoding.Default.GetString(br.ReadBytes(12))
-                    Select Case True
-                        ' For Mono, because random from same seed gives a different number. :-(
-                        'Case ChrW(60) & ChrW(66) & ChrW(63) & ChrW(65533) & ChrW(106) & ChrW(65533) & ChrW(65533) & ChrW(978) & ChrW(69) & ChrW(62) & ChrW(97)
-                        'Case bVersion = Byte() {}
-                        '    sVersion = "Version 5.00"
-                        'Case ChrW(60) & ChrW(66) & ChrW(63) & ChrW(65533) & ChrW(106) & ChrW(65533) & ChrW(65533) & ChrW(979) & ChrW(69) & ChrW(62) & ChrW(97)
-                        '    sVersion = "Version 4.00"
-                        'Case ChrW(60) & ChrW(66) & ChrW(63) & ChrW(65533) & ChrW(106) & ChrW(65533) & ChrW(65533) & ChrW(980) & ChrW(69) & ChrW(55) & ChrW(97)
-                        '    sVersion = "Version 3.90"
-                        Case Else
-                            'sVersion = System.Text.Encoding.Default.GetString(Dencode(sVersion, 1))
 
-                    End Select
 
                     If Left(sVersion, 8) <> "Version " Then
                         ErrMsg("Not an ADRIFT Text Adventure file")
@@ -2179,21 +1006,6 @@ Module FileIO
 
                     Debug.WriteLine("Start Load: " & Now)
                     Select Case sVersion
-                        'Case "Version 3.90"
-                        '    Dim br2 As BinaryReader = br
-                        '    LoadLibraries(LoadWhatEnum.Properies)
-                        '    br = br2
-                        '    iStartPriority = 0
-                        '    If LoadOlder(3.9) Then
-                        '        iStartPriority = 50000
-                        '        LoadLibraries(LoadWhatEnum.AllExceptProperties)
-                        '        'CreateMandatoryProperties()
-                        '        br = br2
-                        '        Set400SpecificTasks()
-                        '        Adventure.dVersion = 3.90002
-                        '    Else
-                        '        Return False
-                        '    End If
                         Case "Version 3.90", "Version 4.00"
                             Dim br2 As BinaryReader = br
                             'LoadDefaults() ' If mandatory properties like StaticOrDynamic don't exist, create them                                                        
@@ -2214,7 +1026,7 @@ Module FileIO
                             End If
                         Case "Version 5.00"
                             Dim sSize As String = System.Text.Encoding.UTF8.GetString(br.ReadBytes(4))
-                            Dim sCheck As String = System.Text.Encoding.UTF8.GetString(br.ReadBytes(8)) 'CStr(br.ReadChars(8))
+                            Dim sCheck As String = System.Text.Encoding.UTF8.GetString(br.ReadBytes(8))
                             Dim iBabelLength As Integer = 0
                             Dim sBabel As String = Nothing
                             Dim bObfuscate As Boolean = True
@@ -2244,21 +1056,7 @@ Module FileIO
                                 Dim sTemp As String = Adventure.CoverFilename
                                 Adventure.CoverFilename = Nothing
                                 Adventure.CoverFilename = sTemp ' Just to re-set the image in the Babel structure
-                                'With Adventure.BabelTreatyInfo.Stories(0).Bibliographic
-                                '    Adventure.Title = .Title
-                                '    Adventure.Author = .Author
-                                'End With                                
                             End If
-#If Generator Then
-                            ' Check each library file.  If it is a later date than the adventure file, ask whether we want to overwrite library items
-                            ' TODO - This needs to check each individual item date rather than the adventure, in case the user has saved their game
-                            ' since the library was saved, but hasn't updated the individual items.
-                            ' It should also prompt to say what would be added/updated
-                            '
-                            OverwriteLibraries(LoadWhatEnum.All)
-                            '#Else
-                            '                            If lOffset > 0 Then bEXE = True
-#End If
 
                         Case Else
                             ErrMsg("ADRIFT " & sVersion & " Adventures are not currently supported in ADRIFT v" & dVersion.ToString("0.0"))
@@ -2272,10 +1070,8 @@ Module FileIO
                 Case FileTypeEnum.XMLModule_AMF
                     If Not Load500(FileToMemoryStream(False, CInt(FileLen(sFilename)), False), bLibrary, True, eLoadWhat, dtAdvDate, sFilename) Then Return False
 
-#If Runner Then
                 Case FileTypeEnum.GameState_TAS
                     state = LoadState(FileToMemoryStream(True, CInt(FileLen(sFilename)), False))
-#End If
 
             End Select
 
@@ -2306,20 +1102,15 @@ Module FileIO
             ErrMsg("Error loading " & sFilename, ex)
             Return False
         Finally
-#If Not Adravalon Then
-            Cursor.Current = Cursors.Arrow
-#End If
         End Try
 
     End Function
 
 
-#If Runner Then
     Private Function LoadState(ByVal stmMemory As MemoryStream) As clsGameState
 
         Try
             Dim NewState As New clsGameState
-            'Dim stmMemory As MemoryStream = FileToMemoryStream(True, CInt(FileLen(sFilePath)))
             Dim xmlDoc As New XmlDocument
             xmlDoc.Load(stmMemory)
 
@@ -2337,7 +1128,6 @@ Module FileIO
                         For Each nodDisplayed As XmlElement In nodLoc.SelectNodes("Displayed")
                             locs.htblDisplayedDescriptions.Add(nodDisplayed.InnerText, True)
                         Next
-                        'If .Item("Seen") IsNot Nothing Then locs.bSeen = CBool(.Item("Seen").InnerText)
                         NewState.htblLocationStates.Add(sKey, locs)
                     End With
                 Next
@@ -2507,8 +1297,6 @@ Module FileIO
         Return Nothing
 
     End Function
-#End If
-
 
     Private Sub Set400SpecificTasks()
 
@@ -2565,11 +1353,6 @@ Module FileIO
                                 .Keys.Add(sFound)
                             End With
                             tas.Specifics(0) = s
-                            'If sCommand = "get *" Then
-                            '    tas.ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnFail
-                            'Else
-                            '    tas.ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnNoOutput
-                            'End If
                             Exit For
                         End If
                     End If
@@ -2583,11 +1366,6 @@ NextTask:
             ' Make it a system task, i.e. don't run events
             tasExamineChar.bSystemTask = True
         End If
-        'Dim tasExamineObjects As clsTask = Adventure.htblTasks("ExamineObjects") ' Use the parent task, because we don't know if they're being lazy or not...
-        'If tasExamineObjects IsNot Nothing Then
-        '    ' Make it a system task, i.e. don't run events
-        '    tasExamineObjects.bSystemTask = True
-        'End If
 
     End Sub
 
@@ -2610,17 +1388,9 @@ NextTask:
         Dim outStream As New System.IO.MemoryStream
         If iLength = 0 Then iLength = bZLib.Length - iOffset
         Dim inStream As New System.IO.MemoryStream(bZLib, iOffset, iLength)
-#If Not Adravalon Then
-        Dim zStream As New ZOutputStream(outStream)
-#Else
         Dim zStream As New InflaterInputStream(inStream)
-#End If
         Try
-#If Not Adravalon Then
-            If Not CopyStream(inStream, zStream) Then Return Nothing
-#Else
             If Not CopyStream(zStream, outStream) Then Return Nothing
-#End If
             Return New MemoryStream(outStream.GetBuffer)
         Catch ex As Exception
             ErrMsg("Error decompressing byte array", ex)
@@ -2665,81 +1435,14 @@ NextTask:
         Inherits Exception
     End Class
 
-#If Not Adravalon Then
-    Private bPromptedLibraryOverride As Boolean = False
-    Private PerLibraryResponse As DialogResult = DialogResult.None
-#End If
     Private Enum LoadItemEum As Integer
         No = 0
         Yes = 1
         Both = 2
     End Enum
     Private Function ShouldWeLoadLibraryItem(ByVal sItemKey As String) As LoadItemEum
-
         If Adventure.listExcludedItems.Contains(sItemKey) Then Return LoadItemEum.No
-
-#If Runner Then
         Return LoadItemEum.Yes
-#Else
-        ' We only override library items.  If a player modifies a library item, it is no longer a library item, so we don't overwrite it
-        Dim itm As clsItem = Nothing
-        If Adventure.dictAllItems.TryGetValue(sItemKey, itm) Then
-            If itm.LoadedFromLibrary Then Return LoadItemEum.Yes
-            If Not itm.IsLibrary Then
-                Select Case eOverwriteLibraries
-                    Case OverwriteLibrariesEnum.PromptPerItem
-                        Select Case MessageBox.Show("Library item """ & Adventure.dictAllItems(sItemKey).CommonName & """ is newer than the one in your adventure.  However, you have customised this item.  " & vbCrLf & vbCrLf & _
-                                                    "Select YES to overwrite your custom version with the updated version from the library." & vbCrLf & vbCrLf & "Select NO to keep your custom version, or " & vbCrLf & vbCrLf & "Select CANCEL to keep both versions " & _
-                                                    "(useful in case you want to compare the two, but you will probably need to delete one manually)", "Update from Library", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2)
-                            Case DialogResult.Yes
-                                Return LoadItemEum.Yes
-                            Case DialogResult.No
-                                Return LoadItemEum.No
-                            Case DialogResult.Cancel
-                                Return LoadItemEum.Both
-                        End Select
-                    Case Else
-                        Return LoadItemEum.No ' Don't override user's custom library
-                End Select
-            End If
-        End If
-
-        Select Case eOverwriteLibraries
-            Case OverwriteLibrariesEnum.Always
-                Return LoadItemEum.Yes
-            Case OverwriteLibrariesEnum.Never
-                Return LoadItemEum.No
-            Case OverwriteLibrariesEnum.PromptPerItem
-                If Not Adventure.dictAllItems.ContainsKey(sItemKey) Then
-                    Return LoadItemEum.Yes
-                Else
-                    Select Case MessageBox.Show("Library item """ & Adventure.dictAllItems(sItemKey).CommonName & """ is newer than the one in your adventure.  Update?", "Update from Library", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1)
-                        Case DialogResult.Yes
-                            Return LoadItemEum.Yes
-                        Case DialogResult.No
-                            Return LoadItemEum.No
-                        Case DialogResult.Cancel
-                            Throw New LoadAbortException
-                    End Select
-                End If
-            Case OverwriteLibrariesEnum.PromptPerLibrary
-                If Not Adventure.dictAllItems.ContainsKey(sItemKey) Then
-                    Return LoadItemEum.Yes
-                Else
-                    If Not bPromptedLibraryOverride Then
-                        bPromptedLibraryOverride = True
-                        PerLibraryResponse = MessageBox.Show("Library file is more recent than your adventure.  Do you want to update/insert any newer items?", "Update Library items", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-                    End If
-                    If PerLibraryResponse = DialogResult.Yes Then
-                        Return LoadItemEum.Yes
-                    Else
-                        Return LoadItemEum.No
-                    End If
-                    'Return PerLibraryResponse = DialogResult.Yes
-                End If
-        End Select
-#End If
-
     End Function
 
 
@@ -2817,7 +1520,6 @@ NextTask:
     Dim iCorrectedTasks As Integer = 0
 
     Private Function Load500(ByVal stmMemory As MemoryStream, ByVal bLibrary As Boolean, Optional ByVal bAppend As Boolean = False, Optional ByVal eLoadWhat As LoadWhatEnum = LoadWhatEnum.All, Optional ByVal dtAdvDate As Date = #1/1/1900#, Optional ByVal sFilename As String = "") As Boolean
-
         Try
             If stmMemory Is Nothing Then Return False
 
@@ -2828,49 +1530,18 @@ NextTask:
             Dim bAddDuplicateKeys As Boolean = True
             Dim htblDuplicateKeyMapping As New StringHashTable
             Dim arlNewTasks As New StringArrayList
-            'Dim bOverwrite As Boolean = False            
 
-            ' Temp
-            'Adventure.iCompassPoints = [Global].DirectionsEnum.Out
             With xmlDoc.Item("Adventure")
                 If .Item("Version") IsNot Nothing Then
-                    'Dim sVersion As String = .Item("Version").InnerText
-                    'Dim sVerSplit() As String = sVersion.Split("."c)
-                    'dFileVersion = SafeDbl(sVerSplit(0) & System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator & sVerSplit(1))
-                    'a.dVersion = 0
-                    'For i As Integer = 0 To sVerSplit.Length - 1
-                    '    a.dVersion += SafeInt(sVerSplit(i)) * 10 ^ (2 * -i)
-                    'Next
-                    '.WriteElementString("Version", version.Major & "." & Format(version.Minor, "000") & Format(version.Build, "000"))
-
                     dFileVersion = SafeDbl(.Item("Version").InnerText)
                     If dFileVersion > dVersion Then
-#If Not Adravalon Then
-                        MsgBox("This file is a later version than the software.  It is advisable that you upgrade to ensure it runs properly.", MsgBoxStyle.Exclamation)
-#Else
                         Glue.MakeNote("This file is newer than what this software might understand.")
-#End If
                     End If
                     If Not bLibrary Then a.dVersion = dFileVersion
                 Else
                     Throw New Exception("Version tag not specified")
                 End If
 
-                If bLibrary AndAlso dtAdvDate > #1/1/1900# Then
-#If Generator Then
-                    ' We are loading a library and already have an adventure loaded.  Check what the user wants to do
-                    If eOverwriteLibraries = OverwriteLibrariesEnum.Never Then Return True ' I.e. user never wants libraries to overwrite
-                    bPromptedLibraryOverride = False
-#End If
-                    '' Only load the library if it is more recent than the adventure file
-                    'If Not .Item("LastUpdated") Is Nothing AndAlso CDate(.Item("LastUpdated").InnerText) < dtAdvDate Then
-                    '    Exit Sub
-                    'Else
-                    '    ' Library is more recent than our adventure
-                    '    If MessageBox.Show("Library file is more recent than your adventure.  Do you want to update/insert any newer items?", "Update Library items", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then Exit Sub
-                    '    bOverwrite = True
-                    'End If
-                End If
                 If eLoadWhat = LoadWhatEnum.All Then
                     bAskedAboutBrackets = False
                     iCorrectedTasks = 0
@@ -2881,28 +1552,20 @@ NextTask:
                     If Not .Item("Introduction") Is Nothing Then a.Introduction = LoadDescription(xmlDoc.Item("Adventure"), "Introduction") ' New Description(.Item("Introduction").InnerText)
                     If .Item("FontName") IsNot Nothing Then a.DefaultFontName = .Item("FontName").InnerText
                     If .Item("FontSize") IsNot Nothing Then a.DefaultFontSize = SafeInt(.Item("FontSize").InnerText)
-#If Runner Then
                     a.DeveloperDefaultBackgroundColour = Nothing
                     a.DeveloperDefaultInputColour = Nothing
                     a.DeveloperDefaultOutputColour = Nothing
                     a.DeveloperDefaultLinkColour = Nothing
-#End If
                     If .Item("BackgroundColour") IsNot Nothing Then a.DeveloperDefaultBackgroundColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("BackgroundColour").InnerText))
                     If .Item("InputColour") IsNot Nothing Then a.DeveloperDefaultInputColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("InputColour").InnerText))
                     If .Item("OutputColour") IsNot Nothing Then a.DeveloperDefaultOutputColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("OutputColour").InnerText))
                     If .Item("LinkColour") IsNot Nothing Then a.DeveloperDefaultLinkColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("LinkColour").InnerText))
                     If .Item("ShowFirstLocation") IsNot Nothing Then a.ShowFirstRoom = GetBool(.Item("ShowFirstLocation").InnerText)
                     If .Item("UserStatus") IsNot Nothing Then a.sUserStatus = .Item("UserStatus").InnerText
-                    'If Not .Item("V4Compatibility") Is Nothing Then a.bV4Compatibility = CBool(.Item("V4Compatibility").InnerText)
-                    '#If Generator Then
-                    'If Not .Item("IFID") Is Nothing Then a.BabelTreatyInfo.Stories(0).Identification.IFID = .Item("IFID").InnerText
                     If .Item("ifindex") IsNot Nothing Then Adventure.BabelTreatyInfo.FromString(.Item("ifindex").OuterXml) ' Pre 5.0.20
                     If .Item("Cover") IsNot Nothing Then
-                        'If Adventure.BabelTreatyInfo.Stories(0).Cover Is Nothing Then Adventure.BabelTreatyInfo.Stories(0).Cover = New clsBabelTreatyInfo.clsStory.clsCover
-                        'Adventure.BabelTreatyInfo.Stories(0).Cover.Filename = .Item("Cover").InnerText
                         Adventure.CoverFilename = .Item("Cover").InnerText
                     End If
-                    '#End If
                     If .Item("ShowExits") IsNot Nothing Then a.ShowExits = GetBool(.Item("ShowExits").InnerText)
                     If .Item("EnableMenu") IsNot Nothing Then a.EnableMenu = GetBool(.Item("EnableMenu").InnerText)
                     If .Item("EnableDebugger") IsNot Nothing Then a.EnableDebugger = GetBool(.Item("EnableDebugger").InnerText)
@@ -2912,9 +1575,6 @@ NextTask:
                     If .Item("WaitTurns") IsNot Nothing Then a.WaitTurns = SafeInt(.Item("WaitTurns").InnerText)
                     If .Item("KeyPrefix") IsNot Nothing Then
                         a.KeyPrefix = .Item("KeyPrefix").InnerText
-#If Generator Then
-                        fGenerator.KeyPrefix = a.KeyPrefix
-#End If
                     End If
 
                     If .Item("DirectionNorth") IsNot Nothing AndAlso .Item("DirectionNorth").InnerText <> "" Then a.sDirectionsRE(DirectionsEnum.North) = .Item("DirectionNorth").InnerText
@@ -2934,105 +1594,6 @@ NextTask:
 
                 If eLoadWhat = LoadWhatEnum.All OrElse eLoadWhat = LoadWhatEnum.AllExceptProperties Then
                     Debug.WriteLine("End Intro: " & Now)
-
-#If Generator Then
-                    ' Folders
-                    For Each nodFol As XmlElement In xmlDoc.SelectNodes("/Adventure/Folder")
-                        With nodFol
-                            Dim sKey As String = .Item("Key").InnerText
-                            Dim folder As clsFolder = Nothing
-                            Dim bAppending As Boolean = False
-                            ' If we load a module, only add folders if they don't already exist.
-                            ' If they do, just merge the contents
-                            '
-                            If a.dictFolders.ContainsKey(sKey) Then
-                                If a.dictFolders(sKey).Name = .Item("Name").InnerText Then
-                                    ' Ok, the imported folder is the same as one we have.  Use our existing one
-                                    folder = a.dictFolders(sKey)
-                                    bAppending = True
-                                End If
-                                If folder Is Nothing Then
-                                    If a.dictFolders.ContainsKey(sKey) Then
-                                        If (.Item("Library") IsNot Nothing AndAlso GetBool(.Item("Library").InnerText)) OrElse bLibrary Then
-                                            If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.dictFolders(sKey).LastUpdated Then GoTo NextFol
-                                            'If ShouldWeLoadLibraryItem(sKey) Then a.dictFolders.Remove(sKey)
-                                            Select Case ShouldWeLoadLibraryItem(sKey)
-                                                Case LoadItemEum.Yes
-                                                    a.dictFolders.Remove(sKey)
-                                                Case LoadItemEum.No
-                                                    GoTo NextFol
-                                                Case LoadItemEum.Both
-                                                    ' Keep key, but still add this new one
-                                            End Select
-                                        End If
-                                    End If
-                                    If bAddDuplicateKeys Then
-                                        While a.dictFolders.ContainsKey(sKey)
-                                            sKey = IncrementKey(sKey)
-                                        End While
-                                    Else
-                                        GoTo NextFol
-                                    End If
-                                End If
-                            ElseIf bLibrary AndAlso ShouldWeLoadLibraryItem(sKey) = LoadItemEum.No Then
-                                GoTo NextFol
-                            End If
-                            If a.listExcludedItems.Contains(sKey) Then a.listExcludedItems.Remove(sKey)
-                            If Not bAppending Then
-                                folder = New clsFolder(sKey)
-                                folder.Name = .Item("Name").InnerText
-                            End If
-                            For Each nodMember As XmlElement In nodFol.SelectNodes("Member")
-                                If Not folder.Members.Contains(nodMember.InnerText) Then
-                                    ' Make sure this item doesn't exist in any other folder
-                                    Dim sCurrentFolderKey As String = ""
-                                    For Each f As clsFolder In Adventure.dictFolders.Values
-                                        If f.Members.Contains(nodMember.InnerText) Then
-                                            sCurrentFolderKey = f.Key
-                                            Exit For
-                                        End If
-                                    Next
-                                    ' If we're not a library, force the item into the new folder if necessary
-                                    If sCurrentFolderKey = "" OrElse Not bLibrary Then
-                                        If sCurrentFolderKey <> "" Then
-                                            ' Remove from the current folder
-                                            Adventure.dictFolders(sCurrentFolderKey).Members.Remove(nodMember.InnerText)
-                                        End If
-                                        folder.Members.Add(nodMember.InnerText)
-                                    End If
-                                End If
-                            Next
-                            If Not bAppending Then
-                                If .Item("Expanded") IsNot Nothing Then folder.Expanded = GetBool(.Item("Expanded").InnerText)
-                                If .Item("Height") IsNot Nothing Then folder.Size.Height = SafeInt(.Item("Height").InnerText)
-                                If .Item("Width") IsNot Nothing Then folder.Size.Width = SafeInt(.Item("Width").InnerText)
-                                If .Item("Visible") IsNot Nothing Then folder.Visible = GetBool(.Item("Visible").InnerText)
-                                If .Item("X") IsNot Nothing Then folder.Location.X = SafeInt(.Item("X").InnerText)
-                                If .Item("Y") IsNot Nothing Then folder.Location.Y = SafeInt(.Item("Y").InnerText)
-                                If .Item("Type") IsNot Nothing Then folder.ViewType = CType([Enum].Parse(GetType(Infragistics.Win.UltraWinListView.UltraListViewStyle), .Item("Type").InnerText), Infragistics.Win.UltraWinListView.UltraListViewStyle)
-                                If .Item("SortColumn") IsNot Nothing Then folder.SortColumn = SafeInt(.Item("SortColumn").InnerText)
-                                If .Item("SortDirection") IsNot Nothing Then folder.SortDirection = CType([Enum].Parse(GetType(Infragistics.Win.UltraWinListView.Sorting), .Item("SortDirection").InnerText), Infragistics.Win.UltraWinListView.Sorting)
-                                If .Item("GroupBy") IsNot Nothing Then folder.GroupBy = SafeInt(.Item("GroupBy").InnerText)
-                                If .Item("GroupDirection") IsNot Nothing Then folder.GroupDirection = CType([Enum].Parse(GetType(Infragistics.Win.UltraWinListView.Sorting), .Item("GroupDirection").InnerText), Infragistics.Win.UltraWinListView.Sorting)
-                                If .Item("ShowCreatedDate") IsNot Nothing Then folder.ShowCreatedDate = GetBool(.Item("ShowCreatedDate").InnerText)
-                                If .Item("ShowModifiedDate") IsNot Nothing Then folder.ShowModifiedDate = GetBool(.Item("ShowModifiedDate").InnerText)
-                                If .Item("ShowType") IsNot Nothing Then folder.ShowType = GetBool(.Item("ShowType").InnerText)
-                                If .Item("ShowKey") IsNot Nothing Then folder.ShowKey = GetBool(.Item("ShowKey").InnerText)
-                                If .Item("ShowPriority") IsNot Nothing Then folder.ShowPriority = GetBool(.Item("ShowPriority").InnerText)
-
-                                If Not .Item("Library") Is Nothing Then folder.IsLibrary = GetBool(.Item("Library").InnerText)
-                                If bLibrary Then
-                                    folder.IsLibrary = True
-                                    folder.LoadedFromLibrary = True
-                                End If
-
-                                If Not .Item("LastUpdated") Is Nothing Then folder.LastUpdated = GetDate(.Item("LastUpdated").InnerText)
-                                a.dictFolders.Add(folder.Key, folder)
-                            End If
-                        End With
-NextFol:
-                    Next
-#End If
                 End If
 
 
@@ -3047,7 +1608,6 @@ NextFol:
                                 If a.htblAllProperties.ContainsKey(sKey) Then
                                     If prop.IsLibrary OrElse bLibrary Then
                                         If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblAllProperties(sKey).LastUpdated Then GoTo NextProp
-                                        'If ShouldWeLoadLibraryItem(sKey) Then a.htblAllProperties.Remove(sKey)
                                         Select Case ShouldWeLoadLibraryItem(sKey)
                                             Case LoadItemEum.Yes
                                                 a.htblAllProperties.Remove(sKey)
@@ -3089,12 +1649,6 @@ NextFol:
                                     Next
                                     If prop.arlStates.Count > 0 Then prop.Value = prop.arlStates(0)
                                 Case clsProperty.PropertyTypeEnum.ValueList
-                                    '.WriteStartElement("ValueList")
-                                    'For Each sKey As String In prop.ValueList.Keys
-                                    '    .WriteElementString("Label", sKey)
-                                    '    .WriteElementString("Value", prop.ValueList(sKey).ToString)
-                                    'Next
-                                    '.WriteEndElement()
                                     For Each nodValueList As XmlElement In nodProp.SelectNodes("ValueList")
                                         If nodValueList.Item("Label") IsNot Nothing Then
                                             Dim sLabel As String = nodValueList("Label").InnerText
@@ -3123,9 +1677,6 @@ NextFol:
                             End If
                         End With
                         a.htblAllProperties.Add(prop)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(prop.Key)
-                        '#End If
 NextProp:
                     Next
                     a.htblAllProperties.SetSelected()
@@ -3138,7 +1689,7 @@ NextProp:
 
                 If eLoadWhat = LoadWhatEnum.All OrElse eLoadWhat = LoadWhatEnum.AllExceptProperties Then
                     ' Locations
-                    For Each nodLoc As XmlElement In xmlDoc.SelectNodes("/Adventure/Location") ' .GetElementsByTagName("Location")
+                    For Each nodLoc As XmlElement In xmlDoc.SelectNodes("/Adventure/Location")
                         Dim loc As New clsLocation
                         With nodLoc
                             Dim sKey As String = .Item("Key").InnerText
@@ -3147,7 +1698,6 @@ NextProp:
                                 If a.htblLocations.ContainsKey(sKey) Then
                                     If loc.IsLibrary OrElse bLibrary Then
                                         If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblLocations(sKey).LastUpdated Then GoTo NextLoc
-                                        'If ShouldWeLoadLibraryItem(sKey) Then a.htblLocations.Remove(sKey)
                                         Select Case ShouldWeLoadLibraryItem(sKey)
                                             Case LoadItemEum.Yes
                                                 a.htblLocations.Remove(sKey)
@@ -3178,11 +1728,11 @@ NextProp:
                             If dFileVersion < 5.000015 Then
                                 loc.ShortDescription = New Description(.Item("ShortDescription").InnerText)
                             Else
-                                loc.ShortDescription = LoadDescription(nodLoc, "ShortDescription") ' .Item("ShortDescription").InnerText
+                                loc.ShortDescription = LoadDescription(nodLoc, "ShortDescription")
                             End If
-                            loc.LongDescription = LoadDescription(nodLoc, "LongDescription") ' .Item("LongDescription").InnerText
+                            loc.LongDescription = LoadDescription(nodLoc, "LongDescription")
 
-                            For Each nodDir As XmlElement In nodLoc.SelectNodes("Movement") ' .GetElementsByTagName("Direction")
+                            For Each nodDir As XmlElement In nodLoc.SelectNodes("Movement")
                                 Dim xdir As DirectionsEnum = EnumParseDirections(nodDir.Item("Direction").InnerText)
 
                                 With loc.arlDirections(xdir)
@@ -3190,7 +1740,7 @@ NextProp:
                                     .Restrictions = LoadRestrictions(nodDir)
                                 End With
                             Next
-                            For Each nodProp As XmlElement In .SelectNodes("Property") ' .GetElementsByTagName("Property")
+                            For Each nodProp As XmlElement In .SelectNodes("Property")
                                 Dim prop As New clsProperty
                                 Dim sPropKey As String = nodProp.Item("Key").InnerText
                                 If Adventure.htblAllProperties.ContainsKey(sPropKey) Then
@@ -3201,17 +1751,12 @@ NextProp:
                                         prop.Value = nodProp.Item("Value").InnerText
                                     End If
                                     prop.Selected = True
-                                    'loc.htblActualProperties.Add(prop)
-                                    'loc.bCalculatedGroups = False
                                     loc.AddProperty(prop)
                                 End If
                             Next
                             If .Item("Hide") IsNot Nothing Then loc.HideOnMap = GetBool(.Item("Hide").InnerText)
                         End With
                         a.htblLocations.Add(loc, loc.Key)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(loc.Key)
-                        '#End If
 NextLoc:
                     Next nodLoc
                     Debug.WriteLine("End Locations: " & Now)
@@ -3230,7 +1775,6 @@ NextLoc:
                                 If a.htblObjects.ContainsKey(sKey) Then
                                     If ob.IsLibrary OrElse bLibrary Then
                                         If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblObjects(sKey).LastUpdated Then GoTo NextOb
-                                        'If ShouldWeLoadLibraryItem(sKey) Then a.htblObjects.Remove(sKey)
                                         Select Case ShouldWeLoadLibraryItem(sKey)
                                             Case LoadItemEum.Yes
                                                 a.htblObjects.Remove(sKey)
@@ -3263,9 +1807,9 @@ NextLoc:
                             For Each nodName As XmlElement In .GetElementsByTagName("Name")
                                 ob.arlNames.Add(nodName.InnerText)
                             Next
-                            ob.Description = LoadDescription(nodOb, "Description") ' .Item("Description").InnerText
+                            ob.Description = LoadDescription(nodOb, "Description")
 
-                            For Each nodProp As XmlElement In .SelectNodes("Property") ' .GetElementsByTagName("Property")
+                            For Each nodProp As XmlElement In .SelectNodes("Property")
                                 Dim prop As New clsProperty
                                 Dim sPropKey As String = nodProp.Item("Key").InnerText
                                 If Adventure.htblAllProperties.ContainsKey(sPropKey) Then
@@ -3275,20 +1819,13 @@ NextLoc:
                                     ElseIf prop.Type <> clsProperty.PropertyTypeEnum.SelectionOnly Then
                                         prop.Value = nodProp.Item("Value").InnerText
                                     End If
-                                    'prop = Adventure.htblAllProperties(nodProp.NamespaceURI).Copy
-                                    'prop.Value = nodProp.InnerText
                                     prop.Selected = True
-                                    'ob.htblActualProperties.Add(prop)
-                                    'ob.bCalculatedGroups = False
                                     ob.AddProperty(prop)
                                 End If
                             Next
                             ob.Location = ob.Location ' Assigns the location object from the object properties                            
                         End With
                         a.htblObjects.Add(ob, ob.Key)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(ob.Key)
-                        '#End If
 NextOb:
                     Next
                     Debug.WriteLine("End Objects: " & Now)
@@ -3297,7 +1834,6 @@ NextOb:
                     For Each nodTask As XmlElement In .SelectNodes("/Adventure/Task")
                         Dim tas As New clsTask
                         With nodTask
-                            'Debug.WriteLine("Task1: " & Now.ToString("mm:ss.fff"))
                             Dim sKey As String = .Item("Key").InnerText
                             If .Item("Library") IsNot Nothing Then tas.IsLibrary = GetBool(.Item("Library").InnerText)
                             If .Item("ReplaceTask") IsNot Nothing Then tas.ReplaceDuplicateKey = GetBool(.Item("ReplaceTask").InnerText)
@@ -3306,9 +1842,7 @@ NextOb:
                                     ' We skip loading the task if it is not newer than the one we currently have loaded
                                     ' If there's no timestamp, we have to assume it is newer
                                     If .Item("LastUpdated") IsNot Nothing AndAlso CDate(.Item("LastUpdated").InnerText) <= a.htblTasks(sKey).LastUpdated Then GoTo NextTask
-                                    'If Not a.htblTasks(sKey).IsLibrary Then GoTo NextTask ' If the user modified a library task, it's no longer marked as library, so don't import the updated library item
                                     ' If a library item is newer than the library in your game, prompt
-                                    'If Not tas.ReplaceDuplicateKey AndAlso ShouldWeLoadLibraryItem(sKey) Then a.htblTasks.Remove(sKey)
                                     Select Case ShouldWeLoadLibraryItem(sKey)
                                         Case LoadItemEum.Yes
                                             a.htblTasks.Remove(sKey)
@@ -3344,28 +1878,22 @@ NextOb:
                                 tas.IsLibrary = True
                                 tas.LoadedFromLibrary = True
                             End If
-                            'If .Item("Library") IsNot Nothing Then tas.IsLibrary = GetBool(.Item("Library").InnerText)
                             If Not .Item("LastUpdated") Is Nothing Then tas.LastUpdated = GetDate(.Item("LastUpdated").InnerText)
-                            tas.Priority = CInt(.Item("Priority").InnerText) '+ iStartPriority
+                            tas.Priority = CInt(.Item("Priority").InnerText)
                             If Not .Item("AutoFillPriority") Is Nothing Then tas.AutoFillPriority = CInt(.Item("AutoFillPriority").InnerText)
                             tas.TaskType = EnumParseTaskType(.Item("Type").InnerText)
-                            'Debug.WriteLine("Task2: " & Now.ToString("mm:ss.fff"))
-                            tas.CompletionMessage = LoadDescription(nodTask, "CompletionMessage") ' .Item("CompletionMessage").InnerText
+                            tas.CompletionMessage = LoadDescription(nodTask, "CompletionMessage")
                             Select Case tas.TaskType
                                 Case clsTask.TaskTypeEnum.General
-                                    For Each nodCommand As XmlElement In .GetElementsByTagName("Command")  '.SelectNodes("Command")
-#If Generator Then
-                                        tas.arlCommands.Add(nodCommand.InnerText)
-#Else
+                                    For Each nodCommand As XmlElement In .GetElementsByTagName("Command")
                                         ' Simplify Runner so it only has to deal with multiple, or specific refs
                                         tas.arlCommands.Add(FixInitialRefs(nodCommand.InnerText))
-#End If
                                     Next
                                 Case clsTask.TaskTypeEnum.Specific
                                     tas.GeneralKey = .Item("GeneralTask").InnerText
                                     Dim iSpecCount As Integer = 0
                                     ReDim tas.Specifics(-1)
-                                    For Each nodSpec As XmlElement In .GetElementsByTagName("Specific") ' .SelectNodes("Specific")
+                                    For Each nodSpec As XmlElement In .GetElementsByTagName("Specific")
                                         Dim spec As New clsTask.Specific
                                         iSpecCount += 1
                                         spec.Type = EnumParseSpecificType(nodSpec.Item("Type").InnerText)
@@ -3398,7 +1926,6 @@ NextOb:
                                     If .Item("RunImmediately") IsNot Nothing Then tas.RunImmediately = GetBool(.Item("RunImmediately").InnerText)
                                     If .Item("LocationTrigger") IsNot Nothing Then tas.LocationTrigger = .Item("LocationTrigger").InnerText
                             End Select
-                            'Debug.WriteLine("Task3: " & Now.ToString("mm:ss.fff"))
                             tas.Description = .Item("Description").InnerText
                             tas.Repeatable = GetBool(.Item("Repeatable").InnerText)
                             If .Item("Aggregate") IsNot Nothing Then tas.AggregateOutput = GetBool(.Item("Aggregate").InnerText)
@@ -3410,23 +1937,15 @@ NextOb:
                                         tas.ContinueToExecuteLowerPriority = True
                                 End Select
                             End If
-                            'tas.ContinueToExecuteLowerPriority = CType([Enum].Parse(GetType(clsTask.ContinueEnum), .Item("Continue").InnerText), clsTask.ContinueEnum)
                             If .Item("LowPriority") IsNot Nothing Then tas.LowPriority = GetBool(.Item("LowPriority").InnerText)
-                            'Debug.WriteLine("Task4: " & Now.ToString("mm:ss.fff"))
                             tas.arlRestrictions = LoadRestrictions(nodTask)
-                            'Debug.WriteLine("Task5: " & Now.ToString("mm:ss.fff"))
                             tas.arlActions = LoadActions(nodTask)
-                            'Debug.WriteLine("Task6: " & Now.ToString("mm:ss.fff"))
-                            'If Not .Item("FailOverride") Is Nothing Then tas.FailOverride = .Item("FailOverride").InnerText
                             tas.FailOverride = LoadDescription(nodTask, "FailOverride")
                             If Not .Item("MessageBeforeOrAfter") Is Nothing Then tas.eDisplayCompletion = EnumParseBeforeAfter(.Item("MessageBeforeOrAfter").InnerText) Else tas.eDisplayCompletion = clsTask.BeforeAfterEnum.Before
                             If .Item("PreventOverriding") IsNot Nothing Then tas.PreventOverriding = GetBool(.Item("PreventOverriding").InnerText)
                         End With
                         a.htblTasks.Add(tas, tas.Key)
                         arlNewTasks.Add(tas.Key)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(tas.Key)
-                        '#End If
 NextTask:
                     Next
                     Debug.WriteLine("End Tasks: " & Now)
@@ -3441,7 +1960,6 @@ NextTask:
                                 If a.htblEvents.ContainsKey(sKey) Then
                                     If ev.IsLibrary OrElse bLibrary Then
                                         If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblEvents(sKey).LastUpdated Then GoTo NextEvent
-                                        'If ShouldWeLoadLibraryItem(sKey) Then a.htblEvents.Remove(sKey)
                                         Select Case ShouldWeLoadLibraryItem(sKey)
                                             Case LoadItemEum.Yes
                                                 a.htblEvents.Remove(sKey)
@@ -3537,9 +2055,6 @@ NextTask:
                         End With
 
                         a.htblEvents.Add(ev, ev.Key)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(ev.Key)
-                        '#End If
 NextEvent:
                     Next
 
@@ -3554,7 +2069,6 @@ NextEvent:
                                 If a.htblCharacters.ContainsKey(sKey) Then
                                     If chr.IsLibrary OrElse bLibrary Then
                                         If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblCharacters(sKey).LastUpdated Then GoTo NextChar
-                                        'If ShouldWeLoadLibraryItem(sKey) Then a.htblCharacters.Remove(sKey)
                                         Select Case ShouldWeLoadLibraryItem(sKey)
                                             Case LoadItemEum.Yes
                                                 a.htblCharacters.Remove(sKey)
@@ -3582,7 +2096,6 @@ NextEvent:
                                 chr.LoadedFromLibrary = True
                             End If
                             If Not .Item("LastUpdated") Is Nothing Then chr.LastUpdated = GetDate(.Item("LastUpdated").InnerText)
-                            'chr.Name = .Item("Name").InnerText
                             If Not .Item("Name") Is Nothing Then chr.ProperName = .Item("Name").InnerText
                             If Not .Item("Article") Is Nothing Then chr.Article = .Item("Article").InnerText
                             If Not .Item("Prefix") Is Nothing Then chr.Prefix = .Item("Prefix").InnerText
@@ -3591,9 +2104,8 @@ NextEvent:
                             For Each nodName As XmlElement In .GetElementsByTagName("Descriptor")
                                 If nodName.InnerText <> "" Then chr.arlDescriptors.Add(nodName.InnerText)
                             Next
-                            'chr.Location = .Item("Location").InnerText
                             chr.Description = LoadDescription(nodChar, "Description")
-                            For Each nodProp As XmlElement In .SelectNodes("Property") ' .GetElementsByTagName("Property")
+                            For Each nodProp As XmlElement In .SelectNodes("Property")
                                 Dim prop As New clsProperty
                                 Dim sPropKey As String = nodProp.Item("Key").InnerText
                                 If Adventure.htblAllProperties.ContainsKey(sPropKey) Then
@@ -3604,24 +2116,18 @@ NextEvent:
                                         prop.Value = nodProp.Item("Value").InnerText
                                     End If
                                     prop.Selected = True
-                                    'chr.htblActualProperties.Add(prop)
-                                    'chr.bCalculatedGroups = False
                                     chr.AddProperty(prop)
                                 Else
                                     ErrMsg("Error loading character " & chr.Name & ": Property " & sPropKey & " not found.")
                                 End If
                             Next
-                            'chr.Location = chr.Location
 
                             For Each nodWalk As XmlElement In .GetElementsByTagName("Walk")
                                 Dim walk As New clsWalk
                                 walk.sKey = sKey
                                 walk.Description = nodWalk.Item("Description").InnerText
-                                'If nodWalk.Item("FromDesc") IsNot Nothing Then walk.FromDesc = nodWalk.Item("FromDesc").InnerText
                                 walk.Loops = GetBool(nodWalk.Item("Loops").InnerText)
-                                'walk.ShowMove = GetBool(nodWalk.Item("ShowMove").InnerText)
                                 walk.StartActive = GetBool(nodWalk.Item("StartActive").InnerText)
-                                'If nodWalk.Item("ToDesc") IsNot Nothing Then walk.ToDesc = nodWalk.Item("ToDesc").InnerText
                                 For Each nodStep As XmlElement In nodWalk.GetElementsByTagName("Step")
                                     Dim [step] As New clsWalk.clsStep
                                     Dim sData() As String = nodStep.InnerText.Split(" "c)
@@ -3690,12 +2196,8 @@ NextEvent:
                                 topic.Key = nodTopic.Item("Key").InnerText
                                 If nodTopic.Item("ParentKey") IsNot Nothing Then topic.ParentKey = nodTopic.Item("ParentKey").InnerText
                                 topic.Summary = nodTopic.Item("Summary").InnerText
-#If Generator Then
-                                topic.Keywords = nodTopic.Item("Keywords").InnerText
-#Else
                                 ' Simplify Runner so it only has to deal with multiple, or specific refs                                
                                 topic.Keywords = FixInitialRefs(nodTopic.Item("Keywords").InnerText)
-#End If
 
                                 topic.oConversation = LoadDescription(nodTopic, "Description")
                                 If nodTopic.Item("IsAsk") IsNot Nothing Then topic.bAsk = GetBool(nodTopic.Item("IsAsk").InnerText)
@@ -3718,15 +2220,9 @@ NextEvent:
                             ' Only add the Player character if we don't already have one
                             If chr.CharacterType = clsCharacter.CharacterTypeEnum.NonPlayer OrElse a.Player Is Nothing Then a.htblCharacters.Add(chr, chr.Key)
                         End If
-                        '#If Generator Then
-                        '                        If bAppend AndAlso a.htblCharacters.Contains(chr.Key) Then AddToDefaultList(chr.Key)
-                        '#Else
-#If Runner Then
                         For Each sCharFunction As String In New String() {"CharacterName", "DisplayCharacter", "ListHeld", "ListExits", "ListWorn", "LocationOf", "ParentOf", "ProperName"}
                             chr.SearchAndReplace("%" & sCharFunction & "%", "%" & sCharFunction & "[" & chr.Key & "]%")
                         Next
-                        'chr.bCalculatedGroups = False
-#End If
 NextChar:
                     Next
                     Debug.WriteLine("End Chars: " & Now)
@@ -3742,7 +2238,6 @@ NextChar:
                             If a.htblVariables.ContainsKey(sKey) Then
                                 If var.IsLibrary OrElse bLibrary Then
                                     If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblVariables(sKey).LastUpdated Then GoTo NextVar
-                                    'If ShouldWeLoadLibraryItem(sKey) Then a.htblVariables.Remove(sKey)
                                     Select Case ShouldWeLoadLibraryItem(sKey)
                                         Case LoadItemEum.Yes
                                             a.htblVariables.Remove(sKey)
@@ -3786,18 +2281,13 @@ NextChar:
                                     Next
                                 End If
 
-                                'var.IntValue = -1
                             Else
                                 For i As Integer = 1 To var.Length
                                     var.IntValue(i) = CInt(Val(sValue))
                                 Next i
-                                ''var.StringValue = ""
                             End If
                         End With
                         a.htblVariables.Add(var, var.Key)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(var.Key)
-                        '#End If
 NextVar:
                     Next
                 End If
@@ -3811,7 +2301,6 @@ NextVar:
                             If a.htblGroups.ContainsKey(sKey) Then
                                 If grp.IsLibrary OrElse bLibrary Then
                                     If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblGroups(sKey).LastUpdated Then GoTo NextGroup
-                                    'If ShouldWeLoadLibraryItem(sKey) Then a.htblGroups.Remove(sKey)
                                     Select Case ShouldWeLoadLibraryItem(sKey)
                                         Case LoadItemEum.Yes
                                             a.htblGroups.Remove(sKey)
@@ -3858,8 +2347,6 @@ NextVar:
                                     prop.Selected = True
                                     If prop.PropertyOf = grp.GroupType Then
                                         grp.htblProperties.Add(prop)
-                                    Else
-                                        'ErrMsg("Trying to add incorrect property to group!")
                                     End If
                                 Else
                                     ErrMsg("Error loading group " & grp.Name & ": Property " & sPropKey & " not found.")
@@ -3872,10 +2359,6 @@ NextVar:
                             Dim itm As clsItemWithProperties = CType(Adventure.GetItemFromKey(sMember), clsItemWithProperties)
                             If itm IsNot Nothing Then itm.ResetInherited() ' In case we've accessed properties, and built inherited before the group existed
                         Next
-
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(grp.Key)
-                        '#End If
 NextGroup:
                     Next
 
@@ -3888,7 +2371,6 @@ NextGroup:
                             If a.htblALRs.ContainsKey(sKey) Then
                                 If alr.IsLibrary OrElse bLibrary Then
                                     If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblALRs(sKey).LastUpdated Then GoTo NextALR
-                                    'If ShouldWeLoadLibraryItem(sKey) Then a.htblALRs.Remove(sKey)
                                     Select Case ShouldWeLoadLibraryItem(sKey)
                                         Case LoadItemEum.Yes
                                             a.htblALRs.Remove(sKey)
@@ -3919,9 +2401,6 @@ NextGroup:
                             alr.NewText = LoadDescription(nodALR, "NewText")
                         End With
                         a.htblALRs.Add(alr, alr.Key)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(alr.Key)
-                        '#End If
 NextALR:
                     Next
 
@@ -3933,7 +2412,6 @@ NextALR:
                             If a.htblHints.ContainsKey(sKey) Then
                                 If hint.IsLibrary OrElse bLibrary Then
                                     If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblHints(sKey).LastUpdated Then GoTo NextHint
-                                    'If ShouldWeLoadLibraryItem(sKey) Then a.htblHints.Remove(sKey)
                                     Select Case ShouldWeLoadLibraryItem(sKey)
                                         Case LoadItemEum.Yes
                                             a.htblHints.Remove(sKey)
@@ -3966,9 +2444,6 @@ NextALR:
                             hint.arlRestrictions = LoadRestrictions(nodHint)
                         End With
                         a.htblHints.Add(hint, hint.Key)
-                        '#If Not Runner Then
-                        '                        If bAppend Then AddToDefaultList(hint.Key)
-                        '#End If
 NextHint:
                     Next
 
@@ -3980,7 +2455,6 @@ NextHint:
                             If a.htblSynonyms.ContainsKey(sKey) Then
                                 If synonym.IsLibrary OrElse bLibrary Then
                                     If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblSynonyms(sKey).LastUpdated Then GoTo NextSynonym
-                                    'If ShouldWeLoadLibraryItem(sKey) Then a.htblSynonyms.Remove(sKey)
                                     Select Case ShouldWeLoadLibraryItem(sKey)
                                         Case LoadItemEum.Yes
                                             a.htblSynonyms.Remove(sKey)
@@ -4027,7 +2501,6 @@ NextSynonym:
                             If a.htblUDFs.ContainsKey(sKey) Then
                                 If udf.IsLibrary OrElse bLibrary Then
                                     If .Item("LastUpdated") Is Nothing OrElse CDate(.Item("LastUpdated").InnerText) <= a.htblUDFs(sKey).LastUpdated Then GoTo NextUDF
-                                    'If ShouldWeLoadLibraryItem(sKey) Then a.htblUDFs.Remove(sKey)
                                     Select Case ShouldWeLoadLibraryItem(sKey)
                                         Case LoadItemEum.Yes
                                             a.htblUDFs.Remove(sKey)
@@ -4077,7 +2550,6 @@ NextUDF:
                         Next
                     End If
 
-#If Not www Then
                     If Not bLibrary Then
                         If .Item("Map") IsNot Nothing Then
                             Adventure.Map.Pages.Clear()
@@ -4112,19 +2584,11 @@ NextUDF:
                                                             link.sSource = node.Key
                                                             If .Item("SourceAnchor") IsNot Nothing Then link.eSourceLinkPoint = CType([Enum].Parse(GetType(DirectionsEnum), .Item("SourceAnchor").InnerText), DirectionsEnum)
                                                             link.sDestination = loc.arlDirections(link.eSourceLinkPoint).LocationKey
-#If Not Adravalon Then
-                                                            If Adventure.Map.DottedLink(loc.arlDirections(link.eSourceLinkPoint)) Then
-                                                                link.Style = Drawing2D.DashStyle.Dot
-                                                            Else
-                                                                link.Style = Drawing2D.DashStyle.Solid
-                                                            End If
-#Else
                                                             If Adventure.Map.DottedLink(loc.arlDirections(link.eSourceLinkPoint)) Then
                                                                 link.Style = DashStyles.Dot
                                                             Else
                                                                 link.Style = DashStyles.Solid
                                                             End If
-#End If
                                                             If .Item("DestinationAnchor") IsNot Nothing Then link.eDestinationLinkPoint = CType([Enum].Parse(GetType(DirectionsEnum), .Item("DestinationAnchor").InnerText), DirectionsEnum)
                                                             Dim sDest As String = loc.arlDirections(link.eSourceLinkPoint).LocationKey
                                                             If sDest IsNot Nothing AndAlso Adventure.htblLocations.ContainsKey(sDest) Then
@@ -4132,11 +2596,7 @@ NextUDF:
                                                                 If locDest IsNot Nothing Then
                                                                     If locDest.arlDirections(link.eDestinationLinkPoint).LocationKey = loc.Key Then
                                                                         link.Duplex = True
-#If Not Adravalon Then
-                                                                        If Adventure.Map.DottedLink(locDest.arlDirections(link.eDestinationLinkPoint)) Then link.Style = Drawing2D.DashStyle.Dot
-#Else
                                                                         If Adventure.Map.DottedLink(locDest.arlDirections(link.eDestinationLinkPoint)) Then link.Style = DashStyles.Dot
-#End If
                                                                     End If
                                                                 End If
                                                             End If
@@ -4170,13 +2630,11 @@ NextUDF:
                             Next
                         End If
                     End If
-#End If
 
                     ' Now fix any remapped keys
                     ' This must only remap our newly imported tasks, not all the original ones!
                     '
                     For Each sOldKey As String In htblDuplicateKeyMapping.Keys
-                        'For Each tas As clsTask In a.htblTasks.Values
                         For Each sTask As String In arlNewTasks
                             Dim tas As clsTask = a.htblTasks(sTask)
                             If tas.GeneralKey = sOldKey Then tas.GeneralKey = htblDuplicateKeyMapping(sOldKey)
@@ -4218,28 +2676,15 @@ NextUDF:
 
 
             If eLoadWhat = LoadWhatEnum.All AndAlso iCorrectedTasks > 0 Then
-#If Not Adravalon Then
-                MessageBox.Show(iCorrectedTasks & " tasks have been updated.", "Adventure Upgrade", MessageBoxButtons.OK, MessageBoxIcon.Information)
-#Else
                 Glue.ShowInfo(iCorrectedTasks & " tasks have been updated.", "Adventure Upgrade")
-#End If
             End If
 
-            '#If Not www Then
             With Adventure
                 If .Map.Pages.Count = 1 AndAlso .Map.Pages.ContainsKey(0) AndAlso .Map.Pages(0).Nodes.Count = 0 Then
                     .Map = New clsMap
                     .Map.RecalculateLayout()
                 End If
-#If Generator Then
-                fGenerator.Map1.Map = .Map
-                '#ElseIf www Then
-                '                If UserSession.Map Is Nothing Then UserSession.Map = New ADRIFT.Map() ' For www
-#ElseIf Not Adravalon Then
-                UserSession.Map.Map = .Map
-#End If
             End With
-            '#End If
             dFileVersion = dVersion ' Set back to current version so copy/paste etc has correct versions
 
             Return True
@@ -4263,192 +2708,6 @@ NextUDF:
         End Try
 
     End Function
-
-
-
-    'Private Sub Load500(ByVal iLength As Integer)
-
-    '    Try
-    '        Dim bAdvZLib() As Byte = br.ReadBytes(iLength)
-    '        'Dim sPassword As String = Dencode(System.Text.Encoding.Default.GetString(br.ReadBytes(12)), lSize + 1)
-
-    '        ReDim bAdventure(-1)
-
-    '        zi = New DotZLib.Inflater
-    '        zi.Add(bAdvZLib)
-    '        zi.Finish()
-    '        zi.Dispose()
-
-    '        With Adventure
-    '            Dim sBuffer As String
-    '            Dim iPos As Integer = 0
-
-    '            .Title = gl(bAdventure, iPos)
-    '            .Author = gl(bAdventure, iPos)
-    '            .Introduction = gl(bAdventure, iPos)
-
-    '            Dim iNumLocations As Integer = CInt(gl(bAdventure, iPos))
-    '            For iLoc As Integer = 1 To iNumLocations
-    '                Dim location As New clsLocation
-    '                With location
-    '                    .Key = gl(bAdventure, iPos)
-    '                    .ShortDescription = gl(bAdventure, iPos)
-    '                    .LongDescription = gl(bAdventure, iPos)
-    '                    For di As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.Out_
-    '                        Dim dtn As clsDirection = location.arlDirections(di)
-    '                        With dtn
-    '                            .LocationKey = gl(bAdventure, iPos)
-    '                            If .LocationKey <> "" Then
-    '                                LoadRestrictions(.Restrictions, iPos)
-    '                            Else
-    '                                .LocationKey = Nothing
-    '                            End If
-    '                        End With
-    '                    Next
-    '                End With
-    '                .htblLocations.Add(location, location.Key)
-    '            Next
-
-    '            Dim iNumTasks As Integer = CInt(gl(bAdventure, iPos))
-    '            For iTas As Integer = 1 To iNumTasks
-    '                Dim task As New clsTask
-    '                With task
-    '                    .Key = gl(bAdventure, iPos)
-    '                    .Priority = CInt(gl(bAdventure, iPos))
-    '                    sBuffer = gl(bAdventure, iPos)
-    '                    Select Case sBuffer
-    '                        Case "General"
-    '                            .TaskType = clsTask.TaskTypeEnum.General
-    '                        Case "Specific"
-    '                            .TaskType = clsTask.TaskTypeEnum.Specific
-    '                            Dim iNumSpecifics As Integer = CInt(gl(bAdventure, iPos))
-    '                            ReDim .Specifics(iNumSpecifics)
-    '                            For iSpec As Integer = 1 To iNumSpecifics
-    '                                With .Specifics(iSpec)
-    '                                    sBuffer = gl(bAdventure, iPos)
-    '                                    Select Case sBuffer
-    '                                        Case "Character"
-    '                                            .Type = ReferencesType.Character
-    '                                        Case "Number"
-    '                                            .Type = ReferencesType.Number
-    '                                        Case "Object_"
-    '                                            .Type = ReferencesType.Object_
-    '                                        Case "Text"
-    '                                            .Type = ReferencesType.Text
-    '                                    End Select
-    '                                    .Multiple = CBool(gl(bAdventure, iPos))
-    '                                    Dim iNumKeys As Integer = CInt(gl(bAdventure, iPos))
-    '                                    For iKey As Integer = 1 To iNumKeys
-    '                                        .Keys.Add(gl(bAdventure, iPos))
-    '                                    Next
-    '                                End With
-    '                            Next
-    '                        Case "System"
-    '                            .TaskType = clsTask.TaskTypeEnum.System
-    '                    End Select
-    '                    .Description = gl(bAdventure, iPos)
-    '                    .CompletionMessage = gl(bAdventure, iPos)
-    '                    LoadRestrictions(.arlRestrictions, iPos)
-    '                End With
-    '                .htblTasks.Add(task, task.Key)
-    '            Next
-
-    '        End With
-
-    '    Catch ex As Exception
-    '        ErrMsg("Error loading Adventure", ex)
-    '    Finally
-    '        bAdventure = Nothing
-    '    End Try
-
-    'End Sub
-
-
-    'Private Sub LoadRestrictions(ByVal arlRestrictions As RestrictionArrayList, ByRef iPos As Integer)
-
-    '    Dim sBuffer As String
-    '    Dim NumRestrictions As Integer = CInt(gl(bAdventure, iPos))
-
-    '    For iRest As Integer = 1 To NumRestrictions
-    '        Dim rest As New clsRestriction
-    '        With rest
-    '            sBuffer = gl(bAdventure, iPos)
-    '            Select Case sBuffer
-    '                Case "Location"
-    '                    .eItem = clsRestriction.ItemEnum.Location
-    '                    sBuffer = gl(bAdventure, iPos)
-    '                    Select Case sBuffer
-    '                        Case "InGroup"
-    '                            .eLocation = clsRestriction.LocationEnum.InGroup
-    '                        Case "SeenByCharacter"
-    '                            .eLocation = clsRestriction.LocationEnum.SeenByCharacter
-    '                    End Select
-    '                    ' TODO
-    '                    sBuffer = gl(bAdventure, iPos)
-    '                    Select Case sBuffer
-    '                        Case "Must"
-    '                            .eMust = clsRestriction.MustEnum.Must
-    '                        Case "MustNot"
-    '                            .eMust = clsRestriction.MustEnum.MustNot
-    '                    End Select
-    '                    .sKey1 = gl(bAdventure, iPos)
-    '                    .sKey2 = gl(bAdventure, iPos)
-
-    '                Case "Object_"
-    '                    .eItem = clsRestriction.ItemEnum.Object_
-    '                    sBuffer = gl(bAdventure, iPos)
-    '                    Select Case sBuffer
-    '                        Case "AtLocation"
-    '                            .eObject = clsRestriction.ObjectEnum.BeAtLocation
-    '                        Case "HeldByCharacter"
-    '                            .eObject = clsRestriction.ObjectEnum.HeldByCharacter
-    '                        Case "InGroup"
-    '                            .eObject = clsRestriction.ObjectEnum.InGroup
-    '                        Case "InsideObject"
-    '                            .eObject = clsRestriction.ObjectEnum.InsideObject
-    '                        Case "InState"
-    '                            .eObject = clsRestriction.ObjectEnum.InState
-    '                        Case "OnObject"
-    '                            .eObject = clsRestriction.ObjectEnum.OnObject
-    '                        Case "PartOfCharacter"
-    '                            .eObject = clsRestriction.ObjectEnum.PartOfCharacter
-    '                        Case "PartOfObject"
-    '                            .eObject = clsRestriction.ObjectEnum.PartOfObject
-    '                        Case "SeenByCharacter"
-    '                            .eObject = clsRestriction.ObjectEnum.SeenByCharacter
-    '                    End Select
-    '                    sBuffer = gl(bAdventure, iPos)
-    '                    Select Case sBuffer
-    '                        Case "Must"
-    '                            .eMust = clsRestriction.MustEnum.Must
-    '                        Case "MustNot"
-    '                            .eMust = clsRestriction.MustEnum.MustNot
-    '                    End Select
-    '                    .sKey1 = gl(bAdventure, iPos)
-    '                    .sKey2 = gl(bAdventure, iPos)
-
-    '                Case "Task"
-    '                    .eItem = clsRestriction.ItemEnum.Task
-    '                    sBuffer = gl(bAdventure, iPos)
-    '                    Select Case sBuffer
-    '                        Case "Complete"
-    '                            .eTask = clsRestriction.TaskEnum.Complete
-    '                    End Select
-    '                    sBuffer = gl(bAdventure, iPos)
-    '                    Select Case sBuffer
-    '                        Case "Must"
-    '                            .eMust = clsRestriction.MustEnum.Must
-    '                        Case "MustNot"
-    '                            .eMust = clsRestriction.MustEnum.MustNot
-    '                    End Select
-    '                    .sKey1 = gl(bAdventure, iPos)
-    '                    .sKey2 = gl(bAdventure, iPos)
-    '            End Select
-    '            .sMessage = gl(bAdventure, iPos)
-    '        End With
-    '        arlRestrictions.Add(rest)
-    '    Next
-    'End Sub
 
 
     Private Function LocRestriction(ByVal sLocKey As String, ByVal bMust As Boolean) As clsRestriction
@@ -4524,12 +2783,7 @@ NextUDF:
         Return s500Text
     End Function
 
-#If Not Adravalon Then
-    Friend Function CopyStream(ByRef input As System.IO.MemoryStream, ByRef output As ZOutputStream) As Boolean
-#Else
     Friend Function CopyStream(input As Stream, output As Stream) As Boolean
-#End If
-
         Try
             Dim iBlock As Integer = 1024
             Dim iBytes As Integer
@@ -4541,19 +2795,13 @@ NextUDF:
             Loop
             output.Flush()
             Return True
-#If Not Adravalon Then
-        Catch ex As ZStreamException
-#Else
         Catch ex As SharpZipBaseException
-#End If
             ErrMsg("CopyStream error", ex)
             Return False
         End Try
-
     End Function
 
     Friend Sub CreateMandatoryProperties()
-
         For Each sKey As String In New String() {OBJECTARTICLE, OBJECTPREFIX, OBJECTNOUN}
             If Not Adventure.htblObjectProperties.ContainsKey(sKey) Then
                 Dim prop As New clsProperty
@@ -4674,2407 +2922,8 @@ NextUDF:
 
     End Sub
 
-#If False Then
-    Private Function Load390() As Boolean
-
-        Try
-
-#If Mono Then
-            ErrMsg("Unfortunately it is not possible to load ADRIFT 3.90 files directly, using Mono, as the Mono framework does not implement a .Net compatible Random function.  Sorry!")
-            Return False
-#End If
-            Cursor.Current = Cursors.WaitCursor
-
-            If Adventure.htblAllProperties.Count = 0 Then
-                ErrMsg("You must select at least one library within Generator > File > Settings > Libraries before loading ADRIFT v3.9 adventures.")
-                Return False
-            End If
-
-            ' Safety check...
-            Dim sPropCheck As String = ""
-            For Each sProperty As String In New String() {"AtLocation", "AtLocationGroup", "CharacterAtLocation", "CharacterLocation", "CharEnters", "CharExits", "Container", "DynamicLocation", "HeldByWho", "InLocation", "InsideWhat", "Lockable", "LockKey", "LockStatus", "ListDescription", "OnWhat", "Openable", "OpenStatus", "PartOfWho", "Readable", "ReadText", "ShowEnterExit", "StaticLocation", "StaticOrDynamic", "Surface", "Wearable", "WornByWho"}
-                If Not Adventure.htblAllProperties.ContainsKey(sProperty) Then
-                    sPropCheck &= sProperty & vbCrLf
-                End If
-            Next
-            If sPropCheck <> "" Then
-                ErrMsg("Library must contain the following properties before loading ADRIFT v3.9 files:" & vbCrLf & sPropCheck)
-                Return False
-            End If
-
-            br.BaseStream.Position = 0
-            Dim bRawData() As Byte = br.ReadBytes(CInt(br.BaseStream.Length))
-            Dim sRawData As String = System.Text.Encoding.Default.GetString(bRawData)
-            bAdventure = Dencode(sRawData, 0)
-
-            'br.ReadBytes(2) ' CrLf
-            'Dim lSize As Long = CLng(System.Text.Encoding.Default.GetString(br.ReadBytes(8)))
-
-            'Dim sPassword As String = System.Text.Encoding.Default.GetString(Dencode(System.Text.Encoding.Default.GetString(br.ReadBytes(12)), lSize + 1))
-            Dim a As clsAdventure = Adventure
-
-
-            With Adventure
-
-                Dim iStartMaxPriority As Integer = CurrentMaxPriority()
-                Dim iStartLocations As Integer = .htblLocations.Count
-                Dim iStartObs As Integer = .htblObjects.Count
-                Dim iStartTask As Integer = .htblTasks.Count
-                Dim iStartChar As Integer = .htblCharacters.Count
-                Dim iStartVariable As Integer = .htblVariables.Count
-                Dim bSound As Boolean = False
-                Dim bGraphics As Boolean = False
-                Dim sFilename As String
-                Dim iFilesize As Integer
-                .dictv4Media = New Dictionary(Of String, clsAdventure.v4Media)
-
-                'Dim htblKeyMapping As New StringHashTable
-
-                '.bV4Compatibility = True
-
-                salWithStates.Clear()
-                Dim iPos As Integer = 0
-                Dim sBuffer As String = Nothing
-                ' Read the introduction
-
-                Dim sTerminator As String = "**"
-                .dVersion = SafeDbl(GetLine(bAdventure, iPos).Substring(8))
-
-                While iPos < bAdventure.Length - 1 And sBuffer <> sTerminator
-                    sBuffer = GetLine(bAdventure, iPos)
-                    If sBuffer <> sTerminator Then .Introduction.Item(0).Description &= "<br>" & sBuffer
-                End While
-                Dim iStartLocation As Integer = CInt(GetLine(bAdventure, iPos))
-                sBuffer = Nothing
-                While iPos < bAdventure.Length - 1 And sBuffer <> sTerminator
-                    sBuffer = GetLine(bAdventure, iPos)
-                    If sBuffer <> sTerminator Then .WinningText.Item(0).Description &= "<br>" & sBuffer
-                End While
-                .Title = GetLine(bAdventure, iPos)
-                .Author = GetLine(bAdventure, iPos)
-                .NotUnderstood = GetLine(bAdventure, iPos)
-                Dim iPer As Integer = CInt(GetLine(bAdventure, iPos)) + 1 ' Perspective
-                .ShowExits = CBool(GetLine(bAdventure, iPos))
-                GetLine(bAdventure, iPos) ' WaitNum
-                .ShowFirstRoom = CBool(GetLine(bAdventure, iPos)) ' ShowFirst
-                Dim bBattleSystem As Boolean = CBool(GetLine(bAdventure, iPos))
-                .MaxScore = CInt(GetLine(bAdventure, iPos))
-
-                ' Delete the default char in new file
-                .htblCharacters.Remove("Player")
-                Dim Player As New clsCharacter
-                With Player
-                    .Key = "Player"
-                    .CharacterType = clsCharacter.CharacterTypeEnum.Player
-                    .Perspective = CType(iPer, PerspectiveEnum)
-                    .ProperName = GetLine(bAdventure, iPos)
-                    If .ProperName = "" OrElse .ProperName = "Anonymous" Then .ProperName = "Player"
-                    .arlDescriptors.Add("myself")
-                    .arlDescriptors.Add("me")
-                    Dim bPromptName As Boolean = CBool(GetLine(bAdventure, iPos))  ' PromptName                    
-                    .Description = New Description(ConvText(GetLine(bAdventure, iPos))) ' Description
-                    Dim iTask As Integer = CInt(GetLine(bAdventure, iPos)) ' Task
-                    If iTask > 0 Then
-                        GetLine(bAdventure, iPos) ' Description
-                    End If
-                    .Location.Position = CType(GetLine(bAdventure, iPos), clsCharacterLocation.PositionEnum)
-                    Dim iOnWhat As Integer = CInt(GetLine(bAdventure, iPos)) ' OnWhat                    
-                    Dim bPromptGender As Boolean = False
-                    Select Case SafeInt(GetLine(bAdventure, iPos)) ' Sex
-                        Case 0 ' Male
-                            .Gender = clsCharacter.GenderEnum.Male
-                        Case 1 ' Female
-                            .Gender = clsCharacter.GenderEnum.Female
-                        Case 2 ' Prompt
-                            .Gender = clsCharacter.GenderEnum.Unknown
-                            bPromptGender = True
-                    End Select
-
-                    If bPromptName OrElse bPromptGender Then
-                        Dim tasPrompt As New clsTask
-                        With tasPrompt
-                            .Key = "Task" & (Adventure.htblTasks.Count + 1)
-                            .Description = "Generated task for Player prompts"
-                            .TaskType = clsTask.TaskTypeEnum.System
-                            .RunImmediately = True
-                            .Priority = iStartMaxPriority + Adventure.htblTasks.Count + 1
-                            If bPromptGender Then
-                                Dim act As New clsAction
-                                act.eItem = clsAction.ItemEnum.SetProperties
-                                act.sKey1 = Player.Key
-                                act.sKey2 = "Gender"
-                                act.StringValue = "%PopUpChoice[""Please select player gender"", ""Male"", ""Female""]%"
-                                tasPrompt.arlActions.Add(act)
-                            End If
-                            If bPromptName Then
-                                Dim act As New clsAction
-                                act.eItem = clsAction.ItemEnum.SetProperties
-                                act.sKey1 = Player.Key
-                                act.sKey2 = "CharacterProperName"
-                                act.StringValue = "%PopUpInput[""Please enter your name"", ""Anonymous""]%"
-                                tasPrompt.arlActions.Add(act)
-                            End If
-                        End With
-                        Adventure.htblTasks.Add(tasPrompt, tasPrompt.Key)
-                    End If
-                    .MaxSize = CInt(GetLine(bAdventure, iPos))
-                    .MaxWeight = CInt(GetLine(bAdventure, iPos))
-                    '.Location = "Location" & iStartLocation + 1
-
-                    If iOnWhat = 0 Then
-                        .Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.AtLocation
-                        .Location.Key = "Location" & iStartLocation + 1
-                    Else
-                        .Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.OnObject
-                        .Location.Key = iOnWhat.ToString ' Will adjust this below
-                    End If
-
-
-                    .Location = .Location
-
-                    If bBattleSystem Then
-                        GetLine(bAdventure, iPos) ' Min Stamina
-                        'GetLine(bAdventure, iPos) ' Max Stamina
-                        GetLine(bAdventure, iPos) ' Min Strength
-                        'GetLine(bAdventure, iPos) ' Max Strength
-                        'GetLine(bAdventure, iPos) ' Min Accuracy
-                        'GetLine(bAdventure, iPos) ' Max Accuracy
-                        GetLine(bAdventure, iPos) ' Min Defence
-                        'GetLine(bAdventure, iPos) ' Max Defence
-                        'GetLine(bAdventure, iPos) ' Min Agility
-                        'GetLine(bAdventure, iPos) ' Max Agility
-                        'GetLine(bAdventure, iPos) ' Recovery
-                    End If
-                End With
-                .htblCharacters.Add(Player, Player.Key)
-
-                'Adventure.iCompassPoints = CType(8 + 4 * CInt(GetLine(bAdventure, iPos)), DirectionsEnum)
-                Dim iCompassPoints As Integer = CType(8 + 4 * CInt(GetLine(bAdventure, iPos)), DirectionsEnum) ' CInt(GetLine(bAdventure, iPos))
-                Adventure.Enabled(clsAdventure.EnabledOptionEnum.Score) = Not CBool(GetLine(bAdventure, iPos)) '?
-                Adventure.Enabled(clsAdventure.EnabledOptionEnum.Score) = Not CBool(GetLine(bAdventure, iPos)) '?
-                Adventure.Enabled(clsAdventure.EnabledOptionEnum.Map) = Not CBool(GetLine(bAdventure, iPos))
-                Adventure.Enabled(clsAdventure.EnabledOptionEnum.Score) = Not CBool(GetLine(bAdventure, iPos)) '?
-                Adventure.Enabled(clsAdventure.EnabledOptionEnum.Score) = Not CBool(GetLine(bAdventure, iPos)) '?
-                Adventure.Enabled(clsAdventure.EnabledOptionEnum.Score) = Not CBool(GetLine(bAdventure, iPos)) '?
-                bSound = CBool(GetLine(bAdventure, iPos))
-                bGraphics = CBool(GetLine(bAdventure, iPos))
-                For i As Integer = 0 To 1
-                    If bSound Then
-                        sFilename = GetLine(bAdventure, iPos) ' Filename
-                        iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                        If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                    End If
-                    If bGraphics Then
-                        sFilename = GetLine(bAdventure, iPos) ' Filename
-                        If sFilename <> "" Then
-                            If i = 0 Then Adventure.Introduction(0).Description = "<img src=""" & sFilename & """>" & Adventure.Introduction(0).Description
-                            If i = 1 Then Adventure.WinningText(0).Description = "<img src=""" & sFilename & """>" & Adventure.WinningText(0).Description
-                        End If
-                        iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                        If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
-                    End If
-                Next
-                'GetLine(bAdventure, iPos) ' Enable Panel
-                'GetLine(bAdventure, iPos) ' Panel Text
-                GetLine(bAdventure, iPos) ' Size ratio
-                GetLine(bAdventure, iPos) ' Weight ratio
-                'Dim s1 As String = GetLine(bAdventure, iPos) ' ?
-
-
-                '----------------------------------------------------------------------------------
-                ' Locations                
-                '----------------------------------------------------------------------------------
-
-
-                Dim iNumLocations As Integer = CInt(GetLine(bAdventure, iPos))
-                Dim iLocations(iNumLocations, 11, 2) As Integer ' Temp Store
-                Dim iLoc As Integer
-                Dim colNewLocs As New Collection
-                For iLoc = 1 To iNumLocations
-                    Dim Location As New clsLocation
-                    With Location
-                        '.Key = "Location" & iLoc.ToString
-                        Dim sKey As String = "Location" & iLoc.ToString
-                        If a.htblLocations.ContainsKey(sKey) Then
-                            While a.htblLocations.ContainsKey(sKey)
-                                sKey = IncrementKey(sKey)
-                            End While
-                        End If
-                        .Key = sKey
-                        colNewLocs.Add(sKey)
-                        .ShortDescription = New Description(GetLine(bAdventure, iPos))
-                        .LongDescription = New Description(ConvText(GetLine(bAdventure, iPos)))
-                        Dim srdesc1 As String = GetLine(bAdventure, iPos) '?
-                        If srdesc1 <> "" Then
-                            Dim sd As New SingleDescription
-                            sd.Description = ConvText(srdesc1)
-                            sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartAfterDefaultDescription
-                            sd.Restrictions.BracketSequence = "#"
-                            .LongDescription.Add(sd)
-                        End If
-                        For i As Integer = 0 To iCompassPoints - 1
-                            iLocations(iLoc, i, 0) = SafeInt(GetLine(bAdventure, iPos)) ' Rooms
-                            If iLocations(iLoc, i, 0) <> 0 Then
-                                iLocations(iLoc, i, 1) = SafeInt(GetLine(bAdventure, iPos)) ' Tasks
-                                iLocations(iLoc, i, 2) = SafeInt(GetLine(bAdventure, iPos)) ' Completed
-                                'iLocations(iLoc, i, 3) = SafeInt(GetLine(bAdventure, iPos)) ' Mode                                
-                            End If
-                        Next
-                        Dim srdesc2_0 As String = GetLine(bAdventure, iPos) '?
-                        Dim irtaskno2_0 As Integer = SafeInt(GetLine(bAdventure, iPos))
-                        If srdesc2_0 <> "" OrElse irtaskno2_0 > 0 Then
-                            Dim sd As New SingleDescription
-                            sd.Description = ConvText(srdesc2_0)
-                            sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartAfterDefaultDescription
-                            If irtaskno2_0 > 0 Then
-                                Dim rest As New clsRestriction
-                                rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                                rest.sKey1 = "Task" & irtaskno2_0
-                                rest.eMust = clsRestriction.MustEnum.Must
-                                rest.eTask = clsRestriction.TaskEnum.Complete
-                                sd.Restrictions.Add(rest)
-                            End If
-                            sd.Restrictions.BracketSequence = "#"
-                            .LongDescription.Add(sd)
-                        End If
-                        Dim srdesc2_1 As String = GetLine(bAdventure, iPos) '?
-                        Dim irtaskno2_1 As Integer = SafeInt(GetLine(bAdventure, iPos))
-                        If srdesc2_1 <> "" OrElse irtaskno2_1 > 0 Then
-                            Dim sd As New SingleDescription
-                            sd.Description = ConvText(srdesc2_1)
-                            sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartAfterDefaultDescription
-                            If irtaskno2_1 > 0 Then
-                                Dim rest As New clsRestriction
-                                rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                                rest.sKey1 = "Task" & irtaskno2_1
-                                rest.eMust = clsRestriction.MustEnum.Must
-                                rest.eTask = clsRestriction.TaskEnum.Complete
-                                sd.Restrictions.Add(rest)
-                            End If
-                            sd.Restrictions.BracketSequence = "#"
-                            .LongDescription.Add(sd)
-                        End If
-                        Dim irobject As Integer = SafeInt(GetLine(bAdventure, iPos))
-                        Dim srdesc3 As String = GetLine(bAdventure, iPos) '?
-                        Dim irhideob As Integer = SafeInt(GetLine(bAdventure, iPos))
-                        If srdesc3 <> "" Then
-                            Dim sd As New SingleDescription
-                            sd.Description = ConvText(srdesc3)
-                            sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartDescriptionWithThis
-                            Dim rest As New clsRestriction
-                            rest.eType = clsRestriction.RestrictionTypeEnum.Character
-                            rest.sKey1 = "Player"
-                            Select Case CInt(irhideob / 10)
-                                Case 0
-                                    rest.eMust = clsRestriction.MustEnum.MustNot
-                                    rest.eCharacter = clsRestriction.CharacterEnum.BeHoldingObject
-                                Case 1
-                                    rest.eMust = clsRestriction.MustEnum.Must
-                                    rest.eCharacter = clsRestriction.CharacterEnum.BeHoldingObject
-                                Case 2
-                                    rest.eMust = clsRestriction.MustEnum.MustNot
-                                    rest.eCharacter = clsRestriction.CharacterEnum.BeWearingObject
-                                Case 3
-                                    rest.eMust = clsRestriction.MustEnum.Must
-                                    rest.eCharacter = clsRestriction.CharacterEnum.BeWearingObject
-                                Case 4
-                                    rest.eMust = clsRestriction.MustEnum.MustNot
-                                    rest.eCharacter = clsRestriction.CharacterEnum.BeInSameLocationAsObject
-                                Case 5
-                                    rest.eMust = clsRestriction.MustEnum.Must
-                                    rest.eCharacter = clsRestriction.CharacterEnum.BeInSameLocationAsObject
-                            End Select
-                            rest.sKey2 = irobject.ToString ' Needs to be converted once we've loaded objects
-                            sd.Restrictions.Add(rest)
-                            sd.Restrictions.BracketSequence = "#"
-                            .LongDescription.Add(sd)
-                        End If
-
-                        If bSound Then
-                            sFilename = GetLine(bAdventure, iPos) ' Filename
-                            'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                            If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                        End If
-                        If bGraphics Then
-                            sFilename = GetLine(bAdventure, iPos) ' Filename
-                            If sFilename <> "" Then
-                                .LongDescription(0).Description = "<img src=""" & sFilename & """>" & .LongDescription(0).Description
-                            End If
-                            'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                            If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                        End If
-                        For i As Integer = 0 To 3
-                            If bSound Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename                                
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                            End If
-                            If bGraphics Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename
-                                If sFilename <> "" Then
-                                    .LongDescription(0).Description = "<img src=""" & sFilename & """>" & .LongDescription(0).Description
-                                End If
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                            End If
-                        Next
-                        'Dim iNumAltDesc As Integer = CInt(GetLine(bAdventure, iPos))
-                        'For iAlt As Integer = 0 To iNumAltDesc - 1
-                        '    Dim sd As New SingleDescription
-
-                        '    sd.Description = ConvText(GetLine(bAdventure, iPos)) ' Description
-                        '    Dim rest As New clsRestriction
-                        '    Dim iTaskObPlayer As Integer = CInt(GetLine(bAdventure, iPos)) ' Options
-                        '    Select Case iTaskObPlayer
-                        '        Case 0 ' Task
-                        '            rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                        '        Case 1 ' Object
-                        '            rest.eType = clsRestriction.RestrictionTypeEnum.Object
-                        '        Case 2 ' Player
-                        '            rest.eType = clsRestriction.RestrictionTypeEnum.Character
-                        '            rest.sKey1 = "%Player%"
-                        '    End Select
-                        '    If bSound Then
-                        '        sFilename = GetLine(bAdventure, iPos) ' Filename
-                        '        iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                        '        If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                        '    End If
-                        '    If bGraphics Then
-                        '        sFilename = GetLine(bAdventure, iPos) ' Filename
-                        '        If sFilename <> "" Then sd.Description = "<img src=""" & sFilename & """>" & sd.Description
-                        '        iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                        '        If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
-                        '    End If
-                        '    rest.oMessage = New Description(ConvText(GetLine(bAdventure, iPos))) ' Description
-                        '    iTaskObPlayer = CInt(GetLine(bAdventure, iPos)) ' Options
-                        '    Select Case rest.eType
-                        '        Case clsRestriction.RestrictionTypeEnum.Task
-                        '            rest.sKey1 = "Task" & iTaskObPlayer
-                        '        Case clsRestriction.RestrictionTypeEnum.Object
-                        '        Case clsRestriction.RestrictionTypeEnum.Character
-                        '            Select Case iTaskObPlayer
-                        '                Case 0 ' is not holding
-                        '                    rest.eCharacter = clsRestriction.CharacterEnum.BeHoldingObject
-                        '                    rest.eMust = clsRestriction.MustEnum.MustNot
-                        '                Case 1 ' is holding
-                        '                    rest.eCharacter = clsRestriction.CharacterEnum.BeHoldingObject
-                        '                    rest.eMust = clsRestriction.MustEnum.Must
-                        '                Case 2 ' is not wearing
-                        '                    rest.eCharacter = clsRestriction.CharacterEnum.BeWearingObject
-                        '                    rest.eMust = clsRestriction.MustEnum.MustNot
-                        '                Case 3 ' is wearing
-                        '                    rest.eCharacter = clsRestriction.CharacterEnum.BeHoldingObject
-                        '                    rest.eMust = clsRestriction.MustEnum.Must
-                        '                Case 4 ' is not same room as
-                        '                    rest.eCharacter = clsRestriction.CharacterEnum.BeInSameLocationAsObject
-                        '                    rest.eMust = clsRestriction.MustEnum.MustNot
-                        '                Case 5 ' is in same room as
-                        '                    rest.eCharacter = clsRestriction.CharacterEnum.BeInSameLocationAsObject
-                        '                    rest.eMust = clsRestriction.MustEnum.Must
-                        '            End Select
-                        '    End Select
-                        '    If bSound Then
-                        '        sFilename = GetLine(bAdventure, iPos) ' Filename
-                        '        iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                        '        If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                        '    End If
-                        '    If bGraphics Then
-                        '        sFilename = GetLine(bAdventure, iPos) ' Filename
-                        '        If sFilename <> "" Then sd.Description = "<img src=""" & sFilename & """>" & sd.Description
-                        '        iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                        '        If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
-                        '    End If
-                        '    GetLine(bAdventure, iPos) ' Hideobs
-                        '    GetLine(bAdventure, iPos) ' New Short Desc
-                        '    iTaskObPlayer = CInt(GetLine(bAdventure, iPos)) ' Options
-                        '    Select Case rest.eType
-                        '        Case clsRestriction.RestrictionTypeEnum.Task
-                        '            If iTaskObPlayer = 0 Then rest.eMust = clsRestriction.MustEnum.Must Else rest.eMust = clsRestriction.MustEnum.MustNot
-                        '            rest.eTask = clsRestriction.TaskEnum.Complete
-                        '        Case clsRestriction.RestrictionTypeEnum.Object
-                        '            rest.sKey2 = rest.sKey2
-                        '        Case clsRestriction.RestrictionTypeEnum.Character
-                        '            rest.sKey2 = iTaskObPlayer.ToString
-                        '    End Select
-                        '    Dim iDisplayWhen As Integer = CInt(GetLine(bAdventure, iPos))
-                        '    sd.eDisplayWhen = CType(iDisplayWhen, SingleDescription.DisplayWhenEnum) ' Show When                            
-                        '    If Not (rest.eType = clsRestriction.RestrictionTypeEnum.Task AndAlso rest.sKey1 = "Task0") Then sd.Restrictions.Add(rest)
-                        '    sd.Restrictions.BracketSequence = "#"
-                        '    .LongDescription.Add(sd)
-                        'Next
-                        If Adventure.Enabled(clsAdventure.EnabledOptionEnum.Map) Then GetLine(bAdventure, iPos) ' No Map
-                    End With
-                    .htblLocations.Add(Location, Location.Key)
-NextLoc:
-                Next
-                'Dim h As New Hashtable
-                'h.Add("1", "3")
-                'For Each x As System.Collections.DictionaryEntry In h
-                '    Dim y As String = CStr(x.Value)
-                '    Debug.WriteLine(x)
-                'Next
-
-                'iLoc = 0
-                '                For Each loc As clsLocation In .htblLocations.Values
-
-
-                '----------------------------------------------------------------------------------
-                ' Objects
-                '----------------------------------------------------------------------------------
-
-
-
-                Dim iNumObjects As Integer = CInt(GetLine(bAdventure, iPos))
-                Dim colNewObs As New Collection
-                For iObj As Integer = 1 To iNumObjects
-                    Dim NewObject As New clsObject
-                    With NewObject
-                        '.Key = "Object" & iObj.ToString
-                        Dim sKey As String = "Object" & iObj.ToString
-                        If a.htblObjects.ContainsKey(sKey) Then
-                            While a.htblObjects.ContainsKey(sKey)
-                                sKey = IncrementKey(sKey)
-                            End While
-                        End If
-                        .Key = sKey
-                        colNewObs.Add(sKey)
-                        .Prefix = GetLine(bAdventure, iPos)
-                        ConvertPrefix(.Article, .Prefix)
-                        .arlNames.Add(GetLine(bAdventure, iPos))
-                        Dim sAlias As String = GetLine(bAdventure, iPos)
-                        If sAlias <> "" Then .arlNames.Add(sAlias)
-                        'Dim iNumAliases As Integer = CInt(GetLine(bAdventure, iPos))
-                        'For iAlias As Integer = 1 To iNumAliases
-                        '    .arlNames.Add(GetLine(bAdventure, iPos))
-                        'Next
-
-                        Dim sod As New clsProperty
-                        sod = Adventure.htblAllProperties("StaticOrDynamic").Copy
-                        .htblActualProperties.Add(sod)
-                        .bCalculatedGroups = False
-                        .IsStatic = SafeBool(GetLine(bAdventure, iPos))
-
-                        .Description = New Description(ConvText(GetLine(bAdventure, iPos)))
-                        Dim cObjectLocation As New clsObjectLocation
-                        If .IsStatic Then
-                            GetLine(bAdventure, iPos) ' Not needed here?
-                            Dim sl As New clsProperty
-                            sl = Adventure.htblAllProperties("StaticLocation").Copy
-                            .htblActualProperties.Add(sl)
-                            .bCalculatedGroups = False
-                        Else
-                            Dim dl As New clsProperty
-                            dl = Adventure.htblAllProperties("DynamicLocation").Copy
-                            .htblActualProperties.Add(dl)
-                            .bCalculatedGroups = False
-
-                            Dim iv4Loc As Integer = CInt(GetLine(bAdventure, iPos))
-                            Select Case iv4Loc
-                                Case 0
-                                    cObjectLocation.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.Hidden
-                                Case 1
-                                    cObjectLocation.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.HeldByCharacter
-                                Case 2
-                                    cObjectLocation.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.InObject
-                                Case 3
-                                    cObjectLocation.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.OnObject
-                                Case iNumLocations + 4
-                                    cObjectLocation.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.WornByCharacter
-                                Case Else
-                                    cObjectLocation.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.InLocation
-                                    cObjectLocation.Key = "Location" & iv4Loc - 3 + iStartLocations
-                                    Dim p As New clsProperty
-                                    p = Adventure.htblAllProperties("InLocation").Copy
-                                    .htblActualProperties.Add(p)
-                                    .bCalculatedGroups = False
-                            End Select
-                        End If
-
-                        Dim sTaskKey As String = "Task" & GetLine(bAdventure, iPos)
-                        Dim bTaskState As Boolean = CBool(GetLine(bAdventure, iPos))
-                        Dim sDescription As String = GetLine(bAdventure, iPos)
-                        If sTaskKey <> "Task0" Then
-                            Dim sd As New SingleDescription
-                            sd.Description = sDescription
-                            Dim rest As New clsRestriction
-                            rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                            rest.eMust = CType(IIf(bTaskState, clsRestriction.MustEnum.MustNot, clsRestriction.MustEnum.Must), clsRestriction.MustEnum)
-                            rest.eTask = clsRestriction.TaskEnum.Complete
-                            rest.sKey1 = sTaskKey
-                            sd.Restrictions.Add(rest)
-                            sd.Restrictions.BracketSequence = "#"
-                            sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartDescriptionWithThis
-                            .Description.Add(sd)
-                        End If
-
-                        'Dim AltDesc As New clsObject.AlternativeDescription
-                        'With AltDesc
-                        '    .sTaskKey = "Task" & GetLine(bAdventure, iPos)
-                        '    .bTaskState = CBool(GetLine(bAdventure, iPos))
-                        '    .sDescription = GetLine(bAdventure, iPos)
-                        'End With
-                        '.colAlternativeDescriptions.Add(AltDesc)
-
-                        Dim StaticLoc As New clsObjectLocation
-                        If .IsStatic Then
-                            StaticLoc.StaticExistWhere = CType(GetLine(bAdventure, iPos), clsObjectLocation.StaticExistsWhereEnum)
-                            '.Location = StaticLoc
-
-                            Select Case StaticLoc.StaticExistWhere
-                                Case clsObjectLocation.StaticExistsWhereEnum.NoRooms
-
-                                Case clsObjectLocation.StaticExistsWhereEnum.SingleLocation
-                                    StaticLoc.Key = "Location" & GetLine(bAdventure, iPos) ' StaticKey
-                                    Dim pLoc As New clsProperty
-                                    pLoc = Adventure.htblAllProperties("AtLocation").Copy
-                                    .htblActualProperties.Add(pLoc)
-                                    .bCalculatedGroups = False
-                                Case clsObjectLocation.StaticExistsWhereEnum.LocationGroup
-                                    Dim salRooms As New StringArrayList
-                                    For iRoom As Integer = 0 To iNumLocations
-                                        If CBool(GetLine(bAdventure, iPos)) Then salRooms.Add("Location" & iRoom) ' StaticLoc.StaticKey = "Location" & iRoom ' TODO - Generate a roomgroup and assign that
-                                    Next
-                                    StaticLoc.Key = GetRoomGroupFromList(iPos, salRooms, "object '" & .FullName & "'").Key ' StaticKey
-                                    Dim pLG As New clsProperty
-                                    pLG = Adventure.htblAllProperties("AtLocationGroup").Copy
-                                    .htblActualProperties.Add(pLG)
-                                    .bCalculatedGroups = False
-                                Case clsObjectLocation.StaticExistsWhereEnum.AllRooms
-
-                                Case clsObjectLocation.StaticExistsWhereEnum.PartOfCharacter
-                                    ' Key defined later
-                                Case clsObjectLocation.StaticExistsWhereEnum.PartOfObject
-                                    ' Key defined later
-                            End Select
-                        End If
-
-
-                        If CBool(GetLine(bAdventure, iPos)) Then ' container
-                            Dim c As New clsProperty
-                            c = Adventure.htblAllProperties("Container").Copy
-                            c.Selected = True
-                            .htblActualProperties.Add(c)
-                            .bCalculatedGroups = False
-                        End If
-                        If CBool(GetLine(bAdventure, iPos)) Then ' surface
-                            Dim s As New clsProperty
-                            s = Adventure.htblAllProperties("Surface").Copy
-                            s.Selected = True
-                            .htblActualProperties.Add(s)
-                            .bCalculatedGroups = False
-                        End If
-                        GetLine(bAdventure, iPos) ' Num Holds
-
-                        If Not .IsStatic Then
-                            If CBool(GetLine(bAdventure, iPos)) Then  ' wearable
-                                Dim w As New clsProperty
-                                w = Adventure.htblAllProperties("Wearable").Copy
-                                w.Selected = True
-                                .htblActualProperties.Add(w)
-                                .bCalculatedGroups = False
-                            End If
-                            GetLine(bAdventure, iPos) ' weight                            
-                            Dim iParent As Integer = CInt(GetLine(bAdventure, iPos))
-                            Select Case cObjectLocation.DynamicExistWhere
-                                Case clsObjectLocation.DynamicExistsWhereEnum.HeldByCharacter
-                                    Dim p As New clsProperty
-                                    p = Adventure.htblAllProperties("HeldByWho").Copy
-                                    .htblActualProperties.Add(p)
-                                    .bCalculatedGroups = False
-
-                                    If iParent = 0 Then
-                                        cObjectLocation.Key = "%Player%"
-                                    Else
-                                        cObjectLocation.Key = "Character" & iParent
-                                    End If
-                                    .Location = cObjectLocation
-                                Case clsObjectLocation.DynamicExistsWhereEnum.WornByCharacter
-                                    If iParent = 0 Then
-                                        cObjectLocation.Key = "%Player%"
-                                    Else
-                                        cObjectLocation.Key = "Character" & iParent
-                                    End If
-                                    Dim p As New clsProperty
-                                    p = Adventure.htblAllProperties("WornByWho").Copy
-                                    .htblActualProperties.Add(p)
-                                    .bCalculatedGroups = False
-                                    p.Value = cObjectLocation.Key
-                                    .Location = cObjectLocation
-                                Case clsObjectLocation.DynamicExistsWhereEnum.InObject
-                                    .Location = cObjectLocation
-                                    Dim p As New clsProperty
-                                    p = Adventure.htblAllProperties("InsideWhat").Copy
-                                    .htblActualProperties.Add(p)
-                                    .bCalculatedGroups = False
-                                    p.Value = iParent.ToString
-                                Case clsObjectLocation.DynamicExistsWhereEnum.OnObject
-                                    .Location = cObjectLocation
-                                    Dim p As New clsProperty
-                                    p = Adventure.htblAllProperties("OnWhat").Copy
-                                    .htblActualProperties.Add(p)
-                                    .bCalculatedGroups = False
-                                    p.Value = iParent.ToString
-                                Case Else
-                                    .Location = cObjectLocation
-                            End Select
-                            '.Location = cObjectLocation
-                            '.Move(cObjectLocation)
-                        End If
-                        If .IsStatic AndAlso StaticLoc.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.PartOfCharacter Then
-                            Dim iChar As Integer = CInt(GetLine(bAdventure, iPos))
-                            If iChar = 0 Then
-                                StaticLoc.Key = "%Player%" ' StaticKey
-                            Else
-                                StaticLoc.Key = "Character" & iChar ' StaticKey
-                            End If
-                            Dim c As New clsProperty
-                            c = Adventure.htblAllProperties("PartOfWho").Copy
-                            c.StringData = New Description(ConvText(StaticLoc.Key)) ' StaticKey
-                            .htblActualProperties.Add(c)
-                            .bCalculatedGroups = False
-                        End If
-                        If .IsStatic Then .Move(StaticLoc)
-
-                        Dim iOpenableLockable As Integer = CInt(GetLine(bAdventure, iPos))
-                        If iOpenableLockable > 1 Then iOpenableLockable = 11 - iOpenableLockable
-                        ' 0 = Not openable
-                        ' 5 = Openable, open
-                        ' 6 = Openable, closed
-                        ' 7 = Openable, locked
-                        If iOpenableLockable > 0 Then
-                            Dim op As New clsProperty
-                            op = Adventure.htblAllProperties("Openable").Copy
-                            op.Selected = True
-                            .htblActualProperties.Add(op)
-                            .bCalculatedGroups = False
-
-                            Dim pOS As New clsProperty
-                            pOS = Adventure.htblAllProperties("OpenStatus").Copy
-                            pOS.Selected = True
-                            If iOpenableLockable = 5 Then
-                                pOS.Value = "Open"
-                            Else
-                                pOS.Value = "Closed"
-                            End If
-                            .htblActualProperties.Add(pOS)
-                            .bCalculatedGroups = False
-
-                            'End If
-                            'If iOpenableLockable > 1 Then
-                            'Dim iKey As Integer = CInt(GetLine(bAdventure, iPos))
-                            'If iKey > -1 Then
-                            '    Dim pLk As New clsProperty
-                            '    pLk = Adventure.htblAllProperties("Lockable").Copy
-                            '    pLk.Selected = True
-                            '    .htblActualProperties.Add(pLk)
-                            '    .bCalculatedGroups = False
-
-                            '    Dim pKey As New clsProperty
-                            '    pKey = Adventure.htblAllProperties("LockKey").Copy
-                            '    pKey.Selected = True
-                            '    pKey.Value = CStr(iKey) ' "Object" & iKey + iStartObs                                
-                            '    .htblActualProperties.Add(pKey)
-                            '    .bCalculatedGroups = False
-
-                            '    Dim pLS As New clsProperty
-                            '    pLS = Adventure.htblAllProperties("LockStatus").Copy
-                            '    pLS.Selected = True
-                            '    If iOpenableLockable = 7 Then pOS.Value = "Locked"
-                            '    .htblActualProperties.Add(pLS)
-                            '    .bCalculatedGroups = False
-
-                            'End If
-                        End If
-
-                        '.Openable = CBool(GetLine(bAdventure, iPos))
-                        'If .Lockable Then GetLine(bAdventure, iPos) ' key
-                        Dim iSitStandLie As Integer = CInt(GetLine(bAdventure, iPos))  ' Sittable
-                        If iSitStandLie = 1 OrElse iSitStandLie = 3 Then .IsSittable = True
-                        .IsStandable = .IsSittable
-                        If iSitStandLie = 2 OrElse iSitStandLie = 3 Then .IsLieable = True
-                        If Not .IsStatic Then GetLine(bAdventure, iPos) ' edible
-
-                        If CBool(GetLine(bAdventure, iPos)) Then
-                            Dim r As New clsProperty
-                            r = Adventure.htblAllProperties("Readable").Copy
-                            r.Selected = True
-                            .htblActualProperties.Add(r)
-                            .bCalculatedGroups = False
-                        End If
-                        If .Readable Then
-                            Dim sReadText As String = GetLine(bAdventure, iPos)
-                            If sReadText <> "" Then
-                                Dim r As New clsProperty
-                                r = Adventure.htblAllProperties("ReadText").Copy
-                                r.Selected = True
-                                .htblActualProperties.Add(r)
-                                .bCalculatedGroups = False
-                                .ReadText = sReadText
-                            End If
-                        End If
-
-                        If Not .IsStatic Then GetLine(bAdventure, iPos) ' weapon
-
-                        'Dim iState As Integer = CInt(GetLine(bAdventure, iPos))
-                        'If iState > 0 Then
-                        '    Dim sStates As String = GetLine(bAdventure, iPos)
-                        '    Dim arlStates As New StringArrayList
-                        '    For Each sState As String In sStates.Split("|"c)
-                        '        arlStates.Add(ToProper(sState))
-                        '    Next
-                        '    Dim sPKey As String = FindProperty(arlStates)
-                        '    Dim s As New clsProperty
-                        '    If sPKey Is Nothing Then
-                        '        s.Type = clsProperty.PropertyTypeEnum.StateList
-                        '        s.Description = "Object can be " & sStates.Replace("|", " or ")
-                        '        s.Key = sStates
-                        '        s.arlStates = arlStates
-                        '        s.Value = arlStates(iState - 1)
-                        '        Adventure.htblAllProperties.Add(s.Copy)
-                        '    Else
-                        '        s = Adventure.htblAllProperties(sPKey).Copy
-                        '        s.Value = arlStates(iState - 1)
-                        '    End If
-                        '    s.Selected = True
-                        '    .htblActualProperties.Add(s)
-                        '    .bCalculatedGroups = False
-                        '    salWithStates.Add(.Key)
-
-                        '    Dim iShowState As Integer = CInt(GetLine(bAdventure, iPos)) ' showstate
-
-                        'End If
-                        'Dim bSpecificallyList As Boolean = CBool(GetLine(bAdventure, iPos)) ' showhide
-                        'If .IsStatic Then
-                        '    .ExplicitlyList = bSpecificallyList
-                        'Else
-                        '    .ExplicitlyExclude = bSpecificallyList
-                        'End If
-                        ' GSFX
-                        For i As Integer = 0 To 1
-                            If bSound Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename
-                                'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                            End If
-                            If bGraphics Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename
-                                If sFilename <> "" Then
-                                    .Description(0).Description = "<img src=""" & sFilename & """>" & .Description(0).Description
-                                End If
-                                'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
-                            End If
-                        Next
-                        ' Battle
-                        If bBattleSystem Then
-                            GetLine(bAdventure, iPos) ' Armour
-                            GetLine(bAdventure, iPos) ' Hit Points
-                            GetLine(bAdventure, iPos) ' Hit Method
-                            'GetLine(bAdventure, iPos) ' Accuracy
-                        End If
-                        'Dim sSpecialList As String = GetLine(bAdventure, iPos) ' alsohere
-                        'If sSpecialList <> "" Then
-                        '    Dim r As New clsProperty
-                        '    If NewObject.IsStatic Then
-                        '        r = Adventure.htblAllProperties("ListDescription").Copy
-                        '    Else
-                        '        r = Adventure.htblAllProperties("ListDescriptionDynamic").Copy
-                        '    End If
-                        '    r.Selected = True
-                        '    .htblActualProperties.Add(r)
-                        '    .bCalculatedGroups = False
-                        '    .ListDescription = sSpecialList
-                        'End If
-                        'Dim s2 As String = GetLine(bAdventure, iPos) ' initial
-
-                        '.htblProperties = .GetPropertiesIncludingGroups()
-                    End With
-
-                    .htblObjects.Add(NewObject, NewObject.Key)
-                Next
-
-                ' Sort out object keys
-                If Adventure.Player.Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.OnObject Then
-                    Select Case Adventure.Player.Location.Position
-                        Case clsCharacterLocation.PositionEnum.Standing
-                            Adventure.Player.Location.Key = GetObKey(CInt(Adventure.Player.Location.Key) - 1, ComboEnum.Standable)
-                        Case clsCharacterLocation.PositionEnum.Sitting
-                            Adventure.Player.Location.Key = GetObKey(CInt(Adventure.Player.Location.Key) - 1, ComboEnum.Sittable)
-                        Case clsCharacterLocation.PositionEnum.Lying
-                            Adventure.Player.Location.Key = GetObKey(CInt(Adventure.Player.Location.Key) - 1, ComboEnum.Lieable)
-                    End Select
-                End If
-                For Each sLoc As String In colNewLocs
-                    Dim loc As clsLocation = a.htblLocations(sLoc)
-                    For Each sd As SingleDescription In loc.LongDescription
-                        If sd.Restrictions.Count > 0 Then
-                            If sd.Restrictions(0).eType = clsRestriction.RestrictionTypeEnum.Character Then
-                                Select Case sd.Restrictions(0).eCharacter
-                                    Case clsRestriction.CharacterEnum.BeInSameLocationAsObject, clsRestriction.CharacterEnum.BeHoldingObject
-                                        sd.Restrictions(0).sKey2 = GetObKey(CInt(sd.Restrictions(0).sKey2) - 1, ComboEnum.Dynamic)
-                                    Case clsRestriction.CharacterEnum.BeWearingObject
-                                        sd.Restrictions(0).sKey2 = GetObKey(CInt(sd.Restrictions(0).sKey2) - 1, ComboEnum.Wearable)
-                                End Select
-                            End If
-                        End If
-                    Next
-                Next
-                For Each sOb As String In colNewObs
-                    Dim ob As clsObject = a.htblObjects(sOb)
-                    If ob.Lockable Then
-                        'ob.htblActualProperties("LockKey").Value = GetObKey(CInt(ob.htblActualProperties("LockKey").Value) + iStartObs, ComboEnum.Dynamic)
-                        ob.SetPropertyValue("LockKey", GetObKey(CInt(ob.htblActualProperties("LockKey").Value) + iStartObs, ComboEnum.Dynamic))
-                        'ob.bCalculatedGroups = False
-                    End If
-                    If ob.htblActualProperties.ContainsKey("OnWhat") Then
-                        'ob.htblActualProperties("OnWhat").Value = GetObKey(CInt(ob.htblActualProperties("OnWhat").Value), ComboEnum.Surface)
-                        ob.SetPropertyValue("OnWhat", GetObKey(CInt(ob.htblActualProperties("OnWhat").Value), ComboEnum.Surface))
-                        'ob.bCalculatedGroups = False
-                    End If
-                    If ob.htblActualProperties.ContainsKey("InsideWhat") Then
-                        'ob.htblActualProperties("InsideWhat").Value = GetObKey(CInt(ob.htblActualProperties("InsideWhat").Value), ComboEnum.Container)
-                        ob.SetPropertyValue("InsideWhat", GetObKey(CInt(ob.htblActualProperties("InsideWhat").Value), ComboEnum.Container))
-                        ' ob.bCalculatedGroups = False
-                    End If
-                Next
-
-                ' Sort out location restrictions
-                'For iLoc = 1 To .htblLocations.Count
-                iLoc = 0
-                For Each sLoc As String In colNewLocs
-                    iLoc += 1
-                    Dim loc As clsLocation = Adventure.htblLocations(sLoc) '"Location" & iLoc)
-                    'Dim loc As clsLocation = CType(CType(x, DictionaryEntry).Value, clsLocation)
-                    For iDir As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest
-                        '                        For iDir As Integer = 0 To 11
-                        If iLocations(iLoc, iDir, 0) > 0 Then
-                            If iLocations(iLoc, iDir, 0) <= Adventure.htblLocations.Count Then
-                                loc.arlDirections(iDir).LocationKey = "Location" & iLocations(iLoc, iDir, 0)
-                            Else
-                                loc.arlDirections(iDir).LocationKey = "Group" & iLocations(iLoc, iDir, 0) - Adventure.htblLocations.Count
-                            End If
-                            If iLocations(iLoc, iDir, 1) > 0 Then
-                                Dim rest As New clsRestriction
-                                'If iLocations(iLoc, iDir, 3) = 0 Then
-                                rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                                rest.sKey1 = "Task" & iLocations(iLoc, iDir, 1) + iStartTask
-                                If iLocations(iLoc, iDir, 2) = 0 Then
-                                    rest.eMust = clsRestriction.MustEnum.Must
-                                Else
-                                    rest.eMust = clsRestriction.MustEnum.MustNot
-                                End If
-                                rest.eTask = clsRestriction.TaskEnum.Complete
-                                'Else
-                                'rest.eType = clsRestriction.RestrictionTypeEnum.Property ' clsRestriction.ItemEnum.Object
-                                '' Filter on objects with state
-                                'rest.sKey1 = "OpenStatus"
-                                'rest.sKey2 = GetObKey(iLocations(iLoc, iDir, 1) - 1, ComboEnum.WithStateOrOpenable)
-                                'rest.eMust = clsRestriction.MustEnum.Must
-                                ''rest.eObject = clsRestriction.ObjectEnum.InState
-                                'Dim ob As clsObject = Adventure.htblObjects(rest.sKey2)
-                                'If ob.Openable Then
-                                '    If iLocations(iLoc, iDir, 2) = 0 Then rest.StringValue = "Open"
-                                '    If iLocations(iLoc, iDir, 2) = 1 Then rest.StringValue = "Closed"
-                                '    If ob.Lockable AndAlso iLocations(iLoc, iDir, 2) = 2 Then rest.StringValue = "Locked"
-                                'End If
-                                'Select Case iLocations(iLoc, iDir, 2)
-
-                                'End Select
-                                'End If
-                                loc.arlDirections(iDir).Restrictions.Add(rest)
-                                loc.arlDirections(iDir).Restrictions.BracketSequence = "#"
-                            End If
-                        End If
-                    Next
-                Next
-
-
-                '----------------------------------------------------------------------------------
-                ' Tasks                
-                '----------------------------------------------------------------------------------
-
-
-
-                Dim iNumTasks As Integer = CInt(GetLine(bAdventure, iPos))
-                'Dim colNewTasks As New Collection
-                For iTask As Integer = 1 To iNumTasks
-                    Dim NewTask As New clsTask
-                    With NewTask
-                        '.Key = "Task" & iTask.ToString
-                        Dim sKey As String = "Task" & iTask.ToString
-                        'Dim sOrigKey As String = sKey
-                        If a.htblTasks.ContainsKey(sKey) Then
-                            While a.htblTasks.ContainsKey(sKey)
-                                sKey = IncrementKey(sKey)
-                            End While
-                        End If
-                        'If sKey <> sOrigKey Then htblKeyMapping.Add(sOrigKey, sKey)
-                        .Key = sKey
-                        'colNewTasks.Add(sKey)
-                        .Priority = iStartMaxPriority + iTask
-                        Dim iNumCommands As Integer = CInt(GetLine(bAdventure, iPos))
-                        For i As Integer = 1 To iNumCommands + 1
-                            Dim sCommand As String = GetLine(bAdventure, iPos)
-
-#If Generator Then
-                            .arlCommands.Add(sCommand)
-#Else
-                            ' Simplify Runner so it only has to deal with multiple, or specific refs
-                            .arlCommands.Add(sCommand.Replace("%object%", "%object1%").Replace("%character%", "%character1%"))
-#End If
-                        Next
-                        .TaskType = clsTask.TaskTypeEnum.System
-                        For Each sCommand As String In .arlCommands
-                            If Left(sCommand, 1) <> "#" Then
-                                .TaskType = clsTask.TaskTypeEnum.General
-                                Exit For
-                            End If
-                        Next
-                        .Description = .arlCommands(0)
-                        .CompletionMessage = New Description(ConvText(GetLine(bAdventure, iPos)))
-                        Dim sMessage1 As String = GetLine(bAdventure, iPos)
-                        Dim sMessage2 As String = GetLine(bAdventure, iPos)
-                        Dim sMessage3 As String = GetLine(bAdventure, iPos)
-                        Dim iShowRoom As Integer = SafeInt(GetLine(bAdventure, iPos))
-                        If iShowRoom > 0 Then
-                            If .CompletionMessage(0).Description <> "" Then .CompletionMessage(0).Description &= "  "
-                            .CompletionMessage(0).Description &= "%DisplayLocation[Location" & iShowRoom & "]%"
-                        End If
-                        If sMessage3 <> "" AndAlso .CompletionMessage.ToString = "" Then .eDisplayCompletion = clsTask.BeforeAfterEnum.After Else .eDisplayCompletion = clsTask.BeforeAfterEnum.Before
-                        If sMessage3 <> "" Then .CompletionMessage(0).Description = pSpace(.CompletionMessage.ToString) & sMessage3 ' &= "  " & sMessage3
-                        'If .CompletionMessage.ToString = "" Then .ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnNoOutput Else .ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnFail
-                        If .CompletionMessage.ToString = "" Then .SpecificOverrideType = clsTask.SpecificOverrideTypeEnum.BeforeTextAndActions ' .ExecuteParentActions = True
-                        ' Needs to be ContinueOnFail so that a failing task with output will be overridden by a lower priority succeeding task, as per v4
-                        '.ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnFail ' clsTask.ContinueEnum.ContinueOnNoOutput
-                        .bContinueToExecuteLowerPriority = False
-                        .Repeatable = CBool(GetLine(bAdventure, iPos))
-                        GetLine(bAdventure, iPos) ' Reversible - give warning if this is set
-                        iNumCommands = CInt(GetLine(bAdventure, iPos))
-                        For i As Integer = 1 To iNumCommands + 1
-                            '.arlReverseCommands.Add(
-                            GetLine(bAdventure, iPos)
-                        Next
-
-                        ' Convert rooms executable in into restrictions
-                        ' If up to 3 rooms, add as seperate restrictions
-                        ' If up to 3 away from all then add as separate restrictions
-                        ' Otherwise, create a room group and have that as single restriction
-                        '
-                        Dim iDoWhere As Integer = SafeInt(GetLine(bAdventure, iPos)) ' 0=None, 1=Single, 2=Multiple, 3=All
-                        If iDoWhere = 1 Then
-                            .arlRestrictions.Add(LocRestriction("Location" & CInt(GetLine(bAdventure, iPos)) + 1 + iStartLocations, True))
-                            .arlRestrictions.BracketSequence = "#"
-                        End If
-                        If iDoWhere = 2 Then
-                            Dim bHere As Boolean
-                            Dim iCount As Integer = 0
-                            Dim salHere As New StringArrayList
-                            Dim salNotHere As New StringArrayList
-                            For i As Integer = 1 To iNumLocations 'Adventure.htblLocations.Count
-                                bHere = CBool(GetLine(bAdventure, iPos))
-                                If bHere Then
-                                    iCount += 1
-                                    salHere.Add("Location" & i + iStartLocations)
-                                Else
-                                    salNotHere.Add("Location" & i + iStartLocations)
-                                End If
-                            Next
-                            Select Case iCount
-                                Case 2, 3
-                                    For Each sLocKey As String In salHere
-                                        .arlRestrictions.Add(LocRestriction(sLocKey, True))
-                                    Next
-                                    If iCount = 2 Then
-                                        .arlRestrictions.BracketSequence = "(#O#)"
-                                    Else
-                                        .arlRestrictions.BracketSequence = "(#O#O#)"
-                                    End If
-                                Case iNumLocations - 1, iNumLocations - 2
-                                    For Each sLocKey As String In salNotHere
-                                        .arlRestrictions.Add(LocRestriction(sLocKey, False))
-                                    Next
-                                    If iCount = iNumLocations - 1 Then
-                                        .arlRestrictions.BracketSequence = "#"
-                                    Else
-                                        .arlRestrictions.BracketSequence = "(#O#)"
-                                    End If
-                                Case Else
-                                    .arlRestrictions.Add(LocRestriction(GetRoomGroupFromList(iPos, salHere, "task '" & .Description & "'").Key, True))
-                                    .arlRestrictions.BracketSequence = "#"
-                            End Select
-                        End If
-
-                        Dim sQuestion As String = GetLine(bAdventure, iPos)
-                        If sQuestion <> "" Then
-                            Dim NewHint As New clsHint
-                            With NewHint
-                                .Key = "Hint" & (Adventure.htblHints.Count + 1).ToString
-                                .Question = sQuestion
-                                .SubtleHint = New Description(ConvText(GetLine(bAdventure, iPos)))
-                                .SledgeHammerHint = New Description(ConvText(GetLine(bAdventure, iPos)))
-                            End With
-                            Adventure.htblHints.Add(NewHint, NewHint.Key)
-                        End If
-
-
-                        Dim iNumRestriction As Integer = CInt(GetLine(bAdventure, iPos))
-                        For i As Integer = 1 To iNumRestriction
-                            Dim NewRestriction As New clsRestriction
-                            With NewRestriction
-                                Dim iMode As Integer = CInt(GetLine(bAdventure, iPos))
-                                Dim iCombo0 As Integer = CInt(GetLine(bAdventure, iPos))
-                                Dim iCombo1 As Integer = CInt(GetLine(bAdventure, iPos))
-                                Dim iCombo2 As Integer
-                                If iMode = 0 OrElse iMode > 2 Then iCombo2 = CInt(GetLine(bAdventure, iPos))
-                                If iMode = 4 AndAlso iCombo0 > 0 Then iCombo0 += 1
-                                'Dim sText As String = Nothing
-                                'If iMode = 4 Then sText = GetLine(bAdventure, iPos)
-                                Select Case iMode
-                                    Case 0 ' Object Locations
-                                        .eType = clsRestriction.RestrictionTypeEnum.Object
-                                        Select Case iCombo0
-                                            Case 0
-                                                .sKey1 = NOOBJECT
-                                            Case 1
-                                                .sKey1 = ANYOBJECT
-                                            Case 2
-                                                .sKey1 = "ReferencedObject"
-                                            Case Else
-                                                .sKey1 = GetObKey(iCombo0 - 3, ComboEnum.Dynamic)
-                                        End Select
-                                        Select Case iCombo1
-                                            Case 0, 6
-                                                .eObject = clsRestriction.ObjectEnum.BeAtLocation
-                                                If iCombo1 = 6 Then .eMust = clsRestriction.MustEnum.MustNot
-                                                If iCombo2 = 0 Then
-                                                    .eObject = clsRestriction.ObjectEnum.BeHidden
-                                                Else
-                                                    .sKey2 = "Location" & iCombo2
-                                                End If
-                                            Case 1, 7
-                                                .eObject = clsRestriction.ObjectEnum.BeHeldByCharacter
-                                                If iCombo1 = 7 Then .eMust = clsRestriction.MustEnum.MustNot
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        .sKey2 = "%Player%"
-                                                    Case 1
-                                                        .sKey2 = "ReferencedCharacter"
-                                                    Case Else
-                                                        .sKey2 = "Character" & iCombo2 - 1 + iStartChar
-                                                End Select
-                                            Case 2, 8
-                                                .eObject = clsRestriction.ObjectEnum.BeWornByCharacter
-                                                If iCombo1 = 8 Then .eMust = clsRestriction.MustEnum.MustNot
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        .sKey2 = "%Player%"
-                                                    Case 1
-                                                        .sKey2 = "ReferencedCharacter"
-                                                    Case Else
-                                                        .sKey2 = "Character" & iCombo2 - 1 + iStartChar
-                                                End Select
-                                            Case 3, 9
-                                                .eObject = clsRestriction.ObjectEnum.BeVisibleToCharacter
-                                                If iCombo1 = 9 Then .eMust = clsRestriction.MustEnum.MustNot
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        .sKey2 = "%Player%"
-                                                    Case 1
-                                                        .sKey2 = "ReferencedCharacter"
-                                                    Case Else
-                                                        .sKey2 = "Character" & iCombo2 - 1 + iStartChar
-                                                End Select
-                                            Case 4, 10
-                                                .eObject = clsRestriction.ObjectEnum.BeInsideObject
-                                                If iCombo1 = 10 Then .eMust = clsRestriction.MustEnum.MustNot
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' Nothing
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Container)
-                                                End Select
-                                            Case 5, 11
-                                                .eObject = clsRestriction.ObjectEnum.BeOnObject
-                                                If iCombo1 = 11 Then .eMust = clsRestriction.MustEnum.MustNot
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' Nothing
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Surface)
-                                                End Select
-                                        End Select
-
-                                        'GetLine(bAdventure, iPos) ' combo(2)
-                                    Case 1 ' Object status
-                                        .eType = clsRestriction.RestrictionTypeEnum.Object
-                                        If iCombo0 = 0 Then
-                                            .sKey1 = "ReferencedObject"
-                                        Else
-                                            .sKey1 = GetObKey(iCombo0 - 1, ComboEnum.WithStateOrOpenable)
-                                        End If
-                                        .eMust = clsRestriction.MustEnum.Must
-                                        .eObject = clsRestriction.ObjectEnum.BeInState
-                                        Dim ob As clsObject = Adventure.htblObjects(.sKey1)
-                                        Select Case iCombo1
-                                            Case 0
-                                                If .sKey1 = "ReferencedObject" OrElse ob.Openable Then
-                                                    .sKey2 = "Open"
-                                                    '            .sKey2 = "OpenStatus"
-                                                    '            .StringValue = "Open"
-                                                Else
-                                                    For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                        If prop.Key.IndexOf("|"c) > 0 Then
-                                                            .sKey2 = prop.arlStates(iCombo1)
-                                                            '.sKey2 = prop.Key
-                                                            '.StringValue = prop.arlStates(iCombo1)
-                                                        End If
-                                                    Next
-                                                End If
-                                            Case 1
-                                                If .sKey1 = "ReferencedObject" OrElse ob.Openable Then
-                                                    .sKey2 = "Closed"
-                                                    '            .sKey2 = "OpenStatus"
-                                                    '            .StringValue = "Closed"
-                                                Else
-                                                    For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                        If prop.Key.IndexOf("|"c) > 0 Then
-                                                            .sKey2 = prop.arlStates(iCombo1)
-                                                            '.sKey2 = prop.Key
-                                                            '.StringValue = prop.arlStates(iCombo1)
-                                                        End If
-                                                    Next
-                                                End If
-                                            Case 2
-                                                If .sKey1 = "ReferencedObject" OrElse ob.Openable Then
-                                                    If .sKey1 = "ReferencedObject" OrElse ob.Lockable Then
-                                                        .sKey2 = "Locked"
-                                                        '.sKey2 = "LockStatus"
-                                                        '.StringValue = "Locked"
-                                                    Else
-                                                        For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                            If prop.Key.IndexOf("|"c) > 0 Then
-                                                                .sKey2 = prop.arlStates(iCombo1 - 2)
-                                                                '.sKey2 = prop.Key
-                                                                '.StringValue = prop.arlStates(iCombo1 - 2)
-                                                            End If
-                                                        Next
-                                                    End If
-                                                Else
-                                                    For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                        If prop.Key.IndexOf("|"c) > 0 Then
-                                                            .sKey2 = prop.arlStates(iCombo1)
-                                                        End If
-                                                    Next
-                                                End If
-                                            Case Else
-                                                Dim iOffset As Integer = 0
-                                                If .sKey1 = "ReferencedObject" OrElse ob.Openable Then
-                                                    If .sKey1 = "ReferencedObject" OrElse ob.Lockable Then iOffset = 3 Else iOffset = 2
-                                                End If
-                                                For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                    If prop.Key.IndexOf("|"c) > 0 Then
-                                                        .sKey2 = prop.arlStates(iCombo1 - iOffset)
-                                                        '.sKey2 = prop.Key
-                                                        '.StringValue = prop.arlStates(iCombo1 - iOffset)
-                                                    End If
-                                                Next
-                                        End Select
-
-
-                                    Case 2 ' Task status
-                                        .eType = clsRestriction.RestrictionTypeEnum.Task
-                                        .sKey1 = "Task" & iCombo0 + iStartTask
-                                        If iCombo1 = 0 Then
-                                            .eMust = clsRestriction.MustEnum.Must
-                                        Else
-                                            .eMust = clsRestriction.MustEnum.MustNot
-                                        End If
-                                        .eTask = clsRestriction.TaskEnum.Complete
-
-                                    Case 3 ' Characters
-                                        .eType = clsRestriction.RestrictionTypeEnum.Character
-                                        Select Case iCombo0
-                                            Case 0
-                                                .sKey1 = "%Player%"
-                                            Case 1
-                                                .sKey1 = "ReferencedCharacter"
-                                            Case Else
-                                                .sKey1 = "Character" & iCombo0 - 1 + iStartChar
-                                        End Select
-                                        Select Case iCombo1
-                                            Case 0 ' Same room as
-                                                .eMust = clsRestriction.MustEnum.Must
-                                                .eCharacter = clsRestriction.CharacterEnum.BeInSameLocationAsCharacter
-                                            Case 1 ' Not same room as
-                                                .eMust = clsRestriction.MustEnum.MustNot
-                                                .eCharacter = clsRestriction.CharacterEnum.BeInSameLocationAsCharacter
-                                            Case 2 ' Alone
-                                                .eMust = clsRestriction.MustEnum.Must
-                                                .eCharacter = clsRestriction.CharacterEnum.BeAlone
-                                            Case 3 ' Not alone
-                                                .eMust = clsRestriction.MustEnum.MustNot
-                                                .eCharacter = clsRestriction.CharacterEnum.BeAlone
-                                            Case 4 ' standing on 
-                                                .eMust = clsRestriction.MustEnum.Must
-                                                .eCharacter = clsRestriction.CharacterEnum.BeStandingOnObject
-                                            Case 5 ' sitting on 
-                                                .eMust = clsRestriction.MustEnum.Must
-                                                .eCharacter = clsRestriction.CharacterEnum.BeSittingOnObject
-                                            Case 6 ' lying on
-                                                .eMust = clsRestriction.MustEnum.Must
-                                                .eCharacter = clsRestriction.CharacterEnum.BeLyingOnObject
-                                            Case 7  ' gender
-                                                .eMust = clsRestriction.MustEnum.Must
-                                                .eCharacter = clsRestriction.CharacterEnum.BeOfGender
-                                        End Select
-                                        Select Case iCombo1
-                                            Case 0, 1
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        .sKey2 = "%Player%"
-                                                    Case 1
-                                                        .sKey2 = "ReferencedCharacter"
-                                                    Case Else
-                                                        .sKey2 = "Character" & iCombo2 - 1 + iStartChar
-                                                End Select
-                                            Case 4
-                                                ' Standables
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' The floor
-                                                        .sKey2 = "TheFloor"
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Standable)
-                                                End Select
-                                            Case 5
-                                                ' Sittables
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' The floor
-                                                        .sKey2 = "TheFloor"
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Sittable)
-                                                End Select
-                                            Case 6
-                                                ' Lyables
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' The floor
-                                                        .sKey2 = "TheFloor"
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Lieable)
-                                                End Select
-
-                                            Case 7
-                                                ' Gender
-                                                .sKey2 = CType(iCombo2, clsCharacter.GenderEnum).ToString
-                                        End Select
-                                    Case 4 ' Variables
-                                        .eType = clsRestriction.RestrictionTypeEnum.Variable
-                                        Select Case iCombo0
-                                            Case 0
-                                                .sKey1 = "ReferencedNumber"
-                                            Case 1
-                                                .sKey1 = "ReferencedText"
-                                            Case Else
-                                                .sKey1 = "Variable" & (iCombo0 - 1)
-                                        End Select
-                                        .sKey2 = "" ' Arrays not used in v4
-                                        .eMust = clsRestriction.MustEnum.Must
-                                        Select Case iCombo1
-                                            Case 0, 10
-                                                .eVariable = clsRestriction.VariableEnum.LessThan
-                                            Case 1, 11
-                                                .eVariable = clsRestriction.VariableEnum.LessThanOrEqualTo
-                                            Case 2, 12
-                                                .eVariable = clsRestriction.VariableEnum.EqualTo
-                                            Case 3, 13
-                                                .eVariable = clsRestriction.VariableEnum.GreaterThanOrEqualTo
-                                            Case 4, 14
-                                                .eVariable = clsRestriction.VariableEnum.GreaterThan
-                                            Case 5, 15
-                                                .eVariable = clsRestriction.VariableEnum.EqualTo
-                                                .eMust = clsRestriction.MustEnum.MustNot
-                                        End Select
-                                        If iCombo1 < 10 Then
-                                            .IntValue = iCombo2
-                                            '.StringValue = sText
-                                        Else
-                                            .IntValue = Integer.MinValue
-                                            .StringValue = "Variable" & iCombo2
-                                        End If
-                                        'GetLine(bAdventure, iPos) ' combo(2)
-                                        'GetLine(bAdventure, iPos) ' text
-                                End Select
-
-                                .oMessage = New Description(ConvText(GetLine(bAdventure, iPos)))
-                            End With
-                            .arlRestrictions.Add(NewRestriction)
-                        Next
-
-                        Dim iNumActions As Integer = CInt(GetLine(bAdventure, iPos))
-                        For i As Integer = 1 To iNumActions
-                            Dim NewAction As New clsAction
-                            With NewAction
-                                Dim m As Integer = CInt(GetLine(bAdventure, iPos)) ' mode
-                                Dim iCombo0 As Integer = CInt(GetLine(bAdventure, iPos))
-                                Dim iCombo1, iCombo2, iCombo3 As Integer
-
-                                If m < 4 OrElse m = 6 Then iCombo1 = CInt(GetLine(bAdventure, iPos))
-                                If m = 0 OrElse m = 1 OrElse m = 3 OrElse m = 6 Then iCombo2 = CInt(GetLine(bAdventure, iPos))
-                                If m > 4 Then m += 1
-                                If m = 1 AndAlso iCombo1 = 2 Then iCombo2 += 2
-                                If m = 7 Then
-                                    If iCombo0 >= 5 AndAlso iCombo0 <= 6 Then iCombo0 += 2
-                                    If iCombo0 = 7 Then iCombo0 = 11
-                                End If
-
-                                Dim sExpression As String = ""
-                                'If m < 4 Or m = 5 Or m = 6 Or m = 7 Then iCombo1 = CInt(GetLine(bAdventure, iPos))
-                                'If m = 0 Or m = 1 Or m = 3 Or m = 6 Or m = 7 Then iCombo2 = CInt(GetLine(bAdventure, iPos))
-                                If m = 3 Then
-                                    If iCombo1 = 5 Then
-                                        sExpression = GetLine(bAdventure, iPos) ' expression
-                                    Else
-                                        iCombo3 = CInt(GetLine(bAdventure, iPos)) ' combo(3)
-                                    End If
-                                End If
-                                Select Case m
-                                    Case 0 ' Move object
-                                        .eItem = clsAction.ItemEnum.MoveObject
-                                        Select Case iCombo0
-                                            Case 0
-                                                .eMoveObjectWhat = clsAction.MoveObjectWhatEnum.EverythingHeldBy
-                                                .sKey1 = THEPLAYER
-                                                '.sKey1 = "AllHeldObjects"
-                                            Case 1
-                                                .eMoveObjectWhat = clsAction.MoveObjectWhatEnum.EverythingWornBy
-                                                .sKey1 = THEPLAYER
-                                                '.sKey1 = "AllWornObjects"
-                                            Case 2
-                                                .eMoveObjectWhat = clsAction.MoveObjectWhatEnum.Object
-                                                .sKey1 = "ReferencedObject"
-                                            Case Else
-                                                .eMoveObjectWhat = clsAction.MoveObjectWhatEnum.Object
-                                                .sKey1 = GetObKey(iCombo0 - 3, ComboEnum.Dynamic)
-                                        End Select
-
-                                        Select Case iCombo1
-                                            Case 0
-                                                .eMoveObjectTo = clsAction.MoveObjectToEnum.ToLocation
-                                                If iCombo2 = 0 Then
-                                                    .sKey2 = "Hidden"
-                                                Else
-                                                    .sKey2 = "Location" & iCombo2 + iStartLocations
-                                                End If
-                                            Case 1
-                                                .eMoveObjectTo = clsAction.MoveObjectToEnum.ToLocationGroup
-                                            Case 2
-                                                .eMoveObjectTo = clsAction.MoveObjectToEnum.InsideObject
-                                                .sKey2 = GetObKey(iCombo2, ComboEnum.Container)
-                                            Case 3
-                                                .eMoveObjectTo = clsAction.MoveObjectToEnum.OntoObject
-                                                .sKey2 = GetObKey(iCombo2, ComboEnum.Surface)
-                                            Case 4
-                                                .eMoveObjectTo = clsAction.MoveObjectToEnum.ToCarriedBy
-                                            Case 5
-                                                .eMoveObjectTo = clsAction.MoveObjectToEnum.ToWornBy
-                                            Case 6
-                                                .eMoveObjectTo = clsAction.MoveObjectToEnum.ToSameLocationAs
-                                        End Select
-
-                                        If iCombo1 > 3 Then
-                                            Select Case iCombo2
-                                                Case 0
-                                                    .sKey2 = "%Player%"
-                                                Case 1
-                                                    .sKey2 = "ReferencedCharacter"
-                                                Case Else
-                                                    .sKey2 = "Character" & iCombo2 - 1 + iStartChar
-                                            End Select
-                                        End If
-
-                                    Case 1 ' Move character
-                                        .eItem = clsAction.ItemEnum.MoveCharacter
-                                        .eMoveCharacterWho = clsAction.MoveCharacterWhoEnum.Character
-
-                                        Select Case iCombo0
-                                            Case 0
-                                                .sKey1 = THEPLAYER
-                                            Case 1
-                                                .sKey1 = "ReferencedCharacter"
-                                            Case Else
-                                                .sKey1 = "Character" & iCombo0 - 1 + iStartChar
-                                        End Select
-
-                                        Select Case iCombo1
-                                            Case 0
-                                                .eMoveCharacterTo = clsAction.MoveCharacterToEnum.ToLocation
-                                                If .sKey1 = "%Player%" Then
-                                                    .sKey2 = "Location" & iCombo2 + iStartLocations + 1
-                                                Else
-                                                    .sKey2 = "Location" & iCombo2 + iStartLocations
-                                                End If
-                                                If .sKey2 = "Location0" Then .sKey2 = "Hidden"
-                                            Case 1
-                                                .eMoveCharacterTo = clsAction.MoveCharacterToEnum.ToLocationGroup
-
-                                            Case 2
-                                                .eMoveCharacterTo = clsAction.MoveCharacterToEnum.ToSameLocationAs
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        .sKey2 = "%Player%"
-                                                    Case 1
-                                                        .sKey2 = "ReferencedCharacter"
-                                                    Case Else
-                                                        .sKey2 = "Character" & iCombo2 - 2 + iStartChar
-                                                End Select
-                                            Case 3
-                                                .eMoveCharacterTo = clsAction.MoveCharacterToEnum.ToStandingOn
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' The floor
-                                                        .sKey2 = THEFLOOR
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Standable)
-                                                End Select
-                                            Case 4
-                                                .eMoveCharacterTo = clsAction.MoveCharacterToEnum.ToSittingOn
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' The floor
-                                                        .sKey2 = THEFLOOR
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Sittable)
-                                                End Select
-                                            Case 5
-                                                .eMoveCharacterTo = clsAction.MoveCharacterToEnum.ToLyingOn
-                                                Select Case iCombo2
-                                                    Case 0
-                                                        ' The floor
-                                                        .sKey2 = THEFLOOR
-                                                    Case Else
-                                                        .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Lieable)
-                                                End Select
-                                        End Select
-
-                                    Case 2 ' Change ob status
-                                        .eItem = clsAction.ItemEnum.SetProperties
-                                        .sKey1 = GetObKey(iCombo0, ComboEnum.WithStateOrOpenable)
-                                        Dim ob As clsObject = Adventure.htblObjects(.sKey1)
-                                        Select Case iCombo1
-                                            Case 0
-                                                If ob.Openable Then
-                                                    .sKey2 = "OpenStatus"
-                                                    .sPropertyValue = "Open"
-                                                Else
-                                                    For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                        If prop.Key.IndexOf("|"c) > 0 Then
-                                                            .sKey2 = prop.Key
-                                                            .sPropertyValue = prop.arlStates(iCombo1)
-                                                        End If
-                                                    Next
-                                                End If
-                                            Case 1
-                                                If ob.Openable Then
-                                                    .sKey2 = "OpenStatus"
-                                                    .sPropertyValue = "Closed"
-                                                Else
-                                                    For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                        If prop.Key.IndexOf("|"c) > 0 Then
-                                                            .sKey2 = prop.Key
-                                                            .sPropertyValue = prop.arlStates(iCombo1)
-                                                        End If
-                                                    Next
-                                                End If
-                                            Case 2
-                                                If ob.Openable Then
-                                                    If ob.Lockable Then
-                                                        .sKey2 = "OpenStatus"
-                                                        .sPropertyValue = "Locked"
-                                                    Else
-                                                        For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                            If prop.Key.IndexOf("|"c) > 0 Then
-                                                                .sKey2 = prop.Key
-                                                                .sPropertyValue = prop.arlStates(iCombo1 - 2)
-                                                            End If
-                                                        Next
-                                                    End If
-                                                Else
-                                                    For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                        If prop.Key.IndexOf("|"c) > 0 Then
-                                                            .sKey2 = prop.Key
-                                                            .sPropertyValue = prop.arlStates(iCombo1)
-                                                        End If
-                                                    Next
-                                                End If
-                                            Case Else
-                                                Dim iOffset As Integer = 0
-                                                If ob.Openable Then
-                                                    If ob.Lockable Then iOffset = 3 Else iOffset = 2
-                                                End If
-                                                For Each prop As clsProperty In ob.htblActualProperties.Values
-                                                    If prop.Key.IndexOf("|"c) > 0 Then
-                                                        .sKey2 = prop.Key
-                                                        .sPropertyValue = prop.arlStates(iCombo1 - iOffset)
-                                                    End If
-                                                Next
-                                        End Select
-
-                                    Case 3 ' Change variable
-                                        .eItem = clsAction.ItemEnum.Variables
-                                        .sKey1 = "Variable" & iCombo0 + 1 '+ iStartVariable
-                                        .eVariables = clsAction.VariablesEnum.Assignment
-                                        .StringValue = iCombo1 & "|" & iCombo2 & "|" & iCombo3 & "|" & sExpression
-                                        'Select Case iCombo1
-                                        '    Case 0 ' to exact value
-                                        '        .StringValue = iCombo2.ToString
-                                        '    Case 1 ' by exact value
-                                        '        .StringValue = .sKey1 & " + " & iCombo2.ToString
-                                        '    Case 2 ' To Random value between X and Y
-                                        '        .StringValue = "Rand(" & iCombo2 & ", " & iCombo3 & ")"
-                                        '    Case 3 ' By Random value between X and Y
-                                        '        .StringValue = .sKey1 & " + Rand(" & iCombo2 & ", " & iCombo3 & ")"
-                                        '    Case 4 ' to referenced number
-                                        '        .StringValue = "%number%"
-                                        '    Case 5 ' to expression
-                                        '        .StringValue = sExpression
-                                        '    Case 6, 7, 8, 9, 10
-                                        '        .StringValue = ""
-
-                                        '        ' BUT... if this is a string variable
-                                        '        ' 0 = Exact Text
-                                        '        ' 1 = to referenced text
-                                        '        ' 2 = to expression
-                                        'End Select
-
-                                    Case 4 ' Change score
-                                        .eItem = clsAction.ItemEnum.Variables
-                                        .sKey1 = "Score"
-                                        .eVariables = clsAction.VariablesEnum.Assignment
-                                        .StringValue = "1|" & iCombo0 & "|0|"
-                                        '.IntValue = iCombo0
-
-                                    Case 5 ' Set Task
-                                        .eItem = clsAction.ItemEnum.SetTasks
-                                        If iCombo0 = 0 Then
-                                            .eSetTasks = clsAction.SetTasksEnum.Execute
-                                        Else
-                                            .eSetTasks = clsAction.SetTasksEnum.Unset
-                                        End If
-                                        .sKey1 = "Task" & iCombo1 + iStartTask + 1
-                                        .StringValue = ""
-
-                                    Case 6 ' End game
-                                        .eItem = clsAction.ItemEnum.EndGame
-                                        Select Case iCombo0
-                                            Case 0
-                                                .eEndgame = clsAction.EndGameEnum.Win
-                                            Case 1
-                                                .eEndgame = clsAction.EndGameEnum.Neutral
-                                            Case 2, 3
-                                                .eEndgame = clsAction.EndGameEnum.Lose
-                                        End Select
-                                    Case 7 ' Battles
-                                        ' TODO
-
-                                End Select
-                            End With
-                            .arlActions.Add(NewAction)
-                        Next
-
-                        Dim sBrackSeq As String = "" 'GetLine(bAdventure, iPos)
-                        If .arlRestrictions.Count > 0 Then sBrackSeq = "#"
-                        For i As Integer = 1 To .arlRestrictions.Count - 1
-                            sBrackSeq &= "A#"
-                        Next
-                        'If sBrackSeq <> "" AndAlso .arlRestrictions.BracketSequence <> "" Then
-                        '    .arlRestrictions.BracketSequence &= "A"
-                        'End If
-                        .arlRestrictions.BracketSequence = sBrackSeq
-#If Runner Then
-                        .arlRestrictions.BracketSequence = .arlRestrictions.BracketSequence.Replace("[", "((").Replace("]", "))")
-#End If
-
-                        If bSound Then
-                            sFilename = GetLine(bAdventure, iPos) ' Filename
-                            'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                            If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                        End If
-                        If bGraphics Then
-                            sFilename = GetLine(bAdventure, iPos) ' Filename
-                            If sFilename <> "" Then .CompletionMessage(0).Description = "<img src=""" & sFilename & """>" & .CompletionMessage(0).Description
-                            'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                            If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
-                        End If
-                    End With
-                    .htblTasks.Add(NewTask, NewTask.Key)
-                Next
-
-
-                '' Sort task mappings
-                'For Each sTask As String In colNewTasks
-                '    Dim task As clsTask = a.htblTasks(sTask)
-                '    For Each act As clsAction In task.arlActions
-                '        If act.eItem = clsAction.ItemEnum.SetTasks Then
-                '            If htblKeyMapping.ContainsKey(act.sKey1) Then act.sKey1 = htblKeyMapping(act.sKey1)
-                '        End If
-                '    Next
-                'Next
-
-
-                '----------------------------------------------------------------------------------
-                ' Events
-                '----------------------------------------------------------------------------------
-
-
-
-                Dim iNumEvents As Integer = CInt(GetLine(bAdventure, iPos))
-                For iEvent As Integer = 1 To iNumEvents
-                    Dim NewEvent As New clsEvent
-                    Dim sLocationKey As String = ""
-                    With NewEvent
-                        .Key = "Event" & iEvent.ToString
-                        .Description = GetLine(bAdventure, iPos)
-                        .WhenStart = CType(GetLine(bAdventure, iPos), clsEvent.WhenStartEnum)
-                        If .WhenStart = clsEvent.WhenStartEnum.BetweenXandYTurns Then
-                            .StartDelay.iFrom = CInt(GetLine(bAdventure, iPos)) - 1 ' Start1
-                            .StartDelay.iTo = CInt(GetLine(bAdventure, iPos)) - 1 ' Start2
-                        End If
-
-                        If .WhenStart = clsEvent.WhenStartEnum.AfterATask Then
-                            Dim sStartTask As String = "Task" & GetLine(bAdventure, iPos)
-                            Dim ec As New EventOrWalkControl
-                            ec.eControl = EventOrWalkControl.ControlEnum.Start
-                            ec.sTaskKey = sStartTask
-                            ReDim Preserve .EventControls(.EventControls.Length)
-                            .EventControls(.EventControls.Length - 1) = ec
-                        End If
-
-                        .Repeating = CBool(GetLine(bAdventure, iPos))
-                        Dim iTaskMode As Integer = CInt(GetLine(bAdventure, iPos)) ' task mode
-                        .Length.iFrom = CInt(GetLine(bAdventure, iPos))
-                        .Length.iTo = CInt(GetLine(bAdventure, iPos))
-                        If .WhenStart = clsEvent.WhenStartEnum.BetweenXandYTurns Then
-                            .Length.iFrom -= 1
-                            .Length.iTo -= 1
-                        End If
-                        sBuffer = CStr(GetLine(bAdventure, iPos)) ' des1
-                        If sBuffer <> "" Then
-                            Dim se As New clsEvent.SubEvent
-                            se.eWhat = clsEvent.SubEvent.WhatEnum.DisplayMessage
-                            se.eWhen = clsEvent.SubEvent.WhenEnum.FromStartOfEvent
-                            se.ftTurns.iFrom = 0
-                            se.ftTurns.iTo = 0
-                            se.oDescription = New Description(ConvText(sBuffer))
-                            ReDim Preserve .SubEvents(.SubEvents.Length)
-                            .SubEvents(.SubEvents.Length - 1) = se
-                        End If
-                        sBuffer = CStr(GetLine(bAdventure, iPos)) ' des2
-                        If sBuffer <> "" Then
-                            Dim se As New clsEvent.SubEvent
-                            se.eWhat = clsEvent.SubEvent.WhatEnum.SetLook
-                            se.eWhen = clsEvent.SubEvent.WhenEnum.FromStartOfEvent
-                            se.ftTurns.iFrom = 0
-                            se.ftTurns.iTo = 0
-                            se.oDescription = New Description(ConvText(sBuffer))
-                            ReDim Preserve .SubEvents(.SubEvents.Length)
-                            .SubEvents(.SubEvents.Length - 1) = se
-                        End If
-                        Dim sEndMessage As String = CStr(GetLine(bAdventure, iPos)) ' des3                        
-
-                        Dim iWhichRooms As Integer = CInt(GetLine(bAdventure, iPos))
-                        Select Case iWhichRooms
-                            Case 0 ' No rooms
-                                sLocationKey = ""
-                            Case 1 ' Single Room
-                                sLocationKey = "Location" & (CInt(GetLine(bAdventure, iPos)) + 1)
-                            Case 2 ' Multiple Rooms
-                                Dim bShowRoom As Boolean
-                                Dim arlShowInRooms As New StringArrayList
-                                For n As Integer = 1 To iNumLocations 'Adventure.htblLocations.Count
-                                    bShowRoom = CBool(GetLine(bAdventure, iPos))
-                                    If bShowRoom Then arlShowInRooms.Add("Location" & n)
-                                Next
-                                sLocationKey = GetRoomGroupFromList(iPos, arlShowInRooms, "event '" & .Description & "'").Key
-                            Case 3 ' All Rooms
-                                sLocationKey = ALLROOMS
-                        End Select
-
-                        'Dim NewEventDescription As New clsEventDescription
-                        'With NewEventDescription
-                        '    .arlShowInRooms = arlShowInRooms.Clone
-                        'End With
-                        For i As Integer = 0 To 1
-                            Dim iTask As Integer = CInt(GetLine(bAdventure, iPos))
-                            Dim iCompleteOrNot As Integer = CInt(GetLine(bAdventure, iPos))
-                            If iTask > 0 Then
-                                Dim ec As New EventOrWalkControl
-                                ec.eControl = CType(IIf(i = 0, EventOrWalkControl.ControlEnum.Suspend, EventOrWalkControl.ControlEnum.Resume), EventOrWalkControl.ControlEnum)
-                                ec.sTaskKey = "Task" & (iTask - 1)
-                                ec.eCompleteOrNot = CType(IIf(iCompleteOrNot = 0, EventOrWalkControl.CompleteOrNotEnum.Completion, EventOrWalkControl.CompleteOrNotEnum.UnCompletion), EventOrWalkControl.CompleteOrNotEnum)
-                                ReDim Preserve .EventControls(.EventControls.Length)
-                                .EventControls(.EventControls.Length - 1) = ec
-                            End If
-                            'For n As Integer = 0 To 1
-                            '    GetLine(bAdventure, iPos) ' pause(i,n)
-                            'Next
-                            Dim iFrom As Integer = CInt(GetLine(bAdventure, iPos)) ' from(i)
-                            sBuffer = CStr(GetLine(bAdventure, iPos)) ' ftext(i)
-                            If sBuffer <> "" Then
-                                Dim se As New clsEvent.SubEvent
-                                se.eWhat = clsEvent.SubEvent.WhatEnum.DisplayMessage
-                                se.eWhen = clsEvent.SubEvent.WhenEnum.BeforeEndOfEvent
-                                se.ftTurns.iFrom = iFrom
-                                se.ftTurns.iTo = iFrom
-                                se.oDescription = New Description(ConvText(sBuffer))
-                                ReDim Preserve .SubEvents(.SubEvents.Length)
-                                .SubEvents(.SubEvents.Length - 1) = se
-                            End If
-                        Next
-                        If sEndMessage <> "" Then
-                            Dim se As New clsEvent.SubEvent
-                            se.eWhat = clsEvent.SubEvent.WhatEnum.DisplayMessage
-                            se.eWhen = clsEvent.SubEvent.WhenEnum.BeforeEndOfEvent
-                            se.ftTurns.iFrom = 0
-                            se.ftTurns.iTo = 0
-                            se.oDescription = New Description(ConvText(sEndMessage))
-                            ReDim Preserve .SubEvents(.SubEvents.Length)
-                            .SubEvents(.SubEvents.Length - 1) = se
-                        End If
-                        Dim tas As clsTask = Nothing
-                        Dim iDoneTask(1) As Boolean
-                        Dim iMoveObs(2, 1) As Integer
-                        For Each i As Integer In New Integer() {1, 2, 0}
-                            For j As Integer = 0 To 1
-                                iMoveObs(i, j) = CInt(GetLine(bAdventure, iPos))
-                            Next
-                        Next
-                        For i As Integer = 0 To 2
-                            Dim iObKey As Integer = iMoveObs(i, 0) ' CInt(GetLine(bAdventure, iPos))
-                            Dim iMoveTo As Integer = iMoveObs(i, 1) ' CInt(GetLine(bAdventure, iPos))
-                            If iObKey > 0 Then
-                                Dim bNewTask As Boolean = True
-                                If i = 1 AndAlso NewEvent.Length.iTo = 0 AndAlso iDoneTask(0) Then bNewTask = False
-                                If i = 2 AndAlso ((NewEvent.Length.iTo = 0 AndAlso Not iDoneTask(1)) OrElse iDoneTask(1)) Then bNewTask = False
-
-                                If bNewTask Then
-                                    Dim bMultiple As Boolean = False
-                                    If tas IsNot Nothing Then
-                                        bMultiple = True
-                                        tas.Description = "Generated task #" & i & " for event " & NewEvent.Description
-                                    End If
-                                    tas = New clsTask
-                                    tas.Key = "Task" & (Adventure.htblTasks.Count + 1)
-                                    tas.Description = "Generated task" & IIf(bMultiple, " #" & i + 1, "").ToString & " for event " & NewEvent.Description
-                                    tas.Priority = iStartMaxPriority + Adventure.htblTasks.Count + 1
-                                End If
-                                If i < 2 Then iDoneTask(i) = True
-
-                                With tas
-                                    .TaskType = clsTask.TaskTypeEnum.System
-                                    .Repeatable = True
-                                    Dim act As New clsAction
-                                    act.eItem = clsAction.ItemEnum.MoveObject
-                                    act.sKey1 = "Object" & iObKey
-                                    Select Case iMoveTo
-                                        Case 0 ' Hidden
-                                            act.eMoveObjectTo = clsAction.MoveObjectToEnum.ToLocation
-                                            act.sKey2 = "Hidden"
-                                        Case 1 ' Players hands
-                                            If Adventure.htblObjects("Object" & iObKey).IsStatic Then
-                                                act.eMoveObjectTo = clsAction.MoveObjectToEnum.ToLocation '  Don't allow for static
-                                                act.sKey2 = "Hidden"
-                                            Else
-                                                act.eMoveObjectTo = clsAction.MoveObjectToEnum.ToCarriedBy
-                                                act.sKey2 = "%Player%"
-                                            End If
-                                        Case 2 ' Same room as player
-                                            act.eMoveObjectTo = clsAction.MoveObjectToEnum.ToSameLocationAs
-                                            act.sKey2 = "%Player%"
-                                        Case Else ' Locations
-                                            act.eMoveObjectTo = clsAction.MoveObjectToEnum.ToLocation
-                                            act.sKey2 = "Location" & (iMoveTo - 2)
-                                    End Select
-
-                                    .arlActions.Add(act)
-                                End With
-                                If bNewTask Then
-                                    Adventure.htblTasks.Add(tas, tas.Key)
-                                    Dim se As New clsEvent.SubEvent
-                                    se.eWhat = clsEvent.SubEvent.WhatEnum.ExecuteTask
-                                    If i = 0 Then se.eWhen = clsEvent.SubEvent.WhenEnum.FromStartOfEvent Else se.eWhen = clsEvent.SubEvent.WhenEnum.BeforeEndOfEvent
-                                    se.ftTurns.iFrom = 0
-                                    se.ftTurns.iTo = 0
-                                    se.sKey = tas.Key
-                                    ReDim Preserve .SubEvents(.SubEvents.Length)
-                                    .SubEvents(.SubEvents.Length - 1) = se
-                                End If
-                            End If
-                        Next
-                        For Each se As clsEvent.SubEvent In .SubEvents
-                            If se.eWhat = clsEvent.SubEvent.WhatEnum.DisplayMessage OrElse se.eWhat = clsEvent.SubEvent.WhatEnum.SetLook Then se.sKey = sLocationKey
-                        Next
-                        Dim sExecuteTask As String = "Task" & GetLine(bAdventure, iPos)
-                        If sExecuteTask <> "Task0" Then
-                            Dim se As New clsEvent.SubEvent
-                            If iTaskMode = 0 Then
-                                se.eWhat = clsEvent.SubEvent.WhatEnum.ExecuteTask
-                            Else
-                                se.eWhat = clsEvent.SubEvent.WhatEnum.UnsetTask
-                            End If
-                            se.eWhen = clsEvent.SubEvent.WhenEnum.BeforeEndOfEvent
-                            se.ftTurns.iFrom = 0
-                            se.ftTurns.iTo = 0
-                            se.sKey = sExecuteTask
-                            ReDim Preserve .SubEvents(.SubEvents.Length)
-                            .SubEvents(.SubEvents.Length - 1) = se
-                        End If
-                        For i As Integer = 0 To 4
-                            If bSound Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename
-                                'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                            End If
-                            If bGraphics Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename
-                                'If sFilename <> "" Then
-                                '    . .Description(0).Description &= "<img src=""" & sFilename & """>"
-                                'End If
-                                'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
-                            End If
-                        Next
-                    End With
-                    .htblEvents.Add(NewEvent, NewEvent.Key)
-                Next
-
-
-                '----------------------------------------------------------------------------------
-                ' Characters
-                '----------------------------------------------------------------------------------
-
-
-                Dim iNumChars As Integer = CInt(GetLine(bAdventure, iPos))
-                For iChar As Integer = 1 To iNumChars
-                    Dim NewChar As New clsCharacter
-                    With NewChar
-                        '.Key = "Character" & iChar.ToString
-                        Dim sKey As String = "Character" & iChar.ToString
-                        If a.htblCharacters.ContainsKey(sKey) Then
-                            While a.htblCharacters.ContainsKey(sKey)
-                                sKey = IncrementKey(sKey)
-                            End While
-                        End If
-                        .Key = sKey
-                        .CharacterType = clsCharacter.CharacterTypeEnum.NonPlayer
-                        .ProperName = GetLine(bAdventure, iPos)
-                        .Prefix = GetLine(bAdventure, iPos)
-                        ConvertPrefix(.Article, .Prefix)
-                        Dim sAlias As String = GetLine(bAdventure, iPos)
-                        If sAlias <> "" Then .arlDescriptors.Add(sAlias)
-                        'Dim iNumAliases As Integer = CInt(GetLine(bAdventure, iPos))
-                        'For i As Integer = 1 To iNumAliases
-                        ' .arlDescriptors.Add(GetLine(bAdventure, iPos))
-                        'Next
-                        'If iNumAliases = 0 AndAlso .Prefix = "" Then .Article = ""
-                        .Description = New Description(ConvText(GetLine(bAdventure, iPos)))
-                        '.Location = "Location" & GetLine(bAdventure, iPos)
-                        .Known = True
-
-                        Dim iCharLoc As Integer = CInt(GetLine(bAdventure, iPos))
-                        If iCharLoc > 0 Then
-                            .Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.AtLocation
-                            .Location.Key = "Location" & iCharLoc
-                        Else
-                            .Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.Hidden
-                        End If
-                        'If Adventure.htblAllProperties.ContainsKey("CharacterLocation") Then
-                        '    Dim cl As New clsProperty
-                        '    cl = Adventure.htblAllProperties("CharacterLocation").Copy
-                        '    If iCharLoc = 0 Then cl.Value = "Hidden" Else cl.Value = "At Location"
-                        '    .htblProperties.Add(cl, cl.Key)
-
-                        '    If cl.Value = "At Location" Then
-                        '        Dim al As New clsProperty
-                        '        al = Adventure.htblAllProperties("CharacterAtLocation").Copy
-                        '        al.Value = "Location" & iCharLoc
-                        '        .htblProperties.Add(al, al.Key)
-                        '    End If
-                        'End If
-                        Dim p As clsProperty
-                        'p = Adventure.htblAllProperties("Known").Copy
-                        'p.Selected = True
-                        '.htblActualProperties.Add(p)
-                        '.bCalculatedGroups = False                        
-
-                        Dim sDesc2 As String = GetLine(bAdventure, iPos)
-                        Dim sDescTask As String = GetLine(bAdventure, iPos)
-                        If sDescTask <> "0" Then
-                            Dim sd As New SingleDescription
-                            Dim rest As New clsRestriction
-                            rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                            rest.sKey1 = "Task" & sDescTask
-                            rest.eMust = clsRestriction.MustEnum.Must
-                            rest.eTask = clsRestriction.TaskEnum.Complete
-                            sd.Restrictions.Add(rest)
-                            sd.Description = sDesc2
-                            sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartDescriptionWithThis
-                            sd.Restrictions.BracketSequence = "#"
-                            .Description.Add(sd)
-                        End If
-                        Dim iNumSubjects As Integer = CInt(GetLine(bAdventure, iPos))
-                        For i As Integer = 1 To iNumSubjects
-                            Dim Topic As New clsTopic
-                            With Topic
-                                .Key = "Topic" & i
-                                .Keywords = GetLine(bAdventure, iPos)
-                                .Summary = "Ask about " & .Keywords
-                                .oConversation = New Description(ConvText(GetLine(bAdventure, iPos)))
-                                .bAsk = True
-                                Dim iTask As Integer = CInt(GetLine(bAdventure, iPos)) ' Rep Task
-                                If iTask > 0 Then
-                                    Dim sd As New SingleDescription
-                                    Dim rest As New clsRestriction
-                                    rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                                    rest.sKey1 = "Task" & iTask
-                                    rest.eMust = clsRestriction.MustEnum.Must
-                                    rest.eTask = clsRestriction.TaskEnum.Complete
-                                    sd.Restrictions.Add(rest)
-                                    sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartDescriptionWithThis
-                                    sd.Restrictions.BracketSequence = "#"
-                                    .oConversation.Add(sd)
-                                End If
-                                .oConversation.Item(.oConversation.Count - 1).Description &= GetLine(bAdventure, iPos) ' Response 2
-                            End With
-                            .htblTopics.Add(Topic)
-                        Next
-
-                        Dim iNumWalks As Integer = CInt(GetLine(bAdventure, iPos))
-                        Dim arlNewDescriptions As New StringArrayList
-                        For i As Integer = 1 To iNumWalks
-                            Dim Walk As New clsWalk
-                            With Walk
-                                .sKey = sKey
-                                Dim sStartTaskKey As String = ""
-                                Dim iNumberOfSteps As Integer = CInt(GetLine(bAdventure, iPos))
-                                .Loops = CBool(GetLine(bAdventure, iPos))
-                                Dim iTask As Integer = CInt(GetLine(bAdventure, iPos))
-                                If iTask = 0 Then
-                                    .StartActive = True
-                                Else
-                                    .StartActive = False
-                                    sStartTaskKey = "Task" & iTask
-                                    Dim wc As New EventOrWalkControl
-                                    wc.eControl = EventOrWalkControl.ControlEnum.Start
-                                    wc.sTaskKey = sStartTaskKey
-                                    ReDim Preserve .WalkControls(.WalkControls.Length)
-                                    .WalkControls(.WalkControls.Length - 1) = wc
-                                End If
-                                Dim iCharTask As Integer = CInt(GetLine(bAdventure, iPos)) ' Runtask
-                                Dim iObFind As Integer = CInt(GetLine(bAdventure, iPos)) ' Obfind
-                                Dim iObTask As Integer = CInt(GetLine(bAdventure, iPos)) ' Obtask
-                                If iObFind > 0 AndAlso iObTask > 0 Then
-                                    Dim sw As New clsWalk.SubWalk
-                                    sw.eWhat = clsWalk.SubWalk.WhatEnum.ExecuteTask
-                                    sw.eWhen = clsWalk.SubWalk.WhenEnum.ComesAcross
-                                    sw.sKey = "Object" & iObFind
-                                    sw.sKey2 = "Task" & iObTask
-                                    ReDim Preserve .SubWalks(.SubWalks.Length)
-                                    .SubWalks(.SubWalks.Length - 1) = sw
-                                End If
-                                Dim sTerminateTaskKey As String = "Task" & GetLine(bAdventure, iPos)
-                                If sTerminateTaskKey <> "Task0" Then
-                                    Dim wc As New EventOrWalkControl
-                                    wc.eControl = EventOrWalkControl.ControlEnum.Stop
-                                    wc.sTaskKey = sTerminateTaskKey
-                                    ReDim Preserve .WalkControls(.WalkControls.Length)
-                                    .WalkControls(.WalkControls.Length - 1) = wc
-                                End If
-                                'Dim iCharFind As Integer = CInt(GetLine(bAdventure, iPos)) ' Who
-                                If iCharTask > 0 Then
-                                    Dim sw As New clsWalk.SubWalk
-                                    sw.eWhat = clsWalk.SubWalk.WhatEnum.ExecuteTask
-                                    sw.eWhen = clsWalk.SubWalk.WhenEnum.ComesAcross
-                                    sw.sKey = "%Player%"
-                                    sw.sKey2 = "Task" & iCharTask
-                                    ReDim Preserve .SubWalks(.SubWalks.Length)
-                                    .SubWalks(.SubWalks.Length - 1) = sw
-                                End If
-                                Dim sNewDescription As String = GetLine(bAdventure, iPos)
-                                If sNewDescription <> "" Then
-                                    arlNewDescriptions.Add(sStartTaskKey)
-                                    arlNewDescriptions.Add(sNewDescription)
-                                End If
-                                'Dim sDescription As String = ""
-                                For j As Integer = 1 To iNumberOfSteps
-                                    Dim Stp As New clsWalk.clsStep
-                                    With Stp
-                                        Dim iLocation As Integer = CInt(GetLine(bAdventure, iPos))
-                                        Select Case iLocation
-                                            Case 0 ' Hidden
-                                                .sLocation = "Hidden"
-                                                'sDescription &= "Hidden"
-                                            Case 1 ' Follow Player
-                                                .sLocation = "%Player%"
-                                                'sDescription &= "Follow Player"
-                                            Case Else ' Locations
-                                                If iLocation - 1 > Adventure.htblLocations.Count Then
-                                                    ' Location Group
-                                                    'sDescription = "Group " & iLocation - 1
-                                                    .sLocation = "Group" & iLocation - Adventure.htblLocations.Count - 1
-                                                Else
-                                                    ' Location
-                                                    .sLocation = "Location" & iLocation - 1
-                                                    'sDescription &= Adventure.htblLocations(.sLocation).ShortDescription
-                                                End If
-                                        End Select
-                                        Dim iWaitTurns As Integer = CInt(GetLine(bAdventure, iPos))
-                                        If .sLocation = "%Player%" AndAlso iWaitTurns = 1 Then iWaitTurns = 0
-                                        .ftTurns.iFrom = iWaitTurns
-                                        .ftTurns.iTo = iWaitTurns
-                                    End With
-                                    .arlSteps.Add(Stp)
-                                Next
-                                .Description = .GetDefaultDescription
-                            End With
-                            .arlWalks.Add(Walk)
-                        Next
-                        Dim bShowMove As Boolean = CBool(GetLine(bAdventure, iPos))
-                        Dim sFromDesc As String = Nothing
-                        Dim sToDesc As String = Nothing
-                        If bShowMove Then
-                            p = Adventure.htblAllProperties("ShowEnterExit").Copy
-                            p.Selected = True
-                            .htblActualProperties.Add(p)
-                            .bCalculatedGroups = False
-                            sFromDesc = GetLine(bAdventure, iPos)
-                            p = Adventure.htblAllProperties("CharEnters").Copy
-                            p.Selected = True
-                            p.StringData = New Description(ConvText(sFromDesc))
-                            .htblActualProperties.Add(p)
-                            .bCalculatedGroups = False
-                            sToDesc = GetLine(bAdventure, iPos)
-                            p = Adventure.htblAllProperties("CharExits").Copy
-                            p.Selected = True
-                            p.StringData = New Description(ConvText(sToDesc))
-                            .htblActualProperties.Add(p)
-                            .bCalculatedGroups = False
-                        End If
-                        'For Each Walk As clsWalk In .arlWalks
-                        '    Walk.ShowMove = bShowMove
-                        '    Walk.FromDesc = sFromDesc
-                        '    Walk.ToDesc = sToDesc
-                        'Next
-                        Dim sIsHereDesc As String = GetLine(bAdventure, iPos)
-                        If sIsHereDesc = "#" Then sIsHereDesc = "%CharacterName[" & sKey & "]% is here."
-                        If sIsHereDesc <> "" OrElse arlNewDescriptions.Count > 0 Then
-                            p = Adventure.htblAllProperties("CharHereDesc").Copy
-                            p.Selected = True
-                            .htblActualProperties.Add(p)
-                            .bCalculatedGroups = False
-                        End If
-                        If sIsHereDesc <> "" Then .htblActualProperties("CharHereDesc").StringData = New Description(ConvText(sIsHereDesc))
-                        For i As Integer = 0 To arlNewDescriptions.Count - 1 Step 2
-                            Dim sd As New SingleDescription
-                            Dim rest As New clsRestriction
-                            rest.eType = clsRestriction.RestrictionTypeEnum.Task
-                            rest.sKey1 = arlNewDescriptions(i)
-                            rest.eMust = clsRestriction.MustEnum.Must
-                            rest.eTask = clsRestriction.TaskEnum.Complete
-                            sd.Restrictions.Add(rest)
-                            sd.Restrictions.BracketSequence = "#"
-                            sd.Description = arlNewDescriptions(i + 1)
-                            sd.eDisplayWhen = SingleDescription.DisplayWhenEnum.StartDescriptionWithThis
-                            .htblActualProperties("CharHereDesc").StringData.Add(sd)
-                        Next
-                        .Gender = CType(GetLine(bAdventure, iPos), clsCharacter.GenderEnum)
-                        For i As Integer = 0 To 3
-                            If bSound Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename
-                                'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, False))
-                            End If
-                            If bGraphics Then
-                                sFilename = GetLine(bAdventure, iPos) ' Filename
-                                If sFilename <> "" Then
-                                    If i = 0 Then .Description(0).Description = "<img src=""" & sFilename & """>" & .Description(0).Description
-                                    If i = 1 Then .Description(1).Description = "<img src=""" & sFilename & """>" & .Description(1).Description
-                                    If i = 2 Then .htblActualProperties("CharEnters").StringData(0).Description = "<img src=""" & sFilename & """>" & .htblActualProperties("CharEnters").StringData(0).Description
-                                    If i = 3 Then .htblActualProperties("CharExits").StringData(0).Description = "<img src=""" & sFilename & """>" & .htblActualProperties("CharExits").StringData(0).Description
-                                End If
-                                'iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
-                                If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
-                            End If
-                        Next
-                        If bBattleSystem Then
-                            GetLine(bAdventure, iPos) ' Attitude
-                            GetLine(bAdventure, iPos) ' Min Stamina
-                            'GetLine(bAdventure, iPos) ' Max Stamina
-                            GetLine(bAdventure, iPos) ' Min Strength
-                            'GetLine(bAdventure, iPos) ' Max Strength
-                            'GetLine(bAdventure, iPos) ' Min Accuracy
-                            'GetLine(bAdventure, iPos) ' Max Accuracy
-                            GetLine(bAdventure, iPos) ' Min Defence
-                            'GetLine(bAdventure, iPos) ' Max Defence
-                            'GetLine(bAdventure, iPos) ' Min Agility
-                            'GetLine(bAdventure, iPos) ' Max Agility
-                            GetLine(bAdventure, iPos) ' Speed
-                            GetLine(bAdventure, iPos) ' Die Task
-                            'GetLine(bAdventure, iPos) ' Recovery
-                            'GetLine(bAdventure, iPos) ' Low Task
-                        End If
-                    End With
-                    .htblCharacters.Add(NewChar, NewChar.Key)
-                Next
-
-
-                '----------------------------------------------------------------------------------
-                ' Groups
-                '----------------------------------------------------------------------------------
-
-
-                ' Only room groups defined in 4.0 files
-                Dim iNumGroups As Integer = CInt(GetLine(bAdventure, iPos))
-                For iGroup As Integer = 1 To iNumGroups
-                    Dim NewGroup As New clsGroup
-                    With NewGroup
-                        .Key = "Group" & iGroup.ToString
-                        .Name = GetLine(bAdventure, iPos)
-                        Dim bIncluded As Boolean
-                        For i As Integer = 1 To iNumLocations 'Adventure.htblLocations.Count
-                            bIncluded = CBool(GetLine(bAdventure, iPos))
-                            If bIncluded Then .arlMembers.Add("Location" & i.ToString)
-                        Next
-                    End With
-                    .htblGroups.Add(NewGroup, NewGroup.Key)
-                Next
-
-                ' Sort out anything which needed groups defined
-                For Each c As clsCharacter In Adventure.htblCharacters.Values
-                    For Each w As clsWalk In c.arlWalks
-                        For Each g As clsGroup In Adventure.htblGroups.Values
-                            If w.Description.Contains("<" & g.Key & ">") Then
-                                w.Description = w.Description.Replace("<" & g.Key & ">", g.Name)
-                            End If
-                        Next
-                    Next
-                Next
-
-
-                '----------------------------------------------------------------------------------
-                ' Synonyms
-                '----------------------------------------------------------------------------------
-
-                Dim iNumSyn As Integer = CInt(GetLine(bAdventure, iPos))
-                For iSyn As Integer = 1 To iNumSyn
-                    Dim sTo As String = GetLine(bAdventure, iPos) ' System Command
-                    Dim sFrom As String = GetLine(bAdventure, iPos) ' Alternative Command
-                    Dim synNew As clsSynonym = Nothing
-                    For Each syn As clsSynonym In Adventure.htblSynonyms.Values
-                        If syn.ChangeTo = sTo Then
-                            synNew = syn
-                            Exit For
-                        End If
-                    Next
-                    If synNew Is Nothing Then
-                        synNew = New clsSynonym
-                        synNew.Key = "Synonym" & iSyn.ToString
-                    End If
-                    With synNew
-                        .ChangeTo = sTo
-                        .ChangeFrom.Add(sFrom)
-                    End With
-                    If Not .htblSynonyms.ContainsKey(synNew.Key) Then .htblSynonyms.Add(synNew)
-                Next
-
-
-                '----------------------------------------------------------------------------------
-                ' Variables
-                '----------------------------------------------------------------------------------
-
-                Dim iNumVariables As Integer = CInt(GetLine(bAdventure, iPos))
-                For iVar As Integer = 1 To iNumVariables
-                    Dim NewVariable As New clsVariable
-                    With NewVariable
-                        .Key = "Variable" & iVar.ToString
-                        .Name = GetLine(bAdventure, iPos)
-                        .Type = clsVariable.VariableTypeEnum.Numeric ' CType(GetLine(bAdventure, iPos), clsVariable.VariableTypeEnum)
-                        'If .Type = clsVariable.VariableTypeEnum.Numeric Then
-                        .IntValue = CInt(GetLine(bAdventure, iPos))
-                        'Else
-                        '.StringValue = GetLine(bAdventure, iPos)
-                        'End If
-                    End With
-                    .htblVariables.Add(NewVariable, NewVariable.Key)
-                Next
-
-                ' Change Variable names in Actions/Restrictions, and sort assignments
-                For Each tas As clsTask In Adventure.htblTasks.Values
-                    For Each rest As clsRestriction In tas.arlRestrictions
-                        If rest.eType = clsRestriction.RestrictionTypeEnum.Variable Then
-                            If Adventure.htblVariables.ContainsKey(rest.sKey1) Then
-                                If Adventure.htblVariables(rest.sKey1).Type = clsVariable.VariableTypeEnum.Text Then
-                                    Select Case rest.eVariable
-                                        Case clsRestriction.VariableEnum.LessThan
-                                            rest.eVariable = clsRestriction.VariableEnum.EqualTo
-                                        Case clsRestriction.VariableEnum.LessThanOrEqualTo
-                                            rest.eVariable = clsRestriction.VariableEnum.EqualTo
-                                            rest.eMust = clsRestriction.MustEnum.MustNot
-                                    End Select
-                                    rest.StringValue = """" & rest.StringValue & """"
-                                End If
-                            End If
-                        End If
-                    Next
-                    For Each act As clsAction In tas.arlActions
-                        If act.eItem = clsAction.ItemEnum.Variables Then
-                            Dim iCombo1 As Integer = CInt(act.StringValue.Split("|"c)(0))
-                            Dim iCombo2 As Integer = CInt(act.StringValue.Split("|"c)(1))
-                            Dim iCombo3 As Integer = CInt(act.StringValue.Split("|"c)(2))
-                            Dim sExpression As String = act.StringValue.Split("|"c)(3)
-                            If a.htblVariables(act.sKey1).Type = clsVariable.VariableTypeEnum.Numeric Then
-                                Select Case iCombo1
-                                    Case 0 ' to exact value
-                                        act.StringValue = iCombo2.ToString
-                                    Case 1 ' by exact value
-                                        act.StringValue = "%" & a.htblVariables(act.sKey1).Name & "% + " & iCombo2.ToString
-                                    Case 2 ' To Random value between X and Y
-                                        act.StringValue = "Rand(" & iCombo2 & ", " & iCombo3 & ")"
-                                    Case 3 ' By Random value between X and Y
-                                        act.StringValue = "%" & a.htblVariables(act.sKey1).Name & "% + Rand(" & iCombo2 & ", " & iCombo3 & ")"
-                                    Case 4 ' to referenced number
-                                        act.StringValue = "%number%"
-                                    Case 5 ' to expression
-                                        act.StringValue = sExpression
-                                    Case 6, 7, 8, 9, 10
-                                        act.StringValue = ""
-                                End Select
-                            Else
-                                Select Case iCombo1
-                                    Case 0 ' exact text
-                                        act.StringValue = """" & sExpression.Replace("""", "\""") & """"
-                                    Case 1 ' to referenced text
-                                        act.StringValue = "%text%"
-                                    Case 2 ' to expression
-                                        act.StringValue = sExpression
-                                End Select
-                            End If
-
-                        End If
-                        If sInstr(act.StringValue, "Variable") > 0 Then
-                            For iVar As Integer = Adventure.htblVariables.Count To 1 Step -1
-                                If Adventure.htblVariables.ContainsKey("Variable" & iVar) Then act.StringValue = act.StringValue.Replace("Variable" & iVar, "%" & Adventure.htblVariables("Variable" & iVar).Name & "%")
-                            Next
-                        End If
-                    Next
-                Next
-
-
-
-                '----------------------------------------------------------------------------------
-                ' ALRs
-                '----------------------------------------------------------------------------------
-
-                Dim iNumALR As Integer = CInt(GetLine(bAdventure, iPos))
-                For iALR As Integer = 1 To iNumALR
-                    Dim NewALR As New clsALR
-                    With NewALR
-                        .Key = "ALR" & iALR.ToString
-                        .OldText = GetLine(bAdventure, iPos)
-                        .NewText = New Description(ConvText(GetLine(bAdventure, iPos)))
-                    End With
-                    .htblALRs.Add(NewALR, NewALR.Key)
-                Next
-
-
-                Dim bSetFont As Boolean = CBool(SafeInt(GetLine(bAdventure, iPos))) ' Set Font?
-                If bSetFont Then
-                    Dim sFont As String = GetLine(bAdventure, iPos) ' Font
-                    If sFont.Contains(",") Then
-                        Adventure.DefaultFontName = sFont.Split(","c)(0)
-                        Adventure.DefaultFontSize = SafeInt(sFont.Split(","c)(1))
-                    End If
-                End If
-
-                'Dim iMediaOffset As Integer = bAdvZLib.Length + 23
-                'For Each m As clsAdventure.v4Media In a.dictv4Media.Values
-                '    m.iOffset = iMediaOffset
-                '    iMediaOffset += m.iLength + 1
-                'Next
-
-                '--- the rest ---
-                While iPos < bAdventure.Length - 1
-                    Dim s3 As String = GetLine(bAdventure, iPos)
-                End While
-
-                ' Make sure all the 'seen's are set
-                For Each ch As clsCharacter In Adventure.htblCharacters.Values
-                    ch.Move(ch.Location)
-                Next
-
-#If Not www Then
-                .Map = New clsMap
-                .Map.RecalculateLayout()
-#If Generator Then
-                fGenerator.Map1.Map = .Map
-
-                If a.dictv4Media.Count > 0 Then
-                    If MessageBox.Show("Would you like to extract all media from this TAF?", "Extract Media", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-                        fGenerator.fbd.ShowDialog()
-                        If fGenerator.fbd.SelectedPath <> "" Then
-                            For Each sFile As String In a.dictv4Media.Keys
-                                With a.dictv4Media(sFile)
-                                    If .bImage Then
-                                        Dim img As Image = Getv4Image(sFile)
-                                        If img IsNot Nothing Then
-                                            Dim sJustFile As String = IO.Path.GetFileName(sFile)
-                                            img.Save(fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            For Each itm As clsItem In a.dictAllItems.Values
-                                                itm.SearchAndReplace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            Next
-                                        End If
-                                    Else
-                                        ' TODO Sound
-                                    End If
-                                End With
-                            Next
-                        End If
-                        a.dictv4Media.Clear()
-                    End If
-                End If
-#Else
-                fRunner.Map.Map = .Map
-#End If
-#End If
-
-            End With
-
-        Catch ex As Exception
-            ErrMsg("Error loading Adventure", ex)
-            Return False
-        Finally
-            bAdventure = Nothing
-        End Try
-
-        Return True
-
-    End Function
-#End If
-
-
     Private Function LoadOlder(ByVal v As Double) As Boolean
-
         Try
-
-            If v < 4 Then
-#If Mono Then
-                ErrMsg("Unfortunately it is not possible to load ADRIFT 3.90 files directly, using Mono, as the Mono framework does not implement a .Net compatible Random function.  Sorry!")
-                Return False
-#End If
-            End If
-#If Not Adravalon Then
-            Cursor.Current = Cursors.WaitCursor
-#End If
-
             If Adventure.htblAllProperties.Count = 0 Then
                 ErrMsg("You must select at least one library within Generator > File > Settings > Libraries before loading ADRIFT v" & v.ToString("#.0") & " adventures.")
                 Return False
@@ -7109,17 +2958,9 @@ NextLoc:
 
                 Dim outStream As New System.IO.MemoryStream
                 Dim inStream As New System.IO.MemoryStream(bAdvZLib)
-#If Not Adravalon Then
-                Dim zStream As New ZOutputStream(outStream)
-#Else
                 Dim zStream As New InflaterInputStream(inStream)
-#End If
                 Try
-#If Not Adravalon Then
-                    CopyStream(inStream, zStream)
-#Else
                     CopyStream(zStream, outStream)
-#End If
                     bAdventure = outStream.ToArray
                 Finally
                     zStream.Close()
@@ -7143,9 +2984,6 @@ NextLoc:
                 Dim iFilesize As Integer
                 .dictv4Media = New Dictionary(Of String, clsAdventure.v4Media)
 
-                'Dim htblKeyMapping As New StringHashTable
-
-                '.bV4Compatibility = True
                 .TaskExecution = clsAdventure.TaskExecutionEnum.HighestPriorityPassingTask
 
                 salWithStates.Clear()
@@ -7158,9 +2996,6 @@ NextLoc:
                     sTerminator = "**"
                 Else
                     sTerminator = "��"
-#If Mono Then
-                If IsRunningOnMono() Then sTerminator = ChrW(65533) & ChrW(65533)
-#End If
                 End If
 
 
@@ -7178,8 +3013,6 @@ NextLoc:
                 .Author = GetLine(bAdventure, iPos)
                 If v < 3.9 Then
                     Dim sNoOb As String = GetLine(bAdventure, iPos)
-                    'player.maxsize = Format(noob) & "2"
-                    'Player.MaxWeight = Format(noob) & "2"
                 End If
                 .NotUnderstood = GetLine(bAdventure, iPos)
                 Dim iPer As Integer = CInt(GetLine(bAdventure, iPos)) + 1 ' Perspective
@@ -7279,9 +3112,6 @@ NextLoc:
                             .AddProperty(p)
                         End If
 
-
-                        '.Location = "Location" & iStartLocation + 1
-
                         If iOnWhat = 0 Then
                             .Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.AtLocation
                             .Location.Key = "Location" & iStartLocation + 1
@@ -7360,7 +3190,6 @@ NextLoc:
                 '----------------------------------------------------------------------------------
                 ' Locations                
                 '----------------------------------------------------------------------------------
-
 
                 Dim iNumLocations As Integer = CInt(GetLine(bAdventure, iPos))
                 Dim iX As Integer = 3
@@ -7627,21 +3456,11 @@ NextLoc:
                     .htblLocations.Add(Location, Location.Key)
 NextLoc:
                 Next
-                'Dim h As New Hashtable
-                'h.Add("1", "3")
-                'For Each x As System.Collections.DictionaryEntry In h
-                '    Dim y As String = CStr(x.Value)
-                '    Debug.WriteLine(x)
-                'Next
-
-                'iLoc = 0
-                '                For Each loc As clsLocation In .htblLocations.Values
 
 
                 '----------------------------------------------------------------------------------
                 ' Objects
                 '----------------------------------------------------------------------------------
-
 
                 Dim dictDodgyStates As New Dictionary(Of String, String)
                 Dim iNumObjects As Integer = CInt(GetLine(bAdventure, iPos))
@@ -7673,8 +3492,6 @@ NextLoc:
 
                         Dim sod As New clsProperty
                         sod = Adventure.htblAllProperties("StaticOrDynamic").Copy
-                        '.htblActualProperties.Add(sod)
-                        '.bCalculatedGroups = False
                         .AddProperty(sod)
                         .IsStatic = SafeBool(GetLine(bAdventure, iPos))
 
@@ -7685,13 +3502,9 @@ NextLoc:
                             Dim sl As New clsProperty
                             sl = Adventure.htblAllProperties("StaticLocation").Copy
                             .AddProperty(sl)
-                            '.htblActualProperties.Add(sl)
-                            '.bCalculatedGroups = False
                         Else
                             Dim dl As New clsProperty
                             dl = Adventure.htblAllProperties("DynamicLocation").Copy
-                            '.htblActualProperties.Add(dl)
-                            '.bCalculatedGroups = False
                             .AddProperty(dl)
 
                             Dim iv4Loc As Integer = CInt(GetLine(bAdventure, iPos))
@@ -7713,8 +3526,6 @@ NextLoc:
                                     cObjectLocation.Key = "Location" & iv4Loc - 3 + iStartLocations
                                     Dim p As New clsProperty
                                     p = Adventure.htblAllProperties("InLocation").Copy
-                                    '.htblActualProperties.Add(p)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(p)
                             End Select
                         End If
@@ -7736,18 +3547,9 @@ NextLoc:
                             .Description.Add(sd)
                         End If
 
-                        'Dim AltDesc As New clsObject.AlternativeDescription
-                        'With AltDesc
-                        '    .sTaskKey = "Task" & GetLine(bAdventure, iPos)
-                        '    .bTaskState = CBool(GetLine(bAdventure, iPos))
-                        '    .sDescription = GetLine(bAdventure, iPos)
-                        'End With
-                        '.colAlternativeDescriptions.Add(AltDesc)
-
                         Dim StaticLoc As New clsObjectLocation
                         If .IsStatic Then
                             StaticLoc.StaticExistWhere = CType(GetLine(bAdventure, iPos), clsObjectLocation.StaticExistsWhereEnum)
-                            '.Location = StaticLoc
 
                             Select Case StaticLoc.StaticExistWhere
                                 Case clsObjectLocation.StaticExistsWhereEnum.NoRooms
@@ -7756,8 +3558,6 @@ NextLoc:
                                     StaticLoc.Key = "Location" & GetLine(bAdventure, iPos) ' StaticKey
                                     Dim pLoc As New clsProperty
                                     pLoc = Adventure.htblAllProperties("AtLocation").Copy
-                                    '.htblActualProperties.Add(pLoc)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(pLoc)
                                 Case clsObjectLocation.StaticExistsWhereEnum.LocationGroup
                                     Dim salRooms As New StringArrayList
@@ -7767,8 +3567,6 @@ NextLoc:
                                     StaticLoc.Key = GetRoomGroupFromList(iPos, salRooms, "object '" & .FullName & "'").Key ' StaticKey
                                     Dim pLG As New clsProperty
                                     pLG = Adventure.htblAllProperties("AtLocationGroup").Copy
-                                    '.htblActualProperties.Add(pLG)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(pLG)
                                 Case clsObjectLocation.StaticExistsWhereEnum.AllRooms
 
@@ -7784,16 +3582,12 @@ NextLoc:
                             Dim c As New clsProperty
                             c = Adventure.htblAllProperties("Container").Copy
                             c.Selected = True
-                            '.htblActualProperties.Add(c)
-                            '.bCalculatedGroups = False
                             .AddProperty(c)
                         End If
                         If CBool(GetLine(bAdventure, iPos)) Then ' surface
                             Dim s As New clsProperty
                             s = Adventure.htblAllProperties("Surface").Copy
                             s.Selected = True
-                            '.htblActualProperties.Add(s)
-                            '.bCalculatedGroups = False
                             .AddProperty(s)
                         End If
                         Dim iCapacity As Integer = CInt(GetLine(bAdventure, iPos)) ' Num Holds
@@ -7816,8 +3610,6 @@ NextLoc:
                                 Dim w As New clsProperty
                                 w = Adventure.htblAllProperties("Wearable").Copy
                                 w.Selected = True
-                                '.htblActualProperties.Add(w)
-                                '.bCalculatedGroups = False
                                 .AddProperty(w)
                             End If
                             Dim iSize As Integer = CInt(GetLine(bAdventure, iPos)) ' weight                            
@@ -7860,8 +3652,6 @@ NextLoc:
                                 Case clsObjectLocation.DynamicExistsWhereEnum.HeldByCharacter
                                     p = New clsProperty
                                     p = Adventure.htblAllProperties("HeldByWho").Copy
-                                    '.htblActualProperties.Add(p)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(p)
 
                                     If iParent = 0 Then
@@ -7878,8 +3668,6 @@ NextLoc:
                                     End If
                                     p = New clsProperty
                                     p = Adventure.htblAllProperties("WornByWho").Copy
-                                    '.htblActualProperties.Add(p)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(p)
                                     p.Value = cObjectLocation.Key
                                     .Location = cObjectLocation
@@ -7887,23 +3675,17 @@ NextLoc:
                                     .Location = cObjectLocation
                                     p = New clsProperty
                                     p = Adventure.htblAllProperties("InsideWhat").Copy
-                                    '.htblActualProperties.Add(p)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(p)
                                     p.Value = iParent.ToString
                                 Case clsObjectLocation.DynamicExistsWhereEnum.OnObject
                                     .Location = cObjectLocation
                                     p = New clsProperty
                                     p = Adventure.htblAllProperties("OnWhat").Copy
-                                    '.htblActualProperties.Add(p)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(p)
                                     p.Value = iParent.ToString
                                 Case Else
                                     .Location = cObjectLocation
                             End Select
-                            '.Location = cObjectLocation
-                            '.Move(cObjectLocation)
                         End If
                         If .IsStatic AndAlso StaticLoc.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.PartOfCharacter Then
                             Dim iChar As Integer = CInt(GetLine(bAdventure, iPos))
@@ -7915,8 +3697,6 @@ NextLoc:
                             Dim c As New clsProperty
                             c = Adventure.htblAllProperties("PartOfWho").Copy
                             c.StringData = New Description(ConvText(StaticLoc.Key)) ' StaticKey
-                            '.htblActualProperties.Add(c)
-                            '.bCalculatedGroups = False
                             .AddProperty(c)
                         End If
                         If .IsStatic Then .Move(StaticLoc)
@@ -7943,43 +3723,31 @@ NextLoc:
                             Else
                                 pOS.Value = "Closed"
                             End If
-                            '.htblActualProperties.Add(pOS)
-                            '.bCalculatedGroups = False
                             .AddProperty(pOS)
 
-                            'End If
-                            'If iOpenableLockable > 1 Then
                             If v >= 4 Then
                                 Dim iKey As Integer = CInt(GetLine(bAdventure, iPos))
                                 If iKey > -1 Then
                                     Dim pLk As New clsProperty
                                     pLk = Adventure.htblAllProperties("Lockable").Copy
                                     pLk.Selected = True
-                                    '.htblActualProperties.Add(pLk)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(pLk)
 
                                     Dim pKey As New clsProperty
                                     pKey = Adventure.htblAllProperties("LockKey").Copy
                                     pKey.Selected = True
-                                    pKey.Value = CStr(iKey) ' "Object" & iKey + iStartObs                                
-                                    '.htblActualProperties.Add(pKey)
-                                    '.bCalculatedGroups = False
+                                    pKey.Value = CStr(iKey) ' "Object" & iKey + iStartObs
                                     .AddProperty(pKey)
 
                                     Dim pLS As New clsProperty
                                     pLS = Adventure.htblAllProperties("LockStatus").Copy
                                     pLS.Selected = True
                                     If iOpenableLockable = 7 Then pOS.Value = "Locked"
-                                    '.htblActualProperties.Add(pLS)
-                                    '.bCalculatedGroups = False
                                     .AddProperty(pLS)
                                 End If
                             End If
                         End If
 
-                        '.Openable = CBool(GetLine(bAdventure, iPos))
-                        'If .Lockable Then GetLine(bAdventure, iPos) ' key
                         Dim iSitStandLie As Integer = CInt(GetLine(bAdventure, iPos))  ' Sittable
                         If iSitStandLie = 1 OrElse iSitStandLie = 3 Then .IsSittable = True
                         .IsStandable = .IsSittable
@@ -7990,8 +3758,6 @@ NextLoc:
                             Dim r As New clsProperty
                             r = Adventure.htblAllProperties("Readable").Copy
                             r.Selected = True
-                            '.htblActualProperties.Add(r)
-                            '.bCalculatedGroups = False
                             .AddProperty(r)
                         End If
                         If .Readable Then
@@ -8000,8 +3766,6 @@ NextLoc:
                                 Dim r As New clsProperty
                                 r = Adventure.htblAllProperties("ReadText").Copy
                                 r.Selected = True
-                                '.htblActualProperties.Add(r)
-                                '.bCalculatedGroups = False
                                 .AddProperty(r)
                                 .ReadText = sReadText
                             End If
@@ -8022,7 +3786,7 @@ NextLoc:
                                 If sPKey Is Nothing Then
                                     s.Type = clsProperty.PropertyTypeEnum.StateList
                                     s.Description = "Object can be " & sStates.Replace("|", " or ")
-                                    s.Key = sStates '.Replace("|", "")
+                                    s.Key = sStates
                                     s.arlStates = arlStates
                                     s.Value = arlStates(iState - 1)
                                     s.PropertyOf = clsProperty.PropertyOfEnum.Objects
@@ -8038,8 +3802,6 @@ NextLoc:
                                     sStates = sPKey
                                 End If
                                 s.Selected = True
-                                '.htblActualProperties.Add(s)
-                                '.bCalculatedGroups = False
                                 .AddProperty(s)
                                 salWithStates.Add(.Key)
 
@@ -8096,14 +3858,11 @@ NextLoc:
                                     r = Adventure.htblAllProperties("ListDescriptionDynamic").Copy
                                 End If
                                 r.Selected = True
-                                '.htblActualProperties.Add(r)
-                                '.bCalculatedGroups = False
                                 .AddProperty(r)
                                 .ListDescription = sSpecialList
                             End If
                             Dim s2 As String = GetLine(bAdventure, iPos) ' initial
                         End If
-                        '.htblProperties = .GetPropertiesIncludingGroups()
                     End With
 
                     .htblObjects.Add(NewObject, NewObject.Key)
@@ -8204,50 +3963,23 @@ NextLoc:
                 For Each sOb As String In colNewObs
                     Dim ob As clsObject = a.htblObjects(sOb)
                     If ob.Lockable Then
-                        'ob.htblActualProperties("LockKey").Value = GetObKey(CInt(ob.htblActualProperties("LockKey").Value) + iStartObs, ComboEnum.Dynamic)
                         ob.SetPropertyValue("LockKey", GetObKey(CInt(ob.GetPropertyValue("LockKey")) + iStartObs, ComboEnum.Dynamic))
-                        'ob.bCalculatedGroups = False
                     End If
                     If ob.HasProperty("OnWhat") Then
-                        'ob.htblActualProperties("OnWhat").Value = GetObKey(CInt(ob.htblActualProperties("OnWhat").Value), ComboEnum.Surface)
                         ob.SetPropertyValue("OnWhat", GetObKey(CInt(ob.GetPropertyValue("OnWhat")), ComboEnum.Surface))
-                        'ob.bCalculatedGroups = False
                     End If
                     If ob.HasProperty("InsideWhat") Then
-                        'ob.htblActualProperties("InsideWhat").Value = GetObKey(CInt(ob.htblActualProperties("InsideWhat").Value), ComboEnum.Container)
                         ob.SetPropertyValue("InsideWhat", GetObKey(CInt(ob.GetPropertyValue("InsideWhat")), ComboEnum.Container))
-                        ' ob.bCalculatedGroups = False
                     End If
                 Next
-
-                If v < 3.9 Then
-                    'Dim parentob As Integer
-                    For Each ob As clsObject In a.htblObjects.Values
-                        With ob
-                            If .Location.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.LocationGroup Then
-                                '        If .Parent < 0 Then .Parent = 0
-                                '        parentob = xns(.Parent, cont_surf)
-                                'If object(parentob).container = 0 Then
-                                '            ' change it to ON object
-                                '            .room = .room + 1
-                                '            .Parent = wxns(parentob, surface)
-                                '        Else
-                                '            .Parent = wxns(parentob, container)
-                                '        End If
-                            End If
-                        End With
-                    Next
-                End If
 
                 ' Sort out location restrictions
                 'For iLoc = 1 To .htblLocations.Count
                 iLoc = 0
                 For Each sLoc As String In colNewLocs
                     iLoc += 1
-                    Dim loc As clsLocation = Adventure.htblLocations(sLoc) '"Location" & iLoc)
-                    'Dim loc As clsLocation = CType(CType(x, DictionaryEntry).Value, clsLocation)
+                    Dim loc As clsLocation = Adventure.htblLocations(sLoc)
                     For iDir As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest
-                        '                        For iDir As Integer = 0 To 11
                         If iLocations(iLoc, iDir, 0) > 0 Then
                             If iLocations(iLoc, iDir, 0) <= Adventure.htblLocations.Count Then
                                 loc.arlDirections(iDir).LocationKey = "Location" & iLocations(iLoc, iDir, 0)
@@ -8266,21 +3998,17 @@ NextLoc:
                                     End If
                                     rest.eTask = clsRestriction.TaskEnum.Complete
                                 Else
-                                    rest.eType = clsRestriction.RestrictionTypeEnum.Property ' clsRestriction.ItemEnum.Object
+                                    rest.eType = clsRestriction.RestrictionTypeEnum.Property
                                     ' Filter on objects with state
                                     rest.sKey1 = "OpenStatus"
                                     rest.sKey2 = GetObKey(iLocations(iLoc, iDir, 1) - 1, ComboEnum.WithStateOrOpenable)
                                     rest.eMust = clsRestriction.MustEnum.Must
-                                    'rest.eObject = clsRestriction.ObjectEnum.InState
                                     Dim ob As clsObject = Adventure.htblObjects(rest.sKey2)
                                     If ob.Openable Then
                                         If iLocations(iLoc, iDir, 2) = 0 Then rest.StringValue = "Open"
                                         If iLocations(iLoc, iDir, 2) = 1 Then rest.StringValue = "Closed"
                                         If ob.Lockable AndAlso iLocations(iLoc, iDir, 2) = 2 Then rest.StringValue = "Locked"
                                     End If
-                                    'Select Case iLocations(iLoc, iDir, 2)
-
-                                    'End Select
                                 End If
                                 loc.arlDirections(iDir).Restrictions.Add(rest)
                                 loc.arlDirections(iDir).Restrictions.BracketSequence = "#"
@@ -8290,40 +4018,29 @@ NextLoc:
                 Next
 
 
+
                 '----------------------------------------------------------------------------------
                 ' Tasks                
                 '----------------------------------------------------------------------------------
 
-
-
                 Dim iNumTasks As Integer = CInt(GetLine(bAdventure, iPos))
-                'Dim colNewTasks As New Collection
                 For iTask As Integer = 1 To iNumTasks
                     Dim NewTask As New clsTask
                     With NewTask
-                        '.Key = "Task" & iTask.ToString
                         Dim sKey As String = "Task" & iTask.ToString
-                        'Dim sOrigKey As String = sKey
                         If a.htblTasks.ContainsKey(sKey) Then
                             While a.htblTasks.ContainsKey(sKey)
                                 sKey = IncrementKey(sKey)
                             End While
                         End If
-                        'If sKey <> sOrigKey Then htblKeyMapping.Add(sOrigKey, sKey)
                         .Key = sKey
-                        'colNewTasks.Add(sKey)
                         .Priority = iStartMaxPriority + iTask
                         Dim iNumCommands As Integer = CInt(GetLine(bAdventure, iPos))
                         If v < 4 Then iNumCommands += 1
                         For i As Integer = 1 To iNumCommands
                             Dim sCommand As String = GetLine(bAdventure, iPos)
-
-#If Generator Then
-                            .arlCommands.Add(sCommand)
-#Else
                             ' Simplify Runner so it only has to deal with multiple, or specific refs
                             .arlCommands.Add(sCommand.Replace("%object%", "%object1%").Replace("%character%", "%character1%"))
-#End If
                         Next
                         .TaskType = clsTask.TaskTypeEnum.System
                         For Each sCommand As String In .arlCommands
@@ -8345,11 +4062,9 @@ NextLoc:
                         End If
                         If sMessage3 <> "" AndAlso .CompletionMessage.ToString = "" Then .eDisplayCompletion = clsTask.BeforeAfterEnum.After Else .eDisplayCompletion = clsTask.BeforeAfterEnum.Before
                         If .eDisplayCompletion = clsTask.BeforeAfterEnum.Before And sMessage0.Contains("%") Then .eDisplayCompletion = clsTask.BeforeAfterEnum.After ' v4 didn't handle this properly, so any text was substituted afterwards anyway
-                        If sMessage3 <> "" Then .CompletionMessage(0).Description = pSpace(.CompletionMessage.ToString) & sMessage3 ' &= "  " & sMessage3                        
-                        'If .CompletionMessage.ToString = "" Then .ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnNoOutput Else .ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnFail
-                        If .CompletionMessage.ToString = "" Then .SpecificOverrideType = clsTask.SpecificOverrideTypeEnum.BeforeTextAndActions ' .ExecuteParentActions = True
+                        If sMessage3 <> "" Then .CompletionMessage(0).Description = pSpace(.CompletionMessage.ToString) & sMessage3
+                        If .CompletionMessage.ToString = "" Then .SpecificOverrideType = clsTask.SpecificOverrideTypeEnum.BeforeTextAndActions
                         ' Needs to be ContinueOnFail so that a failing task with output will be overridden by a lower priority succeeding task, as per v4
-                        '.ContinueToExecuteLowerPriority = clsTask.ContinueEnum.ContinueOnFail ' clsTask.ContinueEnum.ContinueOnNoOutput
                         .ContinueToExecuteLowerPriority = False
                         .Repeatable = CBool(GetLine(bAdventure, iPos))
                         If v < 3.9 Then
@@ -8402,7 +4117,7 @@ NextLoc:
                             Dim iCount As Integer = 0
                             Dim salHere As New StringArrayList
                             Dim salNotHere As New StringArrayList
-                            For i As Integer = 1 To iNumLocations 'Adventure.htblLocations.Count
+                            For i As Integer = 1 To iNumLocations
                                 bHere = CBool(GetLine(bAdventure, iPos))
                                 If bHere Then
                                     iCount += 1
@@ -8462,227 +4177,7 @@ NextLoc:
                             End If
                             GetLine(bAdventure, iPos) ' winning
 
-                            '' convert task info into restrictions
-                            '.restcount = 0
-                            'For nn = 0 To 3
-                            '    If hold(nn) > 0 Then
-                            '        .restcount = .restcount + 1
-                            '        ReDim Preserve .restriction(.restcount)
-                            '        With .restriction(.restcount - 1)
-                            '            .mode = 0
-                            '            .combo(0) = hold(nn) + 1
-                            '            If nn < 3 Then
-                            '                If holding = 1 Then .combo(1) = 1 Else .combo(1) = 3
-                            '                .combo(2) = 0
-                            '                .message = elses(1)
-                            '            Else
-                            '                .combo(1) = 0
-                            '                .combo(2) = obroom
-                            '                .message = elses(4)
-                            '            End If
-                            '        End With
-                            '    End If
-                            'Next nn
-                            'If taskno > 0 Then
-                            '    .restcount = .restcount + 1
-                            '    ReDim Preserve .restriction(.restcount)
-                            '    With .restriction(.restcount - 1)
-                            '        .mode = 2
-                            '        .combo(0) = taskno
-                            '        .combo(1) = taskdone
-                            '        .message = elses(0)
-                            '    End With
-                            'End If
-                            'For nn = 0 To 1
-                            '    If wear(nn) > 0 Then
-                            '        .restcount = .restcount + 1
-                            '        ReDim Preserve .restriction(.restcount)
-                            '        With .restriction(.restcount - 1)
-                            '            .mode = 0
-                            '            If wear(nn) > 2 Then
-                            '                .combo(0) = wdynamic(xns(wear(nn) - 3, wearable)) + 2 '1
-                            '            Else
-                            '                If wear(nn) = 1 Then
-                            '                    .combo(0) = 1
-                            '                Else
-                            '                    .combo(0) = 0
-                            '                End If
-                            '            End If
-                            '            .combo(1) = 2
-                            '            .combo(2) = 0
-                            '            .message = elses(2)
-                            '        End With
-                            '    End If
-                            'Next nn
-                            'If who > 0 Then
-                            '    .restcount = .restcount + 1
-                            '    ReDim Preserve .restriction(.restcount)
-                            '    With .restriction(.restcount - 1)
-                            '        .mode = 3
-                            '        .combo(0) = 0
-                            '        If who > 1 Then
-                            '            .combo(1) = hereornot
-                            '            .combo(2) = who '- 2 '1
-                            '        Else
-                            '            If hereornot = 0 Then .combo(1) = 2 Else .combo(1) = 3
-                            '        End If
-                            '        .message = elses(3)
-                            '    End With
-                            'End If
-                            'If obstuff(0) > 0 Then
-                            '    .restcount = .restcount + 1
-                            '    ReDim Preserve .restriction(.restcount)
-                            '    With .restriction(.restcount - 1)
-                            '        Select Case obstuff(1)
-                            '            Case 1 'in
-                            '                .mode = 0
-                            '                .combo(0) = xns(obstuff(0) - 1, dynamic) + 3
-                            '                .combo(1) = 4
-                            '                .combo(2) = obstuff(2)
-                            '            Case 2 'on
-                            '                .mode = 0
-                            '                .combo(0) = xns(obstuff(0) - 1, dynamic) + 3 '?
-                            '                .combo(1) = 5
-                            '                .combo(2) = obstuff(2)
-                            '            Case 3 'open
-                            '                .mode = 1
-                            '        If object(obstuff(0) - 1).openable = 0 Then object(obstuff(0) - 1).openable = 5
-                            '                .combo(0) = wxns(obstuff(0) - 1, openable) ' + 1 ' - 1
-                            '                .combo(1) = 0
-                            '            Case 4 'closed
-                            '                .mode = 1
-                            '        If object(obstuff(0) - 1).openable = 0 Then object(obstuff(0) - 1).openable = 5
-                            '                .combo(0) = wxns(obstuff(0) - 1, openable) ' + 1
-                            '                .combo(1) = 1
-                            '            Case 5 'held by
-                            '                .mode = 0
-                            '                .combo(0) = xns(obstuff(0) - 1, dynamic) + 3
-                            '                .combo(1) = 1
-                            '                .combo(2) = obstuff(2) + 1
-                            '            Case 6 'worn by
-                            '                .mode = 0
-                            '                .combo(0) = xns(obstuff(0) - 1, dynamic) + 3
-                            '                .combo(1) = 2
-                            '                .combo(2) = obstuff(2) + 1
-                            '        End Select
-                            '        .message = elses(5)
-                            '    End With
-                            'End If
-
-                            '.actioncount = 0
-                            'If score <> 0 Then
-                            '    .actioncount = .actioncount + 1
-                            '    ReDim Preserve .action(.actioncount)
-                            '    With .action(.actioncount - 1)
-                            '        .mode = 4
-                            '        .combo(0) = score
-                            '    End With
-                            'End If
-                            'If kills = 1 Then
-                            '    .actioncount = .actioncount + 1
-                            '    ReDim Preserve .action(.actioncount)
-                            '    With .action(.actioncount - 1)
-                            '        .mode = 6 '5
-                            '        .combo(0) = 2
-                            '    End With
-                            'End If
-                            'If winning = 1 Then
-                            '    .actioncount = .actioncount + 1
-                            '    ReDim Preserve .action(.actioncount)
-                            '    With .action(.actioncount - 1)
-                            '        .mode = 6 '5
-                            '        .combo(0) = 0
-                            '    End With
-                            'End If
-                            'For nn = 0 To 5
-                            '    If move(nn, 0) > 0 Then
-                            '        .actioncount = .actioncount + 1
-                            '        ReDim Preserve .action(.actioncount)
-                            '        With .action(.actioncount - 1)
-                            '            Select Case movemode(nn)
-                            '                Case 0 ' to room
-                            '                    Select Case move(nn, 0)
-                            '                        Case 1 ' Player
-                            '                            .mode = 1
-                            '                            .combo(0) = 0
-                            '                            If move(nn, 1) > num_room + 1 Then
-                            '                                .combo(1) = 1
-                            '                                .combo(2) = move(nn, 1) - 2 - num_room
-                            '                            Else
-                            '                                .combo(1) = 0
-                            '                                .combo(2) = move(nn, 1) - 2
-                            '                            End If
-                            '                        Case 2 ' Ref object
-                            '                            .mode = 0
-                            '                            .combo(0) = 2
-                            '                            If move(nn, 1) = 1 Then ' to same room as player
-                            '                                .combo(1) = 6
-                            '                                .combo(2) = 0
-                            '                            ElseIf move(nn, 1) > num_room + 1 Then
-                            '                                .combo(1) = 1
-                            '                                .combo(2) = move(nn, 1) - 2 - num_room
-                            '                            Else
-                            '                                .combo(1) = 0
-                            '                                .combo(2) = max(move(nn, 1) - 1, 0)
-                            '                            End If
-                            '                        Case 3 ' All held
-                            '                            .mode = 0
-                            '                            .combo(0) = 0
-                            '                            If move(nn, 1) = 1 Then ' to same room as player
-                            '                                .combo(1) = 6
-                            '                                .combo(2) = 0
-                            '                            ElseIf move(nn, 1) > num_room + 1 Then
-                            '                                .combo(1) = 1
-                            '                                .combo(2) = move(nn, 1) - 2 - num_room
-                            '                            Else
-                            '                                .combo(1) = 0
-                            '                                .combo(2) = max(move(nn, 1) - 1, 0)
-                            '                            End If
-                            '                        Case Else ' the rest
-                            '                            .mode = 0
-                            '                            .combo(0) = move(nn, 0) - 1
-                            '                            If move(nn, 1) = 1 Then ' to same room as player
-                            '                                .combo(1) = 6
-                            '                                .combo(2) = 0
-                            '                            ElseIf move(nn, 1) > num_room + 1 Then
-                            '                                .combo(1) = 1
-                            '                                .combo(2) = move(nn, 1) - 2 - num_room
-                            '                            Else
-                            '                                .combo(1) = 0
-                            '                                .combo(2) = max(move(nn, 1) - 1, 0)
-                            '                            End If
-                            '                    End Select
-                            '                Case 1, 2 ' inside/onto object
-                            '                    .mode = 0
-                            '                    If move(nn, 0) = 1 Then
-                            '                        ' Can't move player in/on an object!
-                            '                        task(n).actioncount = task(n).actioncount - 1
-                            '                    End If
-                            '                    If move(nn, 0) = 2 Then .combo(0) = 2
-                            '                    If move(nn, 0) > 2 Then .combo(0) = move(nn, 0) - 1
-                            '                    If movemode(nn) = 1 Then .combo(1) = 2 Else .combo(1) = 3
-                            '                    .combo(2) = move(nn, 1) - 1
-                            '                Case 3, 4 ' to carried/worn by
-                            '                    .mode = 0
-                            '                    If move(nn, 0) = 1 Then
-                            '                        ' Can't move player to carried by someone
-                            '                        task(n).actioncount = task(n).actioncount - 1
-                            '                    End If
-                            '                    If move(nn, 0) = 2 Then .combo(0) = 2
-                            '                    If move(nn, 0) > 2 Then .combo(0) = move(nn, 0) - 1
-                            '                    .combo(1) = movemode(nn) + 1
-                            '                    If move(nn, 1) = 0 Then
-                            '                        .combo(2) = 0
-                            '                    Else
-                            '                        .combo(2) = move(nn, 1) + 1
-                            '                    End If
-                            '            End Select
-                            '        End With
-                            '    End If
-                            'Next nn
-
                         Else
-
                             Dim iNumRestriction As Integer = CInt(GetLine(bAdventure, iPos))
                             For i As Integer = 1 To iNumRestriction
                                 Dim NewRestriction As New clsRestriction
@@ -8771,8 +4266,6 @@ NextLoc:
                                                             .sKey2 = GetObKey(iCombo2 - 1, ComboEnum.Surface)
                                                     End Select
                                             End Select
-
-                                            'GetLine(bAdventure, iPos) ' combo(2)
                                         Case 1 ' Object status
                                             .eType = clsRestriction.RestrictionTypeEnum.Object
                                             If iCombo0 = 0 Then
@@ -9279,10 +4772,7 @@ NextLoc:
                             End If
                             .arlRestrictions.BracketSequence &= sBrackSeq
                         End If
-
-#If Runner Then
                         If .arlRestrictions.BracketSequence IsNot Nothing Then .arlRestrictions.BracketSequence = .arlRestrictions.BracketSequence.Replace("[", "((").Replace("]", "))")
-#End If
                         If v >= 3.9 Then
                             If bSound Then
                                 sFilename = GetLine(bAdventure, iPos) ' Filename
@@ -9307,22 +4797,9 @@ NextLoc:
                 Next
 
 
-                '' Sort task mappings
-                'For Each sTask As String In colNewTasks
-                '    Dim task As clsTask = a.htblTasks(sTask)
-                '    For Each act As clsAction In task.arlActions
-                '        If act.eItem = clsAction.ItemEnum.SetTasks Then
-                '            If htblKeyMapping.ContainsKey(act.sKey1) Then act.sKey1 = htblKeyMapping(act.sKey1)
-                '        End If
-                '    Next
-                'Next
-
-
                 '----------------------------------------------------------------------------------
                 ' Events
                 '----------------------------------------------------------------------------------
-
-
 
                 Dim iNumEvents As Integer = CInt(GetLine(bAdventure, iPos))
                 For iEvent As Integer = 1 To iNumEvents
@@ -9396,10 +4873,6 @@ NextLoc:
                                 sLocationKey = ALLROOMS
                         End Select
 
-                        'Dim NewEventDescription As New clsEventDescription
-                        'With NewEventDescription
-                        '    .arlShowInRooms = arlShowInRooms.Clone
-                        'End With
                         For i As Integer = 0 To 1
                             Dim iTask As Integer = CInt(GetLine(bAdventure, iPos))
                             Dim iCompleteOrNot As Integer = CInt(GetLine(bAdventure, iPos))
@@ -9411,9 +4884,6 @@ NextLoc:
                                 ReDim Preserve .EventControls(.EventControls.Length)
                                 .EventControls(.EventControls.Length - 1) = ec
                             End If
-                            'For n As Integer = 0 To 1
-                            '    GetLine(bAdventure, iPos) ' pause(i,n)
-                            'Next
                             Dim iFrom As Integer = CInt(GetLine(bAdventure, iPos)) ' from(i)
                             sBuffer = CStr(GetLine(bAdventure, iPos)) ' ftext(i)
                             If sBuffer <> "" Then
@@ -9446,8 +4916,8 @@ NextLoc:
                             Next
                         Next
                         For i As Integer = 0 To 2
-                            Dim iObKey As Integer = iMoveObs(i, 0) ' CInt(GetLine(bAdventure, iPos))
-                            Dim iMoveTo As Integer = iMoveObs(i, 1) ' CInt(GetLine(bAdventure, iPos))
+                            Dim iObKey As Integer = iMoveObs(i, 0)
+                            Dim iMoveTo As Integer = iMoveObs(i, 1)
                             If iObKey > 0 Then
                                 Dim bNewTask As Boolean = True
                                 If i = 1 AndAlso NewEvent.Length.iTo = 0 AndAlso iDoneTask(0) Then bNewTask = False
@@ -9534,9 +5004,6 @@ NextLoc:
                                 End If
                                 If bGraphics Then
                                     sFilename = GetLine(bAdventure, iPos) ' Filename
-                                    'If sFilename <> "" Then
-                                    '    . .Description(0).Description &= "<img src=""" & sFilename & """>"
-                                    'End If
                                     If v >= 4 Then iFilesize = SafeInt(GetLine(bAdventure, iPos)) ' Filesize
                                     If sFilename <> "" AndAlso iFilesize > 0 Then a.dictv4Media.Add(sFilename, New clsAdventure.v4Media(0, iFilesize, True))
                                 End If
@@ -9551,12 +5018,10 @@ NextLoc:
                 ' Characters
                 '----------------------------------------------------------------------------------
 
-
                 Dim iNumChars As Integer = CInt(GetLine(bAdventure, iPos))
                 For iChar As Integer = 1 To iNumChars
                     Dim NewChar As New clsCharacter
                     With NewChar
-                        '.Key = "Character" & iChar.ToString
                         Dim sKey As String = "Character" & iChar.ToString
                         If a.htblCharacters.ContainsKey(sKey) Then
                             While a.htblCharacters.ContainsKey(sKey)
@@ -9580,7 +5045,6 @@ NextLoc:
                         End If
 
                         .Description = New Description(ConvText(GetLine(bAdventure, iPos)))
-                        '.Location = "Location" & GetLine(bAdventure, iPos)
                         .Known = True
 
                         Dim iCharLoc As Integer = CInt(GetLine(bAdventure, iPos))
@@ -9590,25 +5054,8 @@ NextLoc:
                         Else
                             .Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.Hidden
                         End If
-                        'If Adventure.htblAllProperties.ContainsKey("CharacterLocation") Then
-                        '    Dim cl As New clsProperty
-                        '    cl = Adventure.htblAllProperties("CharacterLocation").Copy
-                        '    If iCharLoc = 0 Then cl.Value = "Hidden" Else cl.Value = "At Location"
-                        '    .htblProperties.Add(cl, cl.Key)
-
-                        '    If cl.Value = "At Location" Then
-                        '        Dim al As New clsProperty
-                        '        al = Adventure.htblAllProperties("CharacterAtLocation").Copy
-                        '        al.Value = "Location" & iCharLoc
-                        '        .htblProperties.Add(al, al.Key)
-                        '    End If
-                        'End If
 
                         Dim p As clsProperty
-                        'p = Adventure.htblAllProperties("Known").Copy
-                        'p.Selected = True
-                        '.htblActualProperties.Add(p)
-                        '.bCalculatedGroups = False
 
                         Dim sDesc2 As String = GetLine(bAdventure, iPos)
                         Dim sDescTask As String = GetLine(bAdventure, iPos)
@@ -9724,23 +5171,18 @@ NextLoc:
                                         Select Case iLocation
                                             Case 0 ' Hidden
                                                 .sLocation = "Hidden"
-                                                'sDescription &= "Hidden"
                                             Case 1 ' Follow Player
                                                 .sLocation = "%Player%"
-                                                'sDescription &= "Follow Player"
                                             Case Else ' Locations
                                                 If iLocation - 1 > Adventure.htblLocations.Count Then
                                                     ' Location Group
-                                                    'sDescription = "Group " & iLocation - 1
                                                     .sLocation = "Group" & iLocation - Adventure.htblLocations.Count - 1
                                                 Else
                                                     ' Location
                                                     .sLocation = "Location" & iLocation - 1
-                                                    'sDescription &= Adventure.htblLocations(.sLocation).ShortDescription
                                                 End If
                                         End Select
                                         Dim iWaitTurns As Integer = CInt(GetLine(bAdventure, iPos))
-                                        'If .sLocation = "%Player%" AndAlso iWaitTurns = 1 Then iWaitTurns = 0
                                         .ftTurns.iFrom = iWaitTurns
                                         .ftTurns.iTo = iWaitTurns
                                     End With
@@ -9756,36 +5198,23 @@ NextLoc:
                         If bShowMove Then
                             p = Adventure.htblAllProperties("ShowEnterExit").Copy
                             p.Selected = True
-                            '.htblActualProperties.Add(p)
-                            '.bCalculatedGroups = False
                             .AddProperty(p)
                             sFromDesc = GetLine(bAdventure, iPos)
                             p = Adventure.htblAllProperties("CharEnters").Copy
                             p.Selected = True
                             p.StringData = New Description(ConvText(sFromDesc))
-                            '.htblActualProperties.Add(p)
-                            '.bCalculatedGroups = False
                             .AddProperty(p)
                             sToDesc = GetLine(bAdventure, iPos)
                             p = Adventure.htblAllProperties("CharExits").Copy
                             p.Selected = True
                             p.StringData = New Description(ConvText(sToDesc))
-                            '.htblActualProperties.Add(p)
-                            '.bCalculatedGroups = False
                             .AddProperty(p)
                         End If
-                        'For Each Walk As clsWalk In .arlWalks
-                        '    Walk.ShowMove = bShowMove
-                        '    Walk.FromDesc = sFromDesc
-                        '    Walk.ToDesc = sToDesc
-                        'Next
                         Dim sIsHereDesc As String = GetLine(bAdventure, iPos)
                         If sIsHereDesc = "#" Then sIsHereDesc = "%CharacterName[" & sKey & "]% is here."
                         If sIsHereDesc <> "" OrElse arlNewDescriptions.Count > 0 Then
                             p = Adventure.htblAllProperties("CharHereDesc").Copy
                             p.Selected = True
-                            '.htblActualProperties.Add(p)
-                            '.bCalculatedGroups = False
                             .AddProperty(p)
                         End If
                         If sIsHereDesc <> "" Then .SetPropertyValue("CharHereDesc", New Description(ConvText(sIsHereDesc)))
@@ -9868,7 +5297,7 @@ NextLoc:
                         .Key = "Group" & iGroup.ToString
                         .Name = GetLine(bAdventure, iPos)
                         Dim bIncluded As Boolean
-                        For i As Integer = 1 To iNumLocations 'Adventure.htblLocations.Count
+                        For i As Integer = 1 To iNumLocations
                             bIncluded = CBool(GetLine(bAdventure, iPos))
                             If bIncluded Then .arlMembers.Add("Location" & i.ToString)
                         Next
@@ -10050,65 +5479,8 @@ NextLoc:
                 For Each ch As clsCharacter In Adventure.htblCharacters.Values
                     ch.Move(ch.Location)
                 Next
-
-#If Not www Then
                 .Map = New clsMap
                 .Map.RecalculateLayout()
-#If Generator Then
-                fGenerator.Map1.Map = .Map
-
-                If a.dictv4Media.Count > 0 Then
-                    If MessageBox.Show("Would you like to extract all media from this TAF?", "Extract Media", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-                        fGenerator.fbd.ShowDialog()
-                        If fGenerator.fbd.SelectedPath <> "" Then
-                            For Each sFile As String In a.dictv4Media.Keys
-                                With a.dictv4Media(sFile)
-                                    If .bImage Then
-                                        Dim img As Image = Getv4Image(sFile)
-                                        If img IsNot Nothing Then
-                                            Dim sJustFile As String = IO.Path.GetFileName(sFile)
-                                            img.Save(fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            'For Each sd As SingleDescription In Adventure.Introduction
-                                            '    sd.Description = sd.Description.Replace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            'Next
-                                            'For Each sd As SingleDescription In Adventure.WinningText
-                                            '    sd.Description = sd.Description.Replace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            'Next
-                                            'For Each itm As clsItem In a.dictAllItems.Values
-                                            '    itm.SearchAndReplace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            'Next
-                                            For Each sd As SingleDescription In a.AllDescriptions '.dictAllItems.Values
-                                                sd.Description = sd.Description.Replace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            Next
-                                        End If
-                                    Else
-                                        Dim sJustFile As String = IO.Path.GetFileName(sFile)
-                                        If Getv4Audio(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile) Then
-                                            'For Each sd As SingleDescription In Adventure.Introduction
-                                            '    sd.Description = sd.Description.Replace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            'Next
-                                            'For Each sd As SingleDescription In Adventure.WinningText
-                                            '    sd.Description = sd.Description.Replace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            'Next
-                                            'For Each itm As clsItem In a.dictAllItems.Values
-                                            '    itm.SearchAndReplace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            'Next
-                                            For Each sd As SingleDescription In a.AllDescriptions '.dictAllItems.Values
-                                                sd.Description = sd.Description.Replace(sFile, fGenerator.fbd.SelectedPath & "\" & sJustFile)
-                                            Next
-                                        End If
-                                    End If
-                                End With
-                            Next
-                        End If
-                        a.dictv4Media.Clear()
-                    End If
-                End If
-#ElseIf Not Adravalon Then
-                UserSession.Map.Map = .Map
-#End If
-#End If
-
             End With
 
         Catch ex As Exception
@@ -10223,7 +5595,6 @@ NextGroup:
 
 
     Public Function CurrentMaxPriority(Optional ByVal bIncludeLibrary As Boolean = False) As Integer
-
         Dim iMax As Integer = 0
 
         For Each tas As clsTask In Adventure.htblTasks.Values
@@ -10235,12 +5606,10 @@ NextGroup:
         Next
 
         Return iMax
-
     End Function
 
 
     Friend Sub LoadLibraries(ByVal eLoadWhat As LoadWhatEnum, Optional ByVal sOnlyLoad As String = "")
-
         Dim sLibraries() As String = GetSetting("ADRIFT", "Generator", "Libraries").Split("|"c)
         Dim sError As String = ""
 
@@ -10259,52 +5628,6 @@ NextGroup:
             End If
             If bLoad AndAlso File.Exists(sLibrary) AndAlso (sOnlyLoad = "" OrElse IO.Path.GetFileNameWithoutExtension(sLibrary).ToLower = sOnlyLoad) Then
                 Dim bLoadLibrary As Boolean = True
-                '#If Generator Then
-                '#If DEBUG Then
-                '                If True Then ' Always check to see if the libraries are ok in Gen debug
-                '#Else
-                '                If Not IsRegistered Then ' Check to see if libraries are ok in Gen unregistered
-                '#End If
-                '#Else
-                'If False Then ' Don't check in Runner
-                '    '#End If
-                '    ' Check it's a standard library and hasn't been tampered with
-                '    Dim iSize As Integer = 0
-                '    Dim dictChars As New Generic.Dictionary(Of Integer, Char)
-                '    Dim bLibraryOK As Boolean = False
-                '    If sLibrary.EndsWith("StandardLibrary.amf") Then
-                '        iSize = 166126
-                '        dictChars.Add(10013, "u"c)
-                '        dictChars.Add(90056, "d"c)
-                '    ElseIf sLibrary.EndsWith("Lighting.amf") Then
-                '        iSize = 6192
-                '        dictChars.Add(4979, "e"c)
-                '    ElseIf sLibrary.EndsWith("MoneySystem.amf") Then
-                '        iSize = 13457
-                '        dictChars.Add(9980, "i"c)
-                '    ElseIf sLibrary.EndsWith("ObjectManipulation.amf") Then
-                '        iSize = 2825
-                '        dictChars.Add(999, "n"c)
-                '    Else
-                '        iSize = -1
-                '    End If
-                '    If FileLen(sLibrary) = iSize Then
-                '        bLibraryOK = True
-                '        For Each i As Integer In dictChars.Keys
-                '            Dim fStream As New IO.FileStream(sLibrary, IO.FileMode.Open, IO.FileAccess.Read)
-                '            Dim bData(0) As Byte
-                '            fStream.Seek(i, IO.SeekOrigin.Begin)
-                '            fStream.Read(bData, 0, 1)
-                '            fStream.Close()
-                '            If dictChars(i) <> ChrW(CInt(bData(0))) Then bLibraryOK = False
-                '        Next
-                '    End If
-
-                '    If Not bLibraryOK Then
-                '        sError &= sLibrary & vbCrLf
-                '        bLoadLibrary = False
-                '    End If
-                'End If
 #If DEBUG Then
                 bLoadLibrary = True
 #End If
@@ -10363,18 +5686,6 @@ NextGroup:
     End Function
 
 
-    '' v5.0 GetLine
-    'Private Function gl(ByVal bData() As Byte, ByRef iStartPos As Integer) As String
-
-    '    Dim iEnd As Integer = bData.IndexOf(bData, CByte(13), iStartPos)
-    '    If iEnd < 0 Then iEnd = bData.Length - 1
-
-    '    gl = System.Text.Encoding.UTF8.GetString(bData, iStartPos, iEnd - iStartPos)
-    '    iStartPos = iEnd + 1
-
-    'End Function
-
-
     ' Simple encryption
     Function Dencode(ByVal sText As String) As String
 
@@ -10383,13 +5694,12 @@ NextGroup:
 
         Dencode = ""
         For n As Integer = 1 To sText.Length
-            'Dencode = Dencode & Chr((Asc(CChar(Mid(sText, n, 1))) Xor Int(CInt(Rnd() * 255 - 0.5))) Mod 256) 
             Dencode = Dencode & Chr((Asc(Mid(sText, n, 1)) Xor Int(CInt(Rnd() * 255 - 0.5))) Mod 256)
         Next n
 
     End Function
-    Friend Function Dencode(ByVal sText As String, ByVal lOffset As Long) As Byte() ' String
 
+    Friend Function Dencode(ByVal sText As String, ByVal lOffset As Long) As Byte() ' String
         Rnd(-1)
         Randomize(1976)
 
@@ -10399,15 +5709,13 @@ NextGroup:
 
         Dim result(sText.Length - 1) As Byte
         For n As Integer = 1 To sText.Length
-            'result(n - 1) = CByte((Asc(CChar(sMid(sText, n, 1))) Xor Int(CInt(Rnd() * 255 - 0.5))) Mod 256)
             result(n - 1) = CByte((Asc(Mid(sText, n, 1)) Xor Int(CInt(Rnd() * 255 - 0.5))) Mod 256)
         Next
 
         Return result
-
     End Function
-    Friend Function Dencode(ByVal bData As Byte(), ByVal lOffset As Long) As Byte() ' String
 
+    Friend Function Dencode(ByVal bData As Byte(), ByVal lOffset As Long) As Byte() ' String
         Rnd(-1)
         Randomize(1976)
 
@@ -10422,26 +5730,7 @@ NextGroup:
         Next
 
         Return result
-
     End Function
-
-
-
-    'Private Sub z_DataAvailable(ByVal data() As Byte, ByVal startIndex As Integer, ByVal count As Integer) Handles zi.DataAvailable, zd.DataAvailable
-
-    '    ' Append the new data to our bAdv byte array
-    '    Dim bNew(bAdventure.Length - 1) As Byte
-    '    bAdventure.CopyTo(bNew, 0)
-    '    ReDim bAdventure(bNew.Length + count - 1)
-    '    bNew.CopyTo(bAdventure, 0)
-    '    If count < data.Length Then ' Special case so we can truncate data
-    '        Dim bDataCopy(count - 1) As Byte
-    '        Array.Copy(data, bDataCopy, count)
-    '        data = bDataCopy
-    '    End If
-    '    data.CopyTo(bAdventure, bNew.Length)
-
-    'End Sub
 
 
     Private Enum ComboEnum
@@ -10456,7 +5745,6 @@ NextGroup:
         Lieable
     End Enum
     Private Function GetObKey(ByVal iComboIndex As Integer, ByVal eCombo As ComboEnum) As String
-
         Dim iMatching As Integer
         Dim i As Integer = 1
         Dim sKey As String
@@ -10499,9 +5787,6 @@ NextGroup:
         End Try
 
         Return Nothing
-
     End Function
-
-
 
 End Module

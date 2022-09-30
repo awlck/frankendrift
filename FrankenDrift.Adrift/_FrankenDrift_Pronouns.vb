@@ -1,5 +1,4 @@
-﻿#If Adravalon Then
-
+﻿
 '		                Subjective Pronoun	Objective Pronoun	Reflective Pronoun	Possesive Pronoun
 '
 '		First Person	I (am)				Me			        Myself			    Mine
@@ -27,8 +26,6 @@ End Class
 
 Friend Class PronounInfoList
     Inherits List(Of PronounInfo)
-    'Implements IComparer '(Of PronounInfo)
-
 
     Shadows Sub Add(ByVal sKey As String, ByVal ePronoun As PronounEnum, ByVal Gender As clsCharacter.GenderEnum, ByVal iOffset As Integer)
         Dim pi As New PronounInfo
@@ -42,14 +39,4 @@ Friend Class PronounInfoList
         MyBase.Sort(Function(x, y) x.Offset.CompareTo(y.Offset))
     End Sub
 
-
-    'Public Function Compare(x As PronounInfo, y As PronounInfo) As Integer Implements System.Collections.Generic.IComparer(Of PronounInfo).Compare
-    '    Return x.Offset.CompareTo(y.Offset)
-    'End Function
-
-    'Public Function Compare(x As Object, y As Object) As Integer Implements System.Collections.IComparer.Compare
-    '    Return CType(x, PronounInfo).Offset.CompareTo(CType(y, PronounInfo).Offset)
-    'End Function
-
 End Class
-#End If

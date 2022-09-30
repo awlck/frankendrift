@@ -5,18 +5,12 @@ Imports FrankenDrift.Glue
 <DebuggerDisplay("{Name}")>
 Public Class clsCharacter
     Inherits clsItemWithProperties
-
-    'Private sKey As String
-    'Private sName As String
-    'Private sLocation As String
     Private cLocation As clsCharacterLocation
     Private iMaxSize As Integer
     Private iMaxWeight As Integer
     Private eCharacterType As CharacterTypeEnum = CharacterTypeEnum.NonPlayer
-    'Private ePosition As PositionEnum    
     Private oDescription As Description
     Private sIsHereDesc As String
-    'Private eGender As GenderEnum          
 
     Private sName As String
     Private sArticle As String
@@ -28,7 +22,6 @@ Public Class clsCharacter
     Private htblSeenObject As New BooleanHashTable
     Private htblSeenChar As New BooleanHashTable
 
-    'Friend htblProperties As New PropertyHashTable
     Friend htblTopics As New TopicHashTable
 
 
@@ -71,14 +64,9 @@ Public Class clsCharacter
 
 
     Public Sub DoWalk()
-
         Static sLastPosition As String = ""
 
         If WalkTo <> "" Then
-            'If Location.LocationKey = WalkTo Then
-            '    WalkTo = ""
-            '    Exit Sub
-            'End If
             If Location.LocationKey = sLastPosition Then
                 WalkTo = "" ' Something has stopped us moving, so bomb out the walk
                 Exit Sub
@@ -92,7 +80,6 @@ Public Class clsCharacter
                     For Each d As DirectionsEnum In [Enum].GetValues(GetType(DirectionsEnum))
                         If Adventure.htblLocations(Location.LocationKey).arlDirections(d).LocationKey = node.Key Then
                             If node.Key = WalkTo Then WalkTo = ""
-#If Runner Then
                             Dim bAutoComplete As Boolean = UserSession.bAutoComplete
                             UserSession.bAutoComplete = False
                             fRunner.SetInput(d.ToString)
@@ -100,7 +87,6 @@ Public Class clsCharacter
                             fRunner.SubmitCommand()
                             sLastPosition = ""
                             UserSession.bAutoComplete = bAutoComplete
-#End If
                             Exit Sub
                         End If
                     Next
@@ -153,7 +139,6 @@ Public Class clsCharacter
             If u.Key = sTo Then Return u
             Q.Remove(u)
 
-#If Runner Then
             For Each d As DirectionsEnum In [Enum].GetValues(GetType(DirectionsEnum))
                 If HasRouteInDirection(d, False, u.Key) Then
                     Dim sDest As String = Adventure.htblLocations(u.Key).arlDirections(d).LocationKey
@@ -167,24 +152,12 @@ Public Class clsCharacter
                     End If
                 End If
             Next
-            'For Each d As clsDirection In Adventure.htblLocations(u.Key).arlDirections
-            '    If d.LocationKey <> "" Then
-            '        Dim alt As Integer = u.iDistance + 1
-            '        If alt < WalkNodes(d.LocationKey).iDistance Then
-            '            WalkNodes(d.LocationKey).iDistance = alt
-            '            WalkNodes(d.LocationKey).Previous = u
-            '            Q.Sort()
-            '        End If
-            '    End If
-            'Next
-#End If
 
         End While
 
         Return Nothing
 
     End Function
-
 
 
     Private ePerspective As PerspectiveEnum = PerspectiveEnum.SecondPerson ' Default for Player
@@ -228,12 +201,6 @@ Public Class clsCharacter
         NonPlayer
     End Enum
 
-    'Public Enum PositionEnum
-    '    Standing = 0
-    '    Sitting = 1
-    '    Lying = 2
-    'End Enum
-
     Public Enum GenderEnum
         Male = 0
         Female = 1
@@ -242,7 +209,6 @@ Public Class clsCharacter
 
     Public Property Gender() As GenderEnum
         Get
-            'Return eGender
             Select Case GetPropertyValue("Gender")
                 Case "Male"
                     Return GenderEnum.Male
@@ -251,27 +217,9 @@ Public Class clsCharacter
                 Case Else
                     Return GenderEnum.Unknown
             End Select
-            'If Me.HasProperty("Gender") Then
-            '    Select Case Me.htblProperties("Gender").Value
-            '        Case "Male"
-            '            Return GenderEnum.Male
-            '        Case "Female"
-            '            Return GenderEnum.Female
-            '        Case Else
-            '            Return GenderEnum.Unknown
-            '    End Select
-            'End If
         End Get
         Set(ByVal Value As GenderEnum)
             SetPropertyValue("Gender", Value.ToString)
-            ''eGender = Value
-            'Dim p As clsProperty
-            'Dim sNewValue As String = Value.ToString ' As this gets wiped when we add the new properties...           
-            'If Not HasProperty("Gender") Then
-            '    p = Adventure.htblAllProperties("Gender").Copy
-            '    htblProperties.Add(p)
-            'End If
-            'htblProperties("Gender").Value = sNewValue
         End Set
     End Property
 
@@ -283,13 +231,6 @@ Public Class clsCharacter
         End Get
         Set(ByVal value As Boolean)
             If value <> bKnown Then
-                'Dim p As clsProperty
-
-                'If Not HasProperty("Known") Then
-                '    p = Adventure.htblCharacterProperties("Known").Copy
-                '    htblProperties.Add(p)
-                'End If
-                'htblProperties("Known").Selected = value
                 SetPropertyValue("Known", value)
             End If
         End Set
@@ -320,7 +261,6 @@ Public Class clsCharacter
             Else
                 htblSeenLocation(sLocKey) = Value
             End If
-#If Runner Then
             If Me Is Adventure.Player Then
                 For Each p As MapPage In Adventure.Map.Pages.Values
                     For Each n As MapNode In p.Nodes
@@ -331,7 +271,6 @@ Public Class clsCharacter
                     Next
                 Next
             End If
-#End If
         End Set
     End Property
 
@@ -383,27 +322,19 @@ Public Class clsCharacter
         Get
             Dim iCount As Integer = 0
             Dim sChar As String = Nothing
-            'Dim locMe As clsLocation = LocationRoot
-            'For Each locMe As clsLocation In LocationRoots.Values
             For Each ch As clsCharacter In Adventure.htblCharacters.Values
                 If ch IsNot Me Then
-                    'Dim locChar As clsLocation = ch.LocationRoot
-                    'For Each locChar As clsLocation In ch.LocationRoots.Values
-                    If Location.LocationKey = ch.Location.LocationKey Then ' If locChar IsNot Nothing AndAlso locMe IsNot Nothing AndAlso locChar.Key = locMe.Key Then
+                    If Location.LocationKey = ch.Location.LocationKey Then
                         iCount += 1
                         sChar = ch.Key
                     End If
-                    'Next
                 End If
                 If iCount > 1 Then Return Nothing
             Next
-            'Next
             If iCount = 1 Then Return sChar Else Return Nothing
         End Get
     End Property
 
-
-#If Runner Then
     ' ExplicitPronoun - The user has said they want it to be this pronoun, so don't auto-switch it
     Friend ReadOnly Property Name(Optional ByVal Pronoun As PronounEnum = PronounEnum.Subjective, Optional bMarkAsSeen As Boolean = True, Optional ByVal bAllowPronouns As Boolean = True, Optional ByVal Article As ArticleTypeEnum = ArticleTypeEnum.Indefinite, Optional ByVal bForcePronoun As Boolean = False, Optional ByVal bExplicitArticle As Boolean = False) As String
         Get
@@ -535,34 +466,13 @@ Public Class clsCharacter
             End With
         End Get
     End Property
-#Else
-    Friend ReadOnly Property Name(Optional ByVal a As Boolean = False, Optional ByVal b As Boolean = False, Optional ByVal c As Boolean = False, Optional ByVal d As ArticleTypeEnum = ArticleTypeEnum.Indefinite, Optional ByVal e As Boolean = False, Optional f As Boolean = False) As String
-        Get
-            If ProperName <> "" Then
-                Return ProperName
-            Else
-                Return Descriptor
-            End If
-        End Get
-    End Property
-#End If
 
 
-
-    'Private bChangedName As Boolean = False
-#If Generator Then
-    Public Property ProperName() As String
-        Get
-            Return sName
-#Else
     Friend Property ProperName(Optional ByVal Pronoun As PronounEnum = PronounEnum.Subjective) As String
         Get
-            'If bDisplaying Then PronounKeys.Add(Key, Pronoun)
             If sName <> "" Then Return sName Else Return "Anonymous"
-#End If
         End Get
         Set(ByVal Value As String)
-            'If sName <> "" AndAlso Value <> sName Then bChangedName = True
             sName = Value
         End Set
     End Property
@@ -610,28 +520,22 @@ Public Class clsCharacter
 
     End Sub
     Public Sub Move(ByVal ToWhere As clsCharacterLocation)
-
-#If Runner Then
         If Me Is Adventure.Player Then
             For Each t As clsTask In Adventure.Tasks(clsAdventure.TasksListEnum.SystemTasks).Values
                 If t.Repeatable OrElse Not t.Completed Then
-                    'For Each sKey As String In Adventure.Player.LocationRoots.Keys                    
                     If Adventure.Player.Location.LocationKey <> ToWhere.LocationKey AndAlso t.LocationTrigger = ToWhere.LocationKey Then
                         ' Ok, we need to trigger this task                        
                         Adventure.qTasksToRun.Enqueue(t.Key)
                     End If
-                    'Next
                 End If
             Next
         End If
-#End If
 
         ' Ensure that character Key is not this character, or on this character
         Me.Location = ToWhere
 
         ' Update any 'seen' things        
         If ToWhere.ExistWhere = clsCharacterLocation.ExistsWhereEnum.AtLocation Then
-            'sLastLocationRoot = ToWhere.Key
             Location.sLastLocationKey = ToWhere.Key
             If htblSeenLocation.ContainsKey(ToWhere.Key) Then htblSeenLocation(ToWhere.Key) = True Else htblSeenLocation.Add(True, ToWhere.Key)
             If Adventure.htblLocations.ContainsKey(ToWhere.Key) Then
@@ -644,7 +548,6 @@ Public Class clsCharacter
             End If
         End If
 
-#If Runner Then
         If Adventure.sConversationCharKey <> "" Then
             If Adventure.htblCharacters(Adventure.sConversationCharKey).Location.Key <> Adventure.Player.Location.Key Then
                 If Me.Key = Adventure.Player.Key Then
@@ -658,17 +561,10 @@ Public Class clsCharacter
             End If
         End If
 
-        '#If Not www Then
         If Me Is Adventure.Player Then
             Adventure.Map.RefreshNode(Adventure.Player.Location.LocationKey)
             UserSession.Map.SelectNode(Adventure.Player.Location.LocationKey)
-#If www Then
-            fRunner.RefreshMap()
-#End If
         End If
-        '#End If
-#End If
-
     End Sub
 
 
@@ -685,47 +581,6 @@ Public Class clsCharacter
         End Set
 
     End Property
-
-
-    '' Returns the actual rooms an object is in, regardless of actual location
-    'Private sLastLocationRoot As String
-    'Friend ReadOnly Property LocationRoot() As clsLocation ' LocationHashTable
-    '    Get
-    '        'Dim htblLocRoot As New LocationHashTable            
-    '        LocationRoot = Nothing
-    '        Try                
-    '            Select Case Location.ExistWhere
-    '                Case clsCharacterLocation.ExistsWhereEnum.AtLocation
-    '                    If Location.Key IsNot Nothing AndAlso Location.Key <> HIDDEN Then Return Adventure.htblLocations(Location.Key) ' htblLocRoot.Add(Adventure.htblLocations(Location.Key), Location.Key)
-    '                Case clsCharacterLocation.ExistsWhereEnum.Hidden
-    '                    ' Fall out
-    '                Case clsCharacterLocation.ExistsWhereEnum.InObject, clsCharacterLocation.ExistsWhereEnum.OnObject
-    '                    If Adventure.htblObjects(Location.Key).LocationRoots.ContainsKey(sLastLocationRoot) Then
-    '                        Return Adventure.htblLocations(sLastLocationRoot)
-    '                    Else
-    '                        ' Hmm...
-    '                        For Each loc As clsLocation In Adventure.htblObjects(Location.Key).LocationRoots.Values
-    '                            Return loc
-    '                        Next
-    '                    End If
-    '                    'Return Adventure.htblObjects(Location.Key).LocationRoots("") ' for now
-    '                Case clsCharacterLocation.ExistsWhereEnum.OnCharacter
-    '                    Return Adventure.htblCharacters(Location.Key).LocationRoot
-    '                    'Dim locChar As clsCharacterLocation = Adventure.htblCharacters(Location.Key).Location
-    '                    'If locChar.ExistWhere = clsCharacterLocation.ExistsWhereEnum.AtLocation Then htblLocRoot.Add(Adventure.htblLocations(locChar.Key), locChar.Key)
-    '                    'Return htblLocRoot
-    '                Case Else
-    '                    TODO("LocationRoot for " & Location.ExistWhere.ToString)
-    '                    Return Nothing
-    '            End Select
-
-    '            'Return htblLocRoot
-    '        Finally
-    '            If LocationRoot IsNot Nothing AndAlso sLastLocationRoot <> LocationRoot.Key Then sLastLocationRoot = LocationRoot.Key
-    '        End Try
-
-    '    End Get
-    'End Property
 
 
     Public Property MaxSize() As Integer
@@ -778,22 +633,11 @@ Public Class clsCharacter
     Public Property IsHereDesc() As String
         Get
             Return GetPropertyValue("CharHereDesc")
-            'If Me.HasProperty("CharHereDesc") Then
-            '    Return htblProperties("CharHereDesc").Value
-            'Else
-            '    Return ""
-            'End If
         End Get
         Set(ByVal Value As String)
             If Value <> "" Then
-                'If Not HasProperty("CharHereDesc") Then
-                '    Dim p As clsProperty = Adventure.htblCharacterProperties("CharHereDesc").Copy
-                '    htblProperties.Add(p)
-                'End If
-                'htblProperties("CharHereDesc").Value = Value
                 SetPropertyValue("CharHereDesc", Value)
             Else
-                'If HasProperty("CharHereDesc") Then htblProperties.Remove("CharHereDesc")
                 RemoveProperty("CharHereDesc")
             End If
         End Set
@@ -832,15 +676,9 @@ Public Class clsCharacter
         End Get
     End Property
 
-
-#If Runner Then
     Friend dictHasRouteCache As New Generic.Dictionary(Of String, Boolean)
     Friend dictRouteErrors As New Generic.Dictionary(Of String, String)
-#If Not Adravalon Then
-    Friend Function HasRouteInDirection(ByVal drn As DirectionsEnum, ByVal bIgnoreRestrictions As Boolean, Optional ByVal sFromLocation As String = "", Optional ByRef sErrorMessage As String = "") As Boolean
-#Else
     Public Function HasRouteInDirection(ByVal drn As DirectionsEnum, ByVal bIgnoreRestrictions As Boolean, Optional ByVal sFromLocation As String = "", Optional ByRef sErrorMessage As String = "") As Boolean
-#End If
 
         If sFromLocation = "" Then sFromLocation = Location.LocationKey
         If Not Adventure.htblLocations.ContainsKey(sFromLocation) Then Return False
@@ -870,7 +708,6 @@ Public Class clsCharacter
 
     End Function
 
-
     Public ReadOnly Property IsInGroupOrLocation(ByVal sGroupOrLocationKey As String) As Boolean
         Get
             If Adventure.htblLocations.ContainsKey(sGroupOrLocationKey) Then
@@ -886,7 +723,6 @@ Public Class clsCharacter
             Return False
         End Get
     End Property
-
 
     Public ReadOnly Property BoundVisible As String
         Get
@@ -972,35 +808,6 @@ Public Class clsCharacter
         End Get
     End Property
 
-    'Public ReadOnly Property IsVisibleTo(ByVal sCharKey As String) As Boolean
-    '    Get
-    '        TODO()
-    '    End Get
-    'End Property
-
-    'Public ReadOnly Property IsVisibleAtLocation(ByVal sLocationKey As String) As Boolean
-    '    Get
-    '        With Me.Location
-    '            Select Case .ExistWhere
-    '                Case clsCharacterLocation.ExistsWhereEnum.AtLocation
-    '                    Return .Key = sLocationKey
-    '                Case clsCharacterLocation.ExistsWhereEnum.Hidden
-    '                    Return False
-    '                Case clsCharacterLocation.ExistsWhereEnum.InObject
-    '                    With Adventure.htblObjects(.Key)
-    '                        If Not .Openable OrElse .IsOpen Then
-    '                            Return Adventure.htblObjects(.Key).IsVisibleAtLocation(sLocationKey)
-    '                        End If
-    '                    End With
-    '                Case clsCharacterLocation.ExistsWhereEnum.OnCharacter
-    '                    Return Adventure.htblCharacters(.Key).IsVisibleAtLocation(sLocationKey)
-    '                Case clsCharacterLocation.ExistsWhereEnum.OnObject
-    '                    Return Adventure.htblObjects(.Key).IsVisibleAtLocation(sLocationKey)
-    '            End Select
-    '        End With
-    '    End Get
-    'End Property
-
 
     Public ReadOnly Property IsWearingObject(ByVal sObKey As String, Optional ByVal bDirectly As Boolean = True) As Boolean
         Get
@@ -1040,7 +847,6 @@ Public Class clsCharacter
                 For Each sNoun As String In arl
                     sRE &= sNoun.ToLower & "/"
                 Next
-                'If arl.Count = 0 Then sRE &= "|" ' Fudge
                 If Not Adventure.htblCharacterProperties.ContainsKey("Known") OrElse HasProperty("Known") OrElse arl.Count = 0 Then sRE &= ProperName.ToLower & "/"
                 Return Left(sRE, sRE.Length - 1) & "]"
             Else
@@ -1055,7 +861,6 @@ Public Class clsCharacter
                 For Each sNoun As String In arl
                     sRE &= sNoun.ToLower & "|"
                 Next
-                'If arl.Count = 0 Then sRE &= "|" ' Fudge
                 If Not Adventure.htblCharacterProperties.ContainsKey("Known") OrElse HasProperty("Known") OrElse arl.Count = 0 Then sRE &= ProperName.ToLower & "|"
                 Return Left(sRE, sRE.Length - 1) & ")"
             End If
@@ -1114,7 +919,6 @@ Public Class clsCharacter
                         If .Key = Me.Key OrElse (.Key = "%Player%" AndAlso Me.eCharacterType = CharacterTypeEnum.Player) Then Return True
                     Case clsObjectLocation.DynamicExistsWhereEnum.InObject, clsObjectLocation.DynamicExistsWhereEnum.OnObject
                         If Not bDirectly Then
-                            'If Adventure.htblObjects(sObKey).Location.Key = sObKey Then Return False
                             Return IsHoldingObject(Adventure.htblObjects(sObKey).Location.Key)
                         Else
                             Return False
@@ -1134,18 +938,6 @@ Public Class clsCharacter
             Return True
         End Get
     End Property
-
-
-    'Public ReadOnly Property CanSeeCharacter(ByVal sCharKey As String) As Boolean
-    '    Get
-    '        If Adventure.htblCharacters.ContainsKey(sCharKey) Then
-    '            ' TODO: Should really make sure neither character is in a closed object
-    '            Return Location.LocationKey = Adventure.htblCharacters(sCharKey).Location.LocationKey
-    '        Else
-    '            Throw New Exception("Key " & sCharKey & " is not a character key.")
-    '        End If
-    '    End Get
-    'End Property
 
 
 
@@ -1193,30 +985,6 @@ Public Class clsCharacter
         End Get
     End Property
 
-
-    'Public ReadOnly Property CanSeeObject(ByVal sObKey As String) As Boolean
-    '    Get
-    '        If sObKey = ANYOBJECT Then
-    '            For Each sObKey2 As String In Adventure.htblObjects.Keys
-    '                If CanSeeObject(sObKey2) Then Return True
-    '            Next
-    '            Return False
-    '        ElseIf Adventure.htblObjects.ContainsKey(sObKey) Then
-    '            Return Adventure.htblObjects(sObKey).IsVisibleTo(Me.Key)
-    '        ElseIf Adventure.htblGroups.ContainsKey(sObKey) AndAlso Adventure.htblGroups(sObKey).GroupType = clsGroup.GroupTypeEnum.Objects Then
-    '            ' Can we see any object in this group
-    '            With Adventure.htblGroups(sObKey)
-    '                For Each sOb As String In .arlMembers
-    '                    If CanSeeObject(sOb) Then Return True
-    '                Next
-    '                Return False
-    '            End With
-    '        Else
-    '            Throw New Exception("Key " & sObKey & " is not an object or object group.")
-    '        End If
-    '    End Get
-    'End Property
-
     Friend ReadOnly Property HeldObjects(Optional ByVal bRecursive As Boolean = False) As ObjectHashTable
         Get
             Dim htblHeldObjects As New ObjectHashTable
@@ -1260,7 +1028,6 @@ Public Class clsCharacter
     End Property
 
     Public Function ListExits(Optional ByVal sFromLocation As String = "", Optional ByRef iExitCount As Integer = 0) As String
-
         Dim sExits As String = ""
 
         If sFromLocation = "" Then sFromLocation = Adventure.Player.Location.LocationKey
@@ -1276,27 +1043,17 @@ Public Class clsCharacter
         If iExitCount > 1 Then
             sExits = Left(sExits, sExits.LastIndexOf(", ")) & " and " & Right(sExits, sExits.Length - sExits.LastIndexOf(", ") - 2)
         End If
-        'If iExitCount > 2 Then
-        '    sExits = Left(sExits, sExits.LastIndexOf(", ")) & " " & Right(sExits, sExits.Length - sExits.LastIndexOf(", ") - 2)
-        'End If
 
         If sExits = "" Then sExits = "nowhere"
 
         Return LCase(sExits)
-
     End Function
-
-#End If
 
     Friend Overrides ReadOnly Property AllDescriptions() As Generic.List(Of SharedModule.Description)
         Get
             Dim all As New Generic.List(Of Description)
             all.Add(oDescription)
-#If Runner Then
             For Each p As clsProperty In htblProperties.Values
-#Else
-            For Each p As clsProperty In htblActualProperties.Values
-#End If
                 all.Add(p.StringData)
             Next
             For Each t As clsTopic In htblTopics.Values
@@ -1313,16 +1070,6 @@ Public Class clsCharacter
             Return all
         End Get
     End Property
-
-
-
-
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fCharacter As New frmCharacter(Me, True)
-#End If
-    End Sub
 
     Protected Overrides ReadOnly Property PropertyGroupType() As clsGroup.GroupTypeEnum
         Get
@@ -1449,7 +1196,6 @@ Public Class clsWalk
     End Class
 
     Private sDescription As String
-    'Private iLength As Integer
     Private bLoop As Boolean
     Private sFromDesc As String
     Private sToDesc As String
@@ -1519,8 +1265,6 @@ Public Class clsWalk
     End Class
     Public SubWalks() As SubWalk = {}
 
-    'Friend Length As FromTo
-
     Public arlSteps As New ArrayList
 
     Friend WalkControls() As EventOrWalkControl = {}
@@ -1534,15 +1278,6 @@ Public Class clsWalk
         End Set
     End Property
 
-    'Public Property xNumberOfSteps() As Integer
-    '    Get
-    '        Return iLength
-    '    End Get
-    '    Set(ByVal Value As Integer)
-    '        iLength = Value
-    '    End Set
-    'End Property
-
     Public Property Loops() As Boolean
         Get
             Return bLoop
@@ -1551,34 +1286,6 @@ Public Class clsWalk
             bLoop = Value
         End Set
     End Property
-
-    'Public Property FromDesc() As String
-    '    Get
-    '        Return sFromDesc
-    '    End Get
-    '    Set(ByVal Value As String)
-    '        sFromDesc = Value
-    '    End Set
-    'End Property
-
-
-    'Public Property ToDesc() As String
-    '    Get
-    '        Return sToDesc
-    '    End Get
-    '    Set(ByVal Value As String)
-    '        sToDesc = Value
-    '    End Set
-    'End Property
-
-    'Public Property ShowMove() As Boolean
-    '    Get
-    '        Return bShowMove
-    '    End Get
-    '    Set(ByVal Value As Boolean)
-    '        bShowMove = Value
-    '    End Set
-    'End Property
 
     Public Property StartActive() As Boolean
         Get
@@ -1591,17 +1298,13 @@ Public Class clsWalk
 
 
     Public Function GetDefaultDescription() As String
-
         Dim sb As New System.Text.StringBuilder
 
         For Each stp As clsStep In arlSteps
             Select Case stp.sLocation
                 Case "Hidden"
                     sb.Append("Hidden")
-                    'Case "Player"
-                    '    sb.Append("Follow Player")
                 Case Else
-                    'sb.Append(Adventure.htblLocations(stp.sLocation).ShortDescription)
                     Dim sDescription As String = Adventure.GetNameFromKey(stp.sLocation)
                     If Adventure.htblCharacters.ContainsKey(stp.sLocation) Then sDescription = "Follow " & sDescription
                     If sDescription <> "" Then
@@ -1625,10 +1328,6 @@ Public Class clsWalk
         Return sb.ToString
 
     End Function
-
-
-
-#If Runner Then
 
     Private Sub ResetLength()
         For Each [step] As clsWalk.clsStep In Me.arlSteps
@@ -1655,7 +1354,7 @@ Public Class clsWalk
             iTimerToEndOfWalk = value
 
             ' If we've reached the end of the timer
-            If Status = StatusEnum.Running AndAlso iTimerToEndOfWalk = 0 Then ' iTimerToEndOfWalk < 1 AndAlso iStartValue > iTimerToEndOfWalk Then
+            If Status = StatusEnum.Running AndAlso iTimerToEndOfWalk = 0 Then
                 lStop(True, True)
             End If
 
@@ -1692,16 +1391,15 @@ Public Class clsWalk
             If Not bRestart Then UserSession.DebugPrint(ItemEnum.Character, sKey, DebugDetailLevelEnum.Low, "Starting walk " & Description)
             Status = StatusEnum.Running
             ResetLength()
-            TimerToEndOfWalk = Length ' + 1
+            TimerToEndOfWalk = Length
 
             If TimerFromStartOfWalk = 0 Then
-                DoAnySteps() ' 
+                DoAnySteps()
                 DoAnySubWalks() ' To run 'after 0 turns' subevents
             End If
 
             bJustStarted = True
         Else
-            'ErrMsg("Can't Start an Walk that isn't waiting!")
             UserSession.DebugPrint(ItemEnum.Character, sKey, DebugDetailLevelEnum.Error, "Can't Start a Walk that isn't waiting!")
         End If
     End Sub
@@ -1715,14 +1413,12 @@ Public Class clsWalk
             UserSession.DebugPrint(ItemEnum.Character, sKey, DebugDetailLevelEnum.Low, "Pausing walk " & Description)
             Status = StatusEnum.Paused
         Else
-            'Throw New Exception("Can't Pause a Walk that isn't running!")
             UserSession.DebugPrint(ItemEnum.Character, sKey, DebugDetailLevelEnum.Error, "Can't Pause a Walk that isn't running!")
         End If
     End Sub
 
 
     Public sTriggeringTask As String
-
 
     Public Sub [Resume]()
         NextCommand = Command.Resume
@@ -1732,7 +1428,6 @@ Public Class clsWalk
             UserSession.DebugPrint(ItemEnum.Character, sKey, DebugDetailLevelEnum.Low, "Resuming walk " & Description)
             Status = StatusEnum.Running
         Else
-            'Throw New Exception("Can't Resume a Walk that isn't paused!")
             UserSession.DebugPrint(ItemEnum.Character, sKey, DebugDetailLevelEnum.Error, "Can't Resume a Walk that isn't paused!")
         End If
     End Sub
@@ -1760,14 +1455,10 @@ Public Class clsWalk
 
 
     Public Sub IncrementTimer()
-
-        'Dim bJustStarted As Boolean = False
-
         If NextCommand <> Command.Nothing Then
             Select Case NextCommand
                 Case Command.Start
                     lStart()
-                    'bJustStarted = True
                 Case Command.Stop
                     lStop()
                 Case Command.Pause
@@ -1782,11 +1473,6 @@ Public Class clsWalk
         End If
 
         If Status = StatusEnum.Running Then UserSession.DebugPrint(ItemEnum.Character, sKey, DebugDetailLevelEnum.High, "Walk " & Description & " [" & TimerFromStartOfWalk + 1 & "/" & Length & "]")
-
-        'If TimerToEndOfWalk > 0 AndAlso (TimerFromStartOfWalk > 0 OrElse (TimerFromStartOfWalk = 0 AndAlso Not bJustStarted)) Then
-        '    DoAnySteps()
-        '    DoAnySubWalks()
-        'End If
 
         ' Split this into 2 case statements, as changing timer here may change status
         Select Case Status
@@ -1807,9 +1493,7 @@ Public Class clsWalk
     End Sub
 
 
-
     Public Sub DoAnySteps()
-
         If Status = StatusEnum.Running Then
             Dim iStepLength As Integer = 0
             For Each [step] As clsStep In arlSteps
@@ -1834,7 +1518,7 @@ Public Class clsWalk
                         End If
                         If bHasAdjacent Then
                             While sDestination = ""
-                                Dim sPossibleDest As String = grp.arlMembers(Random(grp.arlMembers.Count - 1)) 'CInt(Rnd() * (grp.arlMembers.Count - 1)))
+                                Dim sPossibleDest As String = grp.arlMembers(Random(grp.arlMembers.Count - 1))
                                 If ch.Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.Hidden OrElse locCurrent.IsAdjacent(sPossibleDest) Then sDestination = sPossibleDest
                             End While
                         Else
@@ -1880,7 +1564,6 @@ Public Class clsWalk
                                                 Case Else
                                                     sLeaves &= " to "
                                             End Select
-                                            'If sTheDirection <> "outside" Then sLeaves &= " to "
                                             sLeaves &= sTheDirection
                                         End If
                                     End If
@@ -1904,13 +1587,10 @@ Public Class clsWalk
                     End If
                 End If
                 iStepLength += [step].ftTurns.Value
-                'If iStepLength > Length - TimerFromStartOfEvent Then Exit Sub
             Next
         End If
 
     End Sub
-
-
 
 
     Public Sub DoAnySubWalks()
@@ -1961,8 +1641,6 @@ Public Class clsWalk
 
     End Sub
 
-#End If
-
 End Class
 
 
@@ -1989,7 +1667,7 @@ Public Class clsCharacterLocation
         Get
             If eExistsWhere = ExistsWhereEnum.Uninitialised Then
                 If Parent.HasProperty("CharacterLocation") Then
-                    Select Case Parent.GetPropertyValue("CharacterLocation") ' Parent.htblActualProperties("CharacterLocation").Value
+                    Select Case Parent.GetPropertyValue("CharacterLocation")
                         Case "At Location"
                             eExistsWhere = ExistsWhereEnum.AtLocation
                         Case "Hidden"
@@ -2013,7 +1691,7 @@ Public Class clsCharacterLocation
             If value <> eExistsWhere Then
                 Dim p As clsProperty
 
-                If Not Parent.HasProperty("CharacterLocation") Then ' Parent.htblActualProperties.ContainsKey("CharacterLocation") Then
+                If Not Parent.HasProperty("CharacterLocation") Then
                     p = Adventure.htblAllProperties("CharacterLocation").Copy
                     p.Selected = True
                     Parent.AddProperty(p)
@@ -2032,7 +1710,7 @@ Public Class clsCharacterLocation
                     Case ExistsWhereEnum.OnObject
                         sNewLocation = "On Object"
                 End Select
-                Parent.SetPropertyValue("CharacterLocation", sNewLocation) '.Value = sNewLocation
+                Parent.SetPropertyValue("CharacterLocation", sNewLocation)
 
                 For Each sProp As String In New String() {"CharacterAtLocation", "CharInsideWhat", "CharOnWhat", "CharOnWho"}
                     If Parent.HasProperty(sProp) Then Parent.RemoveProperty(sProp)
@@ -2076,16 +1754,16 @@ Public Class clsCharacterLocation
             If sKey Is Nothing Then
                 Select Case ExistWhere
                     Case ExistsWhereEnum.AtLocation
-                        If Parent.HasProperty("CharacterAtLocation") Then sKey = Parent.GetPropertyValue("CharacterAtLocation") '.Value
+                        If Parent.HasProperty("CharacterAtLocation") Then sKey = Parent.GetPropertyValue("CharacterAtLocation")
                     Case ExistsWhereEnum.Hidden
                         sKey = ""
                     Case ExistsWhereEnum.InObject
-                        If Parent.HasProperty("CharInsideWhat") Then sKey = Parent.GetPropertyValue("CharInsideWhat") '.Value
+                        If Parent.HasProperty("CharInsideWhat") Then sKey = Parent.GetPropertyValue("CharInsideWhat")
                     Case ExistsWhereEnum.OnCharacter
-                        If Parent.HasProperty("CharOnWho") Then sKey = Parent.GetPropertyValue("CharOnWho") '.Value
+                        If Parent.HasProperty("CharOnWho") Then sKey = Parent.GetPropertyValue("CharOnWho")
                         If sKey = THEPLAYER Then sKey = Adventure.Player.Key
                     Case ExistsWhereEnum.OnObject
-                        If Parent.HasProperty("CharOnWhat") Then sKey = Parent.GetPropertyValue("CharOnWhat") '.Value
+                        If Parent.HasProperty("CharOnWhat") Then sKey = Parent.GetPropertyValue("CharOnWhat")
                 End Select
             End If
             Return sKey
@@ -2094,13 +1772,13 @@ Public Class clsCharacterLocation
             sKey = Value
             Select Case ExistWhere
                 Case ExistsWhereEnum.AtLocation
-                    If Parent.HasProperty("CharacterAtLocation") Then Parent.SetPropertyValue("CharacterAtLocation", Value) '.Value = Value
+                    If Parent.HasProperty("CharacterAtLocation") Then Parent.SetPropertyValue("CharacterAtLocation", Value)
                 Case ExistsWhereEnum.InObject
-                    If Parent.HasProperty("CharInsideWhat") Then Parent.SetPropertyValue("CharInsideWhat", Value) '.Value = Value
+                    If Parent.HasProperty("CharInsideWhat") Then Parent.SetPropertyValue("CharInsideWhat", Value)
                 Case ExistsWhereEnum.OnCharacter
-                    If Parent.HasProperty("CharOnWho") Then Parent.SetPropertyValue("CharOnWho", Value) '.Value = Value
+                    If Parent.HasProperty("CharOnWho") Then Parent.SetPropertyValue("CharOnWho", Value)
                 Case ExistsWhereEnum.OnObject
-                    If Parent.HasProperty("CharOnWhat") Then Parent.SetPropertyValue("CharOnWhat", Value) '.Value = Value
+                    If Parent.HasProperty("CharOnWhat") Then Parent.SetPropertyValue("CharOnWhat", Value)
             End Select
         End Set
     End Property
@@ -2172,15 +1850,6 @@ Public Class clsCharacterLocation
         Set(ByVal value As PositionEnum)
             If value <> ePosition Then
                 Parent.SetPropertyValue("CharacterPosition", value.ToString)
-                'Dim p As clsProperty
-
-                'If Adventure.htblAllProperties.ContainsKey("CharacterPosition") Then
-                '    If Not Parent.HasProperty("CharacterPosition") Then
-                '        p = Adventure.htblAllProperties("CharacterPosition").Copy
-                '        Parent.htblProperties.Add(p)
-                '    End If
-                '    Parent.htblProperties("CharacterPosition").Value = value.ToString
-                'End If
 
                 ePosition = value
             End If

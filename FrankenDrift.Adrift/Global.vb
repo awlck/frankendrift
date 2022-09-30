@@ -1,42 +1,21 @@
-#If Adravalon Then
 Imports System.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 
 Public Module SharedModule
-#Else
-Module SharedModule
-#End If
-
-#If www Then
     Public Property Adventure As clsAdventure
-        Get
-            Return CType(HttpContext.Current.Session.Item("Adventure"), clsAdventure)
-        End Get
-        Set(value As clsAdventure)
-            HttpContext.Current.Session.Item("Adventure") = value
-        End Set
-    End Property
-#Else
-    Public Property Adventure As clsAdventure
-#End If
-#If Adravalon Then
     Public Glue As UIGlue
     Public fRunner As frmRunner
     Public UserSession As RunnerSession
-#End If
 
     Public Blorb As clsBlorb
     Public iLoading As Integer
-    'Public bGenerator As Boolean
     Public dVersion As Double = 5.0
     Public Const ANYOBJECT As String = "AnyObject"
     Public Const ANYCHARACTER As String = "AnyCharacter"
     Public Const ANYDIRECTION As String = "AnyDirection"
     Public Const NOOBJECT As String = "NoObject"
     Public Const NOCHARACTER As String = "NoCharacter"
-    'Public Const ALLHELDOBJECTS As String = "AllHeldObjects"
-    'Public Const ALLWORNOBJECTS As String = "AllWornObjects"
     Public Const ALLROOMS As String = "AllLocations"
     Public Const NOROOMS As String = "NoLocations"
     Public Const THEFLOOR As String = "TheFloor"
@@ -45,10 +24,10 @@ Module SharedModule
     Public Const PLAYERLOCATION As String = "PlayerLocation"
     Public Const HIDDEN As String = "Hidden"
 
-    Public Const DEFAULT_BACKGROUNDCOLOUR As Integer = -16777216 ' Color.Black.ToArgb
-    Public Const DEFAULT_INPUTCOLOUR As Integer = -3005145 ' = Color.FromArgb(210, 37, 39)
-    Public Const DEFAULT_OUTPUTCOLOUR As Integer = -15096438 ' Color = Color.FromArgb(25, 165, 138)
-    Public Const DEFAULT_LINKCOLOUR As Integer = -11806788 ' = Color.FromArgb(75, 215, 188)
+    Public Const DEFAULT_BACKGROUNDCOLOUR As Integer = -16777216
+    Public Const DEFAULT_INPUTCOLOUR As Integer = -3005145
+    Public Const DEFAULT_OUTPUTCOLOUR As Integer = -15096438
+    Public Const DEFAULT_LINKCOLOUR As Integer = -11806788
 
     ' Mandatory properties
     Public Const SHORTLOCATIONDESCRIPTION As String = "ShortLocationDescription"
@@ -72,14 +51,8 @@ Module SharedModule
     Public Const sSELECTED As String = "<Selected>"
     Public Const sUNSELECTED As String = "<Unselected>"
 
-    'Public sLocalDataPath As String
-    'Public colInput As Color = Color.FromArgb(210, 37, 39)
-    'Public colOutput As Color = Color.FromArgb(25, 165, 138)
-    'Public colLink As Color = Color.FromArgb(75, 215, 188)
+    Public iImageSizeMode As Integer
 
-    Public iImageSizeMode As Integer ' SizeModeEnum =  generator.c SizeModeEnum.ActualSizeCentred
-
-    'Private Declare Auto Function AddFontMemResourceEx Lib "Gdi32.dll" (ByVal pbFont As IntPtr, ByVal cbFont As Integer, ByVal pdv As Integer, ByRef pcFonts As Integer) As IntPtr
     Friend pfc As System.Drawing.Text.PrivateFontCollection = Nothing
 
     Public Enum PerspectiveEnum
@@ -92,7 +65,6 @@ Module SharedModule
         ' They
     End Enum
 
-
     Public Enum ReferencesType
         [Object]
         Character
@@ -103,11 +75,7 @@ Module SharedModule
         Item
     End Enum
 
-#If Adravalon Then
     Public Enum ArticleTypeEnum
-#Else
-    Friend Enum ArticleTypeEnum
-#End If
         Definite ' The
         Indefinite ' A
         None
@@ -119,241 +87,24 @@ Module SharedModule
         Return Convert.ToInt32(c)
     End Function
     Public Function Asc(ByVal s As String) As Integer
-        'If System.Text.Encoding.Default.GetBytes(s(0))(0) <> Microsoft.VisualBasic.Asc(s) Then
-        '    Return Microsoft.VisualBasic.Asc(s)
-        'Else
-        Return System.Text.Encoding.Default.GetBytes(s(0))(0) 'Convert.ToInt32(CChar(s))
-        'End If
+        Return System.Text.Encoding.Default.GetBytes(s(0))(0)
     End Function
 
-#If False Then
-    Public Enum MsgBoxStyle
-        OkOnly = 0
-        OkCancel = 1
-        YesNoCancel = 3
-        YesNo = 4
-        Question = 32
-        Exclamation = 48
-    End Enum
-    Public Enum MsgBoxResult
-        Ok = 1
-        Cancel = 2
-        Abort = 3
-        Yes = 6
-        No = 7
-    End Enum
-
-    Public Function Chr(ByVal i As Integer) As Char
-        Return Convert.ToChar(i)
-    End Function
-
-    Public Function ChrW(ByVal i As Integer) As Char
-        Return Convert.ToChar(i)
-    End Function
-
-    Public Function Dir() As String
-        TODO()
-    End Function
-
-    Public Function FileLen(ByVal PathName As String) As Long
-        TODO()
-    End Function
-
-    Public Function Format(Expression As Object, Optional Stye As String = "") As String
-        TODO()
-    End Function
-
-    Public Function GetSetting(AppName As String, Section As String, Key As String, Optional [Default] As String = "") As String
-        TODO()
-    End Function
-
-    Public Function Hex(Number As Integer) As String
-        TODO()
-    End Function
-
-    Public Function IIf(ByVal bTest As Boolean, ByVal oTrue As Object, ByVal oFalse As Object) As Object
-        If bTest Then
-            Return oTrue
-        Else
-            Return oFalse
-        End If
-    End Function
-
-    Public Function InputBox(Prompt As String, Optional Title As String = "", Optional DefaultResponse As String = "") As String
-        TODO()
-    End Function
-
-    Public Enum CompareMethod
-        Binary = 0
-        Text = 1
-    End Enum
-    Public Function Instr(ByVal sText As String, ByVal sSearchFor As String, Optional Compare As CompareMethod = CompareMethod.Binary) As Integer
-        TODO() 'Return sInstr(sText, sSearchFor)        
-    End Function
-
-    Public Function Int(Number As Object) As Integer
-        TODO()
-    End Function
-
-    Public Function IsDate(Expression As Object) As Boolean
-        TODO()
-    End Function
-
-    Public Function IsDBNull(Expression As Object) As Boolean
-        TODO()
-    End Function
-
-    Public Function IsNumeric(Expression As Object) As Boolean
-        TODO()
-    End Function
-
-    Public Function LCase(ByVal s As String) As String
-        Return s.ToLower
-    End Function
-
-    Public Function Left(ByVal sString As String, ByVal iLength As Integer) As String
-        Return sLeft(sString, iLength)
-    End Function
-
-    Public Function Len(ByVal sString As String) As Integer
-        If sString Is Nothing Then Return 0
-        Return sString.Length
-    End Function
-
-    Public Function Mid(ByVal sString As String, ByVal iStart As Integer) As String
-        Return sMid(sString, iStart)
-    End Function
-
-    Public Function Mid(ByVal sString As String, ByVal iStart As Integer, ByVal iLength As Integer) As String
-        Return sMid(sString, iStart, iLength)
-    End Function
-
-    Public Function MsgBox(ByVal Prompt As String) As DialogResult
-        Return MessageBox.Show(Prompt, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information)
-    End Function
-    Public Function MsgBox(ByVal Prompt As String, ByVal Buttons As MsgBoxStyle) As MsgBoxResult
-        TODO() ' Return MessageBox.Show(Prompt, Application.ProductName, MessageBoxButtons.OK)
-    End Function
-    Public Function MsgBox(ByVal Prompt As String, ByVal Buttons As MsgBoxStyle, ByVal Title As String) As MsgBoxResult
-        TODO() ' Return MessageBox.Show(Prompt, Title, MessageBoxButtons.OK)
-    End Function
-
-    Public Function Now() As Date
-        Return Date.Now
-    End Function
-
-    Public Sub Randomize(Number As Double)
-        TODO()
-    End Sub
-    Public Function Replace(Expression As String, Find As String, Replacement As String, Optional Start As Integer = 1, Optional Count As Integer = -1) As String
-        TODO()
-    End Function
-    Public Function Right(ByVal sString As String, ByVal iLength As Integer) As String
-        Return sRight(sString, iLength)
-    End Function
-
-    Public Function Rnd() As Integer
-        TODO()
-    End Function
-    Public Function Rnd(Number As Single) As Single
-        TODO()
-    End Function
-
-    Public Sub SaveSetting(AppName As String, Section As String, Key As String, Setting As String)
-        TODO()
-    End Sub
-
-    Public Function Space(Number As Integer) As String
-        TODO()
-    End Function
-
-    Public Function Split(Expression As String, Optional Delimiter As String = "", Optional Limit As Integer = -1) As String()
-        TODO()
-    End Function
-
-    Public Function Str(Number As Object) As String
-        TODO()
-    End Function
-
-    Public Function UCase(ByVal s As String) As String
-        Return s.ToUpper
-    End Function
-
-    Public Function Val(Expression As Object) As Double
-
-    End Function
-
-    Public ReadOnly Property vbCrLf As String
-        Get
-            Return Environment.NewLine
-        End Get
-    End Property
-
-    Public ReadOnly Property vbLf As Char
-        Get
-            Return Convert.ToChar(10)
-        End Get
-    End Property
-
-#End If
 #End Region
-
-#If Not (Mono Or www Or Adravalon) Then
-    Public Function DarkInterface() As Boolean
-
-        Select Case eStyle
-            Case Infragistics.Win.UltraWinToolbars.ToolbarStyle.Office2007
-                Return eColour2007 = Infragistics.Win.Office2007ColorScheme.Black
-            Case Infragistics.Win.UltraWinToolbars.ToolbarStyle.Office2010
-                Return False ' All light
-            Case Infragistics.Win.UltraWinToolbars.ToolbarStyle.Office2013
-                Return False ' All light
-        End Select
-        Return False
-
-    End Function
-#End If
-
 
     Public ReadOnly Property BinPath(Optional ByVal bSeparatorCharacter As Boolean = False) As String
         Get
-#If www Then
-            Return IO.Path.Combine(HttpContext.Current.Request.PhysicalApplicationPath, "App_Data") & IO.Path.DirectorySeparatorChar
-#Else
             Return Application.StartupPath & If(bSeparatorCharacter, IO.Path.DirectorySeparatorChar, "").ToString
-            'Dim sPath As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments & IO.Path.DirectorySeparatorChar & "ADRIFT"
-            'If Not IO.Directory.Exists(sPath) Then IO.Directory.CreateDirectory(sPath)
-            'Return sPath ' & IO.Path.DirectorySeparatorChar
-#End If
         End Get
     End Property
     Public ReadOnly Property DataPath(Optional ByVal bSeparatorCharacter As Boolean = False) As String
         Get
-#If www Then
-            Return IO.Path.Combine(HttpContext.Current.Request.PhysicalApplicationPath, "App_Data") & IO.Path.DirectorySeparatorChar
-#Else
-            'Return Application.StartupPath & IO.Path.DirectorySeparatorChar
             Dim sPath As String
-#If Not Adravalon Then
-            If Application.LocalUserAppDataPath IsNot Nothing Then
-                sPath = Application.LocalUserAppDataPath.Substring(0, Application.LocalUserAppDataPath.IndexOf("\ADRIFT")) & "\ADRIFT" '& IO.Path.DirectorySeparatorChar
-            Else
-                sPath = My.Computer.FileSystem.SpecialDirectories.MyDocuments & IO.Path.DirectorySeparatorChar & "ADRIFT"
-            End If
-#Else
             sPath = Application.LocalUserAppDataPath
-#End If
             If Not IO.Directory.Exists(sPath) Then IO.Directory.CreateDirectory(sPath)
             Return sPath & If(bSeparatorCharacter, IO.Path.DirectorySeparatorChar, "").ToString
-#End If
         End Get
     End Property
-
-#If Not Adravalon Then
-    Public Sub TidyUp()
-        TidyUpSounds()
-    End Sub
-#End If
 
     Private sWarnings As New List(Of String)
     Public Sub WarnOnce(ByVal sMessage As String)
@@ -365,103 +116,13 @@ Module SharedModule
 
     End Sub
 
-#If Not Adravalon Then
-    Public Function GetFontCollection() As Drawing.Text.PrivateFontCollection
-
-        Dim _pfc As Drawing.Text.PrivateFontCollection = Nothing
-        'Public Function GetFont() As Drawing.Text.PrivateFontCollection
-
-        'Dim pfc As New System.Drawing.Text.PrivateFontCollection
-
-        Try
-            If _pfc Is Nothing Then
-                Dim sFont As String = Application.StartupPath & IO.Path.DirectorySeparatorChar & "LYDIAN.TTF"
-
-                _pfc = New Drawing.Text.PrivateFontCollection
-
-                If IO.File.Exists(sFont) AndAlso False Then
-                    _pfc.AddFontFile(sFont)
-                Else
-
-                    Dim bytLydian As Byte() = My.Resources.Lydian
-                    Dim gch As Runtime.InteropServices.GCHandle = Runtime.InteropServices.GCHandle.Alloc(bytLydian, Runtime.InteropServices.GCHandleType.Pinned)
-                    _pfc.AddMemoryFont(gch.AddrOfPinnedObject, bytLydian.Length)
-                    gch.Free()
-
-                    'Dim FntPtr As IntPtr = Runtime.InteropServices.Marshal.AllocHGlobal(Runtime.InteropServices.Marshal.SizeOf(GetType(Byte)) * bytLydian.Length) ' ByteStrm.Length)
-                    'Dim ptrMem As IntPtr = Runtime.InteropServices.Marshal.AllocCoTaskMem(bytLydian.Length)
-
-                    ''Copy the byte array holding the font into the allocated memory.
-                    'Runtime.InteropServices.Marshal.Copy(bytLydian, 0, ptrMem, bytLydian.Length)
-
-                    ''Add the font to the PrivateFontCollection            
-                    ''FntFC.AddMemoryFont(FntPtr, bytLydian.Length)
-                    '_pfc.AddMemoryFont(ptrMem, bytLydian.Length)
-
-                    'Dim pcFonts As Int32
-                    'pcFonts = 1
-                    'AddFontMemResourceEx(ptrMem, bytLydian.Length, 0, pcFonts)
-
-                    ''Free the memory
-                    ''Runtime.InteropServices.Marshal.FreeHGlobal(FntPtr)
-                    'Runtime.InteropServices.Marshal.FreeCoTaskMem(ptrMem)
-                    'Next
-                End If
-            End If
-
-        Catch ex As Exception
-            ErrMsg("Error extracting font", ex)
-        End Try
-
-        Return _pfc
-
-    End Function
-#End If
-    'Public Function GetFont() As Drawing.Text.PrivateFontCollection
-    '    'Get the namespace of the application    
-    '    'Dim NameSpc As String = Reflection.Assembly.GetExecutingAssembly().GetName().Name.ToString()
-    '    'Dim FntStrm As IO.Stream
-    '    Dim FntFC As New Drawing.Text.PrivateFontCollection()
-    '    Try
-    '        'Dim i As Integer
-    '        'For i = 0 To FontResource.GetUpperBound(0)
-    '        'Get the resource stream area where the font is located
-    '        'FntStrm = Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("ADRIFT." + FontResource(i))            
-    '        'Load the font off the stream into a byte array
-    '        'Dim ByteStrm(CType(FntStrm.Length, Integer)) As Byte
-    '        'FntStrm.Read(ByteStrm, 0, Int(CType(FntStrm.Length, Integer)))
-    '        'Allocate some memory on the global heap
-    '        Dim bytLydian As Byte() = My.Resources.Lydian
-    '        Dim FntPtr As IntPtr = Runtime.InteropServices.Marshal.AllocHGlobal(Runtime.InteropServices.Marshal.SizeOf(GetType(Byte)) * bytLydian.Length) ' ByteStrm.Length)
-    '        'Copy the byte array holding the font into the allocated memory.
-    '        Runtime.InteropServices.Marshal.Copy(bytLydian, 0, FntPtr, bytLydian.Length)
-    '        'Add the font to the PrivateFontCollection
-    '        FntFC.AddMemoryFont(FntPtr, bytLydian.Length)
-    '        Dim pcFonts As Int32
-    '        pcFonts = 1
-    '        '            AddFontMemResourceEx(FntPtr, bytLydian.Length, 0, pcFonts)
-    '        'Free the memory
-    '        Runtime.InteropServices.Marshal.FreeHGlobal(FntPtr)
-    '        'Next
-    '    Catch ex As Exception
-    '        ErrMsg("Error extracting font", ex)
-    '    End Try
-    '    Return FntFC
-    'End Function
-
-
-    'Public Sub Rnd(ByVal a As String)
-    '    ' Don't use this...
-    'End Sub    
     Private r As Random
     Public Function Random(ByVal iMax As Integer) As Integer
         If r Is Nothing Then r = New Random(GetNextSeed)
-        'Dim r As New Random(GetNextSeed)
         Return r.Next(iMax + 1)
     End Function
     Public Function Random(ByVal iMin As Integer, ByVal iMax As Integer) As Integer
         If r Is Nothing Then r = New Random(GetNextSeed)
-        'Dim r As New Random(GetNextSeed)
         If iMax < iMin Then
             Dim i As Integer = iMax
             iMax = iMin
@@ -499,7 +160,6 @@ Module SharedModule
         NorthWest = 11
     End Enum
 
-
     Public Enum ItemEnum
         Location
         [Object]
@@ -514,20 +174,10 @@ Module SharedModule
         General
     End Enum
 
-
     Public Sub GlobalStartup()
-        'If Not Application.LocalUserAppDataPath Is Nothing Then
-        '    sLocalDataPath = Application.LocalUserAppDataPath.Substring(0, Application.LocalUserAppDataPath.IndexOf("ADRIFT")) & "ADRIFT" & IO.Path.DirectorySeparatorChar
-        'End If
-
-#If www Then
-        Dim version As Version = system.Reflection.Assembly.GetCallingAssembly.GetName.Version
-#Else
         Dim version As Version = New Version(Application.ProductVersion)
-#End If
         dVersion = CDbl(version.Major & System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator & Format(version.Minor, "000") & Format(version.Build, "000") & Format(version.Revision))
     End Sub
-
 
     Friend Function IsHex(ByVal sHex As String) As Boolean
         For i As Integer = 0 To sHex.Length - 1
@@ -536,9 +186,7 @@ Module SharedModule
         Return True
     End Function
 
-
     Public Function ItemToString(ByVal item As ItemEnum, Optional ByVal bPlural As Boolean = False) As String
-
         ItemToString = ""
 
         Select Case item
@@ -574,189 +222,12 @@ Module SharedModule
                     Return "Properties"
             End Select
         End If
-
     End Function
-
-#If Not Adravalon Then
-    Private WithEvents WebClient As New System.Net.WebClient
-    Public Sub CheckForUpdate(Optional ByVal bAtStart As Boolean = True)
-
-        ' Try to download from http://www.adrift.co/cgi/versioncheck.cgi?from=5.0.26.1&atstart=0
-
-        ' <?xml>
-        '   <versioncheck>
-        '     <currentversion>5.0.26.1</currentversion>
-        '     <change type="enhancement" item="1234" title="Blah">Blah blah</change>
-        '     <change type="bug" item="2345" title="Oops">La de dah</change>
-        '   </versioncheck>        
-
-#If DEBUG Then
-        Exit Sub
-#End If
-
-        'Dim URI As New System.Uri("http://www.adrift.co/cgi/versioncheck.cgi?from=" & Application.ProductVersion & If(bAtStart, "", "&atstart=0").ToString)
-        'Dim URI As New System.Uri("http://www.adrift.co/cgi/versioncheck.cgi?from=5.0.0.0" & If(bAtStart, "", "&atstart=0").ToString)
-
-        WebClient.DownloadStringAsync(New System.Uri("http://www.adrift.co/cgi/versioncheck.cgi?from=" & Application.ProductVersion & If(bAtStart, "", "&atstart=0").ToString))
-
-    End Sub
-#End If
-
-#If Not www And Not Adravalon Then
-    Private Sub WebClient_DownloadStringCompleted(sender As Object, e As System.Net.DownloadStringCompletedEventArgs) Handles WebClient.DownloadStringCompleted
-
-        Try
-            If e.Error IsNot Nothing Then Exit Sub
-
-            Dim xmlVersion As New Xml.XmlDocument
-            Dim sXML As String = e.Result.Replace("&eacute;", "E").Replace("&agrave;", "A").Replace("&aelig;", "ae").Replace("&raquo;", "&gt;")
-            xmlVersion.LoadXml(sXML)
-            Dim sOldVersion As String = Application.ProductVersion
-            Dim sNewVersion As String = ""
-
-            With xmlVersion.Item("versioncheck")
-                Dim bUpdate As Boolean = False
-
-                If .Item("currentversion") IsNot Nothing Then
-                    sNewVersion = .Item("currentversion").InnerText
-                    If sOldVersion <> sNewVersion Then
-                        Dim OldVersion() As String = sOldVersion.Split("."c)
-                        Dim NewVersion() As String = sNewVersion.Split("."c)
-
-                        For i As Integer = 0 To 3
-                            Dim iOld As Integer = 0
-                            Dim iNew As Integer = 0
-                            If OldVersion.Length > i Then iOld = SafeInt(OldVersion(i))
-                            If NewVersion.Length > i Then iNew = SafeInt(NewVersion(i))
-
-                            If iOld < iNew Then
-                                bUpdate = True
-                                Exit For
-                            ElseIf iOld > iNew Then
-                                Exit Sub ' We are apparently newer than the published version
-                            End If
-                        Next
-                    End If
-                End If
-
-                If Not bUpdate Then Exit Sub
-
-#If Generator Then
-                Dim ync As New frmYesNoCancel
-                ync.Text = "ADRIFT Update"
-                ync.lblText.Text = "There is a new version of ADRIFT available.  Would you like to download this now?"
-                ync.btnCancel.Text = "Details"
-                ync.CancelButton = ync.btnNo
-                Dim sDialogResult As String = GetSetting("ADRIFT", "Shared", "DownloadUpdates", "")
-                If sDialogResult = "" Then sDialogResult = CInt(ync.ShowDialog()).ToString
-
-                Select Case CType(sDialogResult, DialogResult)
-                    Case DialogResult.Yes
-                        DownloadUpdate()
-                    Case DialogResult.No, DialogResult.Cancel
-                        ' Do nothing
-                    Case DialogResult.Ignore ' About
-                        Dim sEnhancements As String = ""
-                        Dim sBugs As String = ""
-                        For Each nodChange As Xml.XmlElement In xmlVersion.SelectNodes("/versioncheck/change")
-                            Dim iItem As Integer = 0
-                            If nodChange.HasAttribute("item") Then iItem = SafeInt(nodChange.GetAttribute("item"))
-                            Dim sTitle As String = ""
-                            If nodChange.HasAttribute("title") Then sTitle = nodChange.GetAttribute("title")
-                            Dim sChange As String = sTitle & " [#" & iItem & "]"
-                            If nodChange.HasAttribute("type") Then
-                                Select Case nodChange.GetAttribute("type")
-                                    Case "enhancement"
-                                        sEnhancements &= sChange & vbCrLf
-                                    Case "bug"
-                                        sBugs &= sChange & vbCrLf
-                                End Select
-                            End If
-                        Next
-
-                        Dim frmWhatsNew As New WhatsNew
-                        With frmWhatsNew
-                            .txtWhatsNew.SelectionFont = New Font("Arial", 12, FontStyle.Bold)
-                            .txtWhatsNew.SelectedText = "Changes between " & sOldVersion & " and " & sNewVersion & vbCrLf & vbCrLf
-                            If sEnhancements <> "" Then
-                                .txtWhatsNew.SelectionFont = New Font("Arial", 14, FontStyle.Bold)
-                                .txtWhatsNew.SelectedText = "Enhancements" & vbCrLf
-                                .txtWhatsNew.SelectionBullet = True
-                                .txtWhatsNew.SelectionFont = New Font("Arial", 10, FontStyle.Regular)
-                                .txtWhatsNew.SelectedText = sEnhancements
-                                .txtWhatsNew.SelectionBullet = False
-                            End If
-                            If sBugs <> "" Then
-                                .txtWhatsNew.SelectionFont = New Font("Arial", 14, FontStyle.Bold)
-                                .txtWhatsNew.SelectedText = vbCrLf & "Bug Fixes" & vbCrLf
-                                .txtWhatsNew.SelectionBullet = True
-                                .txtWhatsNew.SelectionFont = New Font("Arial", 10, FontStyle.Regular)
-                                .txtWhatsNew.SelectedText = sBugs
-                                .txtWhatsNew.SelectionBullet = False
-                            End If
-                            .txtWhatsNew.SelectionStart = 0
-
-                            If .ShowDialog = DialogResult.OK Then DownloadUpdate()
-                        End With
-
-                End Select
-
-                If ync.chkRemember.Checked Then SaveSetting("ADRIFT", "Shared", "DownloadUpdates", sDialogResult)
-#End If
-
-            End With
-        Catch ex As Exception
-            ' Hmm, just ignore
-        End Try
-
-    End Sub
-#End If
-
-#If Not Adravalon Then
-    Private Sub DownloadUpdate()
-        Cursor.Current = Cursors.WaitCursor
-        Process.Start("http://www.adrift.co/download")
-        Cursor.Current = Cursors.Arrow
-    End Sub
-
-    Public Sub OpenAdventureDialog(ByVal ofd As System.Windows.Forms.OpenFileDialog)
-
-        Try
-            ofd.DefaultExt = "taf"
-#If Runner Then
-            ofd.Filter = "ADRIFT Text Adventures (*.taf; *.blorb)|*.taf; *.blorb|All Files (*.*)|*.*"
-            If ofd.FileName.Length > 3 AndAlso Not ofd.FileName.ToLower.EndsWith("taf") AndAlso Not ofd.FileName.ToLower.EndsWith(".blorb") Then ofd.FileName = ""
-#Else
-            ofd.Filter = "ADRIFT Text Adventures (*.taf)|*.taf|All Files (*.*)|*.*"
-            If ofd.FileName.Length > 3 AndAlso Not ofd.FileName.ToLower.EndsWith("taf") Then ofd.FileName = ""
-#End If
-
-            If ofd.ShowDialog() = DialogResult.OK Then
-                If ofd.FileName <> "" Then
-                    If IO.File.Exists(ofd.FileName) Then
-#If Runner Then
-                        UserSession.OpenAdventure(ofd.FileName)
-#Else
-                        OpenAdventure(ofd.FileName)
-#End If
-
-                    Else
-                        ErrMsg("File not found!")
-                    End If
-                End If
-            End If
-        Catch ex As Exception
-            ErrMsg("Error displaying Open File Dialog", ex)
-        End Try
-
-    End Sub
-#End If
 
     Public Function IsRunningOnMono() As Boolean
         Return Type.GetType("Mono.Runtime") IsNot Nothing
     End Function
 
-#If Not www Then
     Public Sub RemoveFileFromList(ByVal sFilename As String)
 
         If sFilename Is Nothing Then Exit Sub
@@ -764,16 +235,8 @@ Module SharedModule
         Dim lRecents As New List(Of String)
         Dim iRetrieve As Integer
         Dim sProject As String
-#If Generator Then
-        Dim UTMMain As Infragistics.Win.UltraWinToolbars.UltraToolbarsManager = fGenerator.UTMMain
-        sProject = "Generator"
-#Else
-#If Mono Then
-#Else
         Dim UTMMain As Infragistics.Win.UltraWinToolbars.UltraToolbarsManager = fRunner.UTMMain
-#End If
         sProject = "Runner"
-#End If
 
         For iPrevious As Integer = 1 To 20
             Dim sPrevious As String = GetSetting("ADRIFT", sProject, "Recent_" & iPrevious, "")
@@ -792,10 +255,6 @@ Module SharedModule
             End Try
         Next
 
-#If Mono Then
-        fRunner.miRecentAdventures.DropDownItems.Clear()
-        AddPrevious()
-#Else
         For m As Integer = UTMMain.Tools.Count - 1 To 0 Step -1
             If CStr(UTMMain.Tools(m).SharedProps.Tag) = "_RECENT_" Then
                 UTMMain.Tools.RemoveAt(m)
@@ -803,8 +262,6 @@ Module SharedModule
         Next
 
         AddPrevious(UTMMain, sProject)
-#End If
-
     End Sub
 
 
@@ -816,16 +273,8 @@ Module SharedModule
         Dim iRetrieve As Integer
         Dim sPrevious As String
         Dim sProject As String
-#If Generator Then
-        Dim UTMMain As Infragistics.Win.UltraWinToolbars.UltraToolbarsManager = fGenerator.UTMMain
-        sProject = "Generator"
-#Else
-#If Mono Then
-#Else
         Dim UTMMain As Infragistics.Win.UltraWinToolbars.UltraToolbarsManager = fRunner.UTMMain
-#End If
         sProject = "Runner"
-#End If
 
         For iPrevious As Integer = 1 To 20
             sPrevious = GetSetting("ADRIFT", sProject, "Recent_" & iPrevious, "")
@@ -840,10 +289,6 @@ Module SharedModule
             SaveSetting("ADRIFT", sProject, "Recent_" & iPrevious, SafeString(sRecents(iPrevious - 1)))
         Next
 
-#If Mono Then
-        fRunner.miRecentAdventures.DropDownItems.Clear()
-        AddPrevious()
-#Else
         For m As Integer = UTMMain.Tools.Count - 1 To 0 Step -1
             If CStr(UTMMain.Tools(m).SharedProps.Tag) = "_RECENT_" Then
                 UTMMain.Tools.RemoveAt(m)
@@ -851,51 +296,11 @@ Module SharedModule
         Next
 
         AddPrevious(UTMMain, sProject)
-#End If
-
     End Sub
-#End If
 
 
     Public Sub ErrMsg(ByVal sMessage As String, Optional ByVal ex As System.Exception = Nothing)
-#If Not Adravalon Then
-        Dim sErrorMsg As String = sMessage
-        If Not ex Is Nothing Then sErrorMsg &= ": " & ex.Message
-
-        If Not ex Is Nothing Then
-            sErrorMsg &= vbCrLf & ex.StackTrace
-            While Not ex.InnerException Is Nothing
-                ex = ex.InnerException
-                sErrorMsg &= vbCrLf & ex.Message & vbCrLf & ex.StackTrace
-            End While
-        End If
-
-#If www Then
-        Throw New Exception(sMessage, ex)
-        Exit Sub
-#End If
-
-        ' We've got to remember the current active form, otherwise for some reason focus goes off ADRIFT (never a good thing!)
-        Try
-            Dim frmActive As Form = Form.ActiveForm
-#If Not Mono AndAlso Not www Then
-            Dim fError As New frmError(sMessage, ex)
-            fError.ShowDialog()
-            If Not frmActive Is Nothing Then
-                If Not frmActive.InvokeRequired Then
-                    If Not frmActive.Focused Then frmActive.Focus()
-                End If
-            End If
-#Else
-            MsgBox(sErrorMsg, MsgBoxStyle.Exclamation, "ADRIFT Error")
-#End If
-        Catch
-            ' We've had an Error creating window handle error here, yikes!
-            MsgBox(sErrorMsg, MsgBoxStyle.Exclamation, "ADRIFT Error")
-        End Try
-#Else
         Glue.ErrMsg(sMessage, ex)
-#End If
     End Sub
 
 
@@ -927,8 +332,6 @@ Module SharedModule
 
     End Function
 
-
-
     ' A replacement for VB.Left - Substring returns an error if you try to access part of the string that doesn't exist.
     Public Function sLeft(ByVal sString As String, ByVal iLength As Integer) As String
         If sString Is Nothing OrElse iLength < 0 Then Return ""
@@ -945,7 +348,6 @@ Module SharedModule
         End If
     End Function
 
-
     ' A replacement for VB.Right
     Public Function sRight(ByVal sString As String, ByVal iLength As Integer) As String
         If sString Is Nothing OrElse iLength < 0 Then Return ""
@@ -961,7 +363,6 @@ Module SharedModule
             Return sString.Substring(sString.Length - iLength)
         End If
     End Function
-
 
     ' A replacement for VB.Mid
     Public Function sMid(ByVal sString As String, ByVal iStart As Integer) As String
@@ -981,14 +382,8 @@ Module SharedModule
         If iStart > sString.Length Then
             Return ""
         ElseIf iLength > sString.Length OrElse iLength + iStart > sString.Length Then
-            'If Mid(sString, iStart, iLength) <> sString.Substring(iStart - 1) Then
-            '    sString = sString
-            'End If
             Return sString.Substring(iStart - 1)
         Else
-            'If Mid(sString, iStart, iLength) <> sString.Substring(iStart - 1, iLength) Then
-            '    sString = sString
-            'End If
             Return sString.Substring(iStart - 1, iLength)
         End If
     End Function
@@ -1013,24 +408,6 @@ Module SharedModule
         Return dfDouble.ToString(sFormat, System.Globalization.CultureInfo.InvariantCulture.NumberFormat)
     End Function
 
-#If Not Adravalon Then
-    Private Function GetDefaultFont() As Font
-#If Runner Then
-        If UserSession.bUseDefaultFont Then
-            Return UserSession.DefaultFont
-        Else
-#End If
-            If Adventure IsNot Nothing Then
-                Return Adventure.DefaultFont
-            Else
-                Return New Font("Arial", 12, GraphicsUnit.Point)
-            End If
-#If Runner Then
-        End If
-#End If
-    End Function
-#End If
-
     Private _AllowDevToSetColours As Boolean?
     Public Property AllowDevToSetColours As Boolean
         Get
@@ -1044,19 +421,14 @@ Module SharedModule
         End Set
     End Property
 
-
     Friend Function GetBackgroundColour() As Color
 
         If Adventure IsNot Nothing Then
-#If Runner Then
             If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultBackgroundColour = Nothing Then
                 Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "Background", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_BACKGROUNDCOLOUR)).ToString)))
             Else
                 Return Adventure.DeveloperDefaultBackgroundColour
             End If
-#Else
-            Return Adventure.DeveloperDefaultBackgroundColour
-#End If
         Else
             Return Color.FromArgb(DEFAULT_BACKGROUNDCOLOUR)
         End If
@@ -1064,57 +436,39 @@ Module SharedModule
     End Function
 
     Friend Function GetInputColour() As Color
-
         If Adventure IsNot Nothing Then
-#If Runner Then
             If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultInputColour = Nothing Then
                 Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "Text1", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_INPUTCOLOUR)).ToString)))
             Else
                 Return Adventure.DeveloperDefaultInputColour
             End If
-#Else
-            Return Adventure.DeveloperDefaultInputColour
-#End If
         Else
             Return Color.FromArgb(DEFAULT_INPUTCOLOUR)
         End If
-
     End Function
 
     Friend Function GetOutputColour() As Color
-
         If Adventure IsNot Nothing Then
-#If Runner Then
             If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultOutputColour = Nothing Then
                 Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "Text2", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_OUTPUTCOLOUR)).ToString)))
             Else
                 Return Adventure.DeveloperDefaultOutputColour
             End If
-#Else
-            Return Adventure.DeveloperDefaultOutputColour
-#End If
         Else
             Return Color.FromArgb(DEFAULT_OUTPUTCOLOUR)
         End If
-
     End Function
 
     Friend Function GetLinkColour() As Color
-
         If Adventure IsNot Nothing Then
-#If Runner Then
             If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultLinkColour = Nothing Then
                 Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "LinkColour", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_LINKCOLOUR)).ToString)))
             Else
                 Return Adventure.DeveloperDefaultLinkColour
             End If
-#Else
-            Return Adventure.DeveloperDefaultLinkColour
-#End If
         Else
             Return Color.FromArgb(DEFAULT_LINKCOLOUR)
         End If
-
     End Function
 
     Friend Enum eJustification
@@ -1123,527 +477,7 @@ Module SharedModule
         [Central]
     End Enum
     Public Sub Source2HTML(ByVal sSource As String, ByRef RichText As RichTextBox, ByVal bClearRTB As Boolean, Optional ByVal bDebug As Boolean = False, Optional ByRef sUnprocessedText As String = Nothing)
-
-#If www Then
-        fRunner.AppendHTML(sSource)
-        Exit Sub
-#ElseIf Adravalon Then
         Glue.OutputHTML(sSource)
-#Else
-
-        Dim arlFonts As New Generic.List(Of Font)
-        Dim arlColours As New Generic.List(Of Color)
-        Dim arlJust As New Generic.List(Of eJustification)
-        Dim iFontLevel As Integer = 0
-        Dim iJustLevel As Integer = 0
-        Dim sChunk As String
-        Dim bItalic As Boolean
-        Dim bBold As Boolean
-        Dim bUnderline As Boolean
-        Dim bColour As Boolean
-        Dim Colour As Color
-
-        Try
-
-            If bClearRTB Then RichText.Text = ""
-
-            Dim f As Font = GetDefaultFont()
-
-            arlFonts.Add(f)
-            arlColours.Add(GetOutputColour)
-            arlJust.Add(eJustification.Left)
-
-            While sSource <> ""
-
-                If sLeft(sSource, 1) = "<" Then
-
-                    Dim sToken As String
-                    Dim sBuffer As String
-
-
-                    If sInstr(1, sSource, ">") > 0 Then
-                        ' Handle embedded tags
-                        Dim i As Integer = 1
-                        Dim iLevel As Integer = 0
-                        While i < sSource.Length - 1 AndAlso Not (iLevel = 0 AndAlso sSource(i) = ">")
-                            Select Case sSource(i)
-                                Case "<"c
-                                    iLevel += 1
-                                Case ">"c
-                                    iLevel -= 1
-                            End Select
-                            i += 1
-                        End While
-                        sToken = sSource.Substring(0, i + 1)
-                        'sToken = sLeft(sSource, sInstr(1, sSource, ">"))
-                    Else
-                        sToken = sSource
-                    End If
-
-                    Dim sTokenOrig As String = sToken
-                    sToken = sToken.ToLower
-                    Dim iTokenLen As Integer = sToken.Length
-                    sToken = sToken.Replace(" =", "=").Replace("= ", "=").Replace("colour", "color")
-
-                    Select Case sToken
-                        Case "<i>" : bItalic = True
-                        Case "</i>" : bItalic = False
-                        Case "<b>" : bBold = True
-                        Case "</b>" : bBold = False
-                        Case "<u>" : bUnderline = True
-                        Case "</u>" : bUnderline = False
-                        Case "<c>" : bColour = True
-                        Case "</c>" : bColour = False
-                        Case "<br>" : sSource = sToken & vbCrLf & Right(sSource, Len(sSource) - Len(sToken))
-                        Case "</font>"
-                            If iFontLevel > 0 Then
-                                arlFonts.RemoveAt(iFontLevel)
-                                arlColours.RemoveAt(iFontLevel)
-                                iFontLevel -= 1
-                                f = GetDefaultFont() ' Restore it in case we changed the default
-                            End If
-                        Case "</window>"
-                            sUnprocessedText = sSource.Substring(sToken.Length)
-                            Exit Sub
-                        Case "<center>", "<centre>"
-                            iJustLevel += 1
-                            arlJust.Add(eJustification.Central)
-                        Case "</center>", "</centre>", "</right>", "</left>"
-                            If iJustLevel > 0 Then
-                                arlJust.RemoveAt(iJustLevel)
-                                iJustLevel -= 1
-                            End If
-                        Case "<right>"
-                            iJustLevel += 1
-                            arlJust.Add(eJustification.Right)
-                        Case "<left>"
-                            iJustLevel += 1
-                            arlJust.Add(eJustification.Left)
-                        Case "<del>"
-                            RichText.SelectionStart = RichText.TextLength - 1
-                            RichText.SelectionLength = 1
-                            RichText.SelectedText = Chr(0)
-                        Case "<waitkey>"
-#If Runner Then
-                            'RichText.SelectionStart = RichText.TextLength
-                            'RichText.ScrollToCaret()
-                            If Not bDebug Then
-                                ScrollToEnd(RichText)
-                                fRunner.WaitKey()
-                            End If
-                            Adventure.Player.WalkTo = "" ' Terminate any walks
-#End If
-                        Case "<cls>"
-                            If Not bDebug Then
-#If Runner Then
-                                If RichText Is fRunner.txtOutput Then UserSession.iPreviousOffset = 0
-#End If
-                                RichText.Clear()
-                            End If
-                    End Select
-
-#If Runner Then
-                    If sLeft(sToken, 6) = "<wait " Then
-                        Dim sTime As String = sRight(sToken, sToken.Length - 6).Replace(">", "")
-                        Dim dfTime As Double = SafeDbl(sTime)
-                        If dfTime > 0 AndAlso Not bDebug Then
-                            ScrollToEnd(RichText)
-                            fRunner.Locked = True
-                            Application.DoEvents()
-                            Threading.Thread.Sleep(SafeInt(dfTime * 1000))
-                            fRunner.Locked = False
-                        End If
-                    End If
-
-                    If sLeft(sToken, 8) = "<window " Then
-                        Dim sWindow As String = sSource.Substring(8, sToken.Length - 8).Replace(">", "") ' Take from sSource rather than sToken so we get the defined case
-
-                        If sWindow <> "" Then
-                            Dim txtOutput As RichTextBox = Nothing
-#If Not Mono Then
-                            Dim pane As Infragistics.Win.UltraWinDock.DockablePaneBase = fRunner.UDMRunner.PaneFromKey("pane_" & sWindow)
-                            If pane Is Nothing Then
-                                pane = New Infragistics.Win.UltraWinDock.DockableControlPane("pane_" & sWindow)
-                                fRunner.UDMRunner.ControlPanes.Add(CType(pane, Infragistics.Win.UltraWinDock.DockableControlPane))
-                                fRunner.UDMRunner.DockAreas(0).Panes.Add(pane)
-                                txtOutput = New RichTextBox
-                                With txtOutput
-                                    .Font = fRunner.txtOutput.Font
-                                    .ForeColor = fRunner.txtOutput.ForeColor
-                                    .BackColor = fRunner.txtOutput.BackColor
-                                    .ReadOnly = True
-                                    .Name = "window_" & sWindow
-                                    AddHandler .MouseDown, AddressOf frmRunner.txtOutput_MouseDown
-                                    AddHandler .GotFocus, AddressOf frmRunner.txtOutput_GotFocus
-                                End With
-                                With CType(pane, Infragistics.Win.UltraWinDock.DockableControlPane)
-                                    .Control = txtOutput
-                                    .Text = sWindow
-                                    .Closed = False
-                                End With
-                                ' The layout restored on game load won't have included this control, so re-load it - not ideal :( 
-                                fRunner.RestoreLayout(CType(pane, Infragistics.Win.UltraWinDock.DockableControlPane))
-                            Else
-                                txtOutput = CType(CType(pane, Infragistics.Win.UltraWinDock.DockableControlPane).Control, RichTextBox)
-                            End If
-#End If
-
-                            Dim sUnprocessed As String = ""
-
-                            Source2HTML(sSource.Substring(sToken.Length), txtOutput, bClearRTB, bDebug, sUnprocessed)
-                            sSource = sToken & sUnprocessed
-                        End If
-                    End If
-
-                    If sLeft(sToken, 5) = "<img " Then
-                        Dim i As Integer
-
-                        i = sInstr(sToken, " src=")
-                        If i > 0 Then
-                            sBuffer = sMid(sTokenOrig, i + 5, sTokenOrig.Length - i - 5)
-                            If Left(sBuffer, 1) = Chr(34) Then
-                                sBuffer = sMid(sBuffer, 2, sInstr(2, sBuffer, Chr(34)) - 2)
-                            Else
-                                If sInstr(1, sBuffer, " ") > 0 Then sBuffer = Left(sBuffer, sInstr(1, sBuffer, " "))
-                            End If
-
-                            Dim bVisible As Boolean = False
-#If Not Mono AndAlso Not www Then
-                            For Each cp As Infragistics.Win.UltraWinDock.DockableControlPane In fRunner.UDMRunner.ControlPanes
-                                If cp.Text = "Graphics" AndAlso cp.IsVisible Then bVisible = True
-                            Next
-#End If
-                            Try
-                                If UserSession.bGraphics AndAlso Not bDebug Then
-                                    If Adventure.BlorbMappings IsNot Nothing AndAlso Adventure.BlorbMappings.Count > 0 Then
-                                        Dim iResource As Integer = 0
-                                        If Adventure.BlorbMappings.ContainsKey(sBuffer) Then iResource = Adventure.BlorbMappings(sBuffer)
-                                        If iResource > 0 Then
-                                            fRunner.pbxGraphics.Image = Blorb.GetImage(iResource, True)
-                                        End If
-                                    Else
-                                        fRunner.pbxGraphics.Load(sBuffer)
-                                    End If
-
-                                    If Not bVisible Then
-                                        If False Then
-                                            ' RTF method
-                                            Dim img As Image = fRunner.pbxGraphics.Image
-                                            Dim stmMemory As New IO.MemoryStream
-                                            'img.Save(stmMemory, System.Drawing.Imaging.ImageFormat.Bmp)
-                                            stmMemory = WmfStuff.MakeMetafileStream(img)
-
-                                            'Dim converter As New ImageConverter
-                                            'Dim bytImage() As Byte = CType(converter.ConvertTo(img, GetType(Byte())), Byte())
-                                            Dim bytImage() As Byte = stmMemory.ToArray
-                                            Dim sHex As String = BitConverter.ToString(bytImage).Replace("-", "").ToLower
-
-
-                                            Dim sRTF As String = "{\pict\wmetafile8\picw" & img.Width & "\pich" & img.Height & "\picwgoal" & img.Width * 15 & "\pichgoal" & img.Height * 15 & " " & sHex & "}"
-                                            'Dim sRTF As String = "{\pict\wbitmap8\picw" & img.Width & "\pich" & img.Height & "\picwgoal" & img.Width * 15 & "\pichgoal" & img.Height * 15 & " " & sHex & "}"
-                                            RichText.ReadOnly = False
-                                            'RichText.Rtf.Insert(RichText.Rtf.Length - 1, sRTF)
-                                            RichText.Rtf = RichText.Rtf.Insert(RichText.Rtf.Length - 3, sRTF)
-                                            'RichText.SelectedRtf = sRTF
-                                            RichText.ReadOnly = True
-
-                                        Else
-                                            ' Clipboard method
-                                            'Dim oExistingData As IDataObject = Nothing
-                                            Dim sExistingText As String = Nothing
-                                            Dim imgExistingImage As Image = Nothing
-                                            Try
-                                                If Clipboard.ContainsText Then sExistingText = Clipboard.GetText
-                                                If Clipboard.ContainsImage Then imgExistingImage = Clipboard.GetImage
-                                                'oExistingData = Clipboard.GetDataObject
-                                            Catch
-                                            End Try
-                                            Clipboard.SetImage(fRunner.pbxGraphics.Image)
-                                            RichText.ReadOnly = False
-                                            'Dim align As HorizontalAlignment = RichText.SelectionAlignment
-                                            'RichText.SelectionAlignment = HorizontalAlignment.Center
-
-                                            RichText.Paste()
-                                            'RichText.SelectedText = vbCrLf
-                                            'RichText.SelectionAlignment = align
-                                            RichText.ReadOnly = True
-
-                                            'Put whatever was on the clipboard before, back on
-                                            'If oExistingData IsNot Nothing Then
-                                            'Clipboard.SetDataObject(oExistingData, True, 1, 0)
-                                            'End If
-                                            If sExistingText IsNot Nothing Then Clipboard.SetText(sExistingText)
-                                            If imgExistingImage IsNot Nothing Then Clipboard.SetImage(imgExistingImage)
-                                        End If
-                                    End If
-                                End If
-                            Catch
-                            End Try
-                        End If
-                    End If
-#End If
-
-                    If sLeft(sToken, 7) = "<audio " Then
-                        Dim i As Integer
-                        Dim iChannel As Integer = 1
-                        Dim bLooping As Boolean = False
-                        Dim sSrc As String = ""
-
-                        i = sInstr(sToken, "channel=")
-                        If i > 0 Then
-                            sBuffer = sMid(sTokenOrig, i + 8, sTokenOrig.Length - i - 8)
-                            If Left(sBuffer, 1) = Chr(34) Then
-                                sBuffer = sMid(sBuffer, 2, sInstr(2, sBuffer, Chr(34)) - 2)
-                            Else
-                                If sInstr(1, sBuffer, " ") > 0 Then sBuffer = Left(sBuffer, sInstr(1, sBuffer, " "))
-                            End If
-                            iChannel = SafeInt(sBuffer)
-                        End If
-
-                        i = sInstr(sToken, " src=")
-                        If i > 0 Then
-                            sBuffer = sMid(sTokenOrig, i + 5, sTokenOrig.Length - i - 5)
-                            If Left(sBuffer, 1) = Chr(34) Then
-                                sSrc = sMid(sBuffer, 2, sInstr(2, sBuffer, Chr(34)) - 2)
-                            Else
-                                If sInstr(1, sBuffer, " ") > 0 Then sSrc = Left(sBuffer, sInstr(1, sBuffer, " "))
-                            End If
-                        End If
-
-                        i = sInstr(sToken, " loop=")
-                        If i > 0 Then
-                            sBuffer = sMid(sTokenOrig, i + 6, sTokenOrig.Length - i - 6)
-                            If Left(sBuffer, 1) = Chr(34) Then sBuffer = sMid(sBuffer, 2, sInstr(2, sBuffer, Chr(34)) - 2)
-                            Select Case sBuffer
-                                Case "Y", "y", "1", "True", "true", "TRUE"
-                                    bLooping = True
-                            End Select
-                        End If
-
-#If Runner Then
-                        If UserSession.bSound AndAlso Not bDebug Then
-#End If
-                            If sToken.Contains(" pause") Then
-                                PauseSound(iChannel)
-                            ElseIf sToken.Contains(" stop") Then
-                                StopSound(iChannel)
-                            Else
-                                PlaySound(sSrc, iChannel, bLooping)
-                            End If
-#If Runner Then
-                        End If
-#End If
-
-                    End If
-
-
-                    If (sLeft(sToken, 8) = "<bgcolor" OrElse sLeft(sToken, 9) = "<bgcolour") AndAlso AllowDevToSetColours Then
-                        sBuffer = sToken.Substring(9)
-                        sBuffer = sBuffer.Substring(0, sBuffer.Length - 1)
-                        While sBuffer.StartsWith(" ") OrElse sBuffer.StartsWith("=")
-                            sBuffer = sBuffer.Substring(1)
-                        End While
-                        Dim bgColour As Color
-                        If Right(sBuffer, 1) = Chr(34) AndAlso Left(sBuffer, 1) = Chr(34) Then sBuffer = sMid(sBuffer, 2, sBuffer.Length - 2)
-                        If sBuffer.ToLower = "default" Then
-                            bgColour = GetBackgroundColour()
-                        Else
-                            sBuffer = ColourLookup(sBuffer)
-
-                            ' Interpret the colour
-                            Dim rr As Byte = invhex(Left(sBuffer, 2))
-                            Dim gg As Byte = invhex(Mid(sBuffer, 3, 2))
-                            Dim bb As Byte = invhex(Right(sBuffer, 2))
-
-                            bgColour = Color.FromArgb(rr, gg, bb)
-                        End If
-#If Runner Then
-                        fRunner.SetBackgroundColour(bgColour)
-#End If
-                    End If
-
-
-                    If sLeft(sToken, 6) = "<font " Then
-
-                        iFontLevel += 1
-                        Dim NewFont As New Font(f, f.Style)
-                        Dim NewColour As New Color
-                        NewColour = arlColours(iFontLevel - 1)
-                        Dim i As Integer
-
-                        i = sInstr(sToken, "color=")
-                        If i > 0 Then
-                            sBuffer = sMid(sToken, i + 6, sToken.Length - i - 6)
-                            If sInstr(sBuffer, " ") > 0 Then sBuffer = Left(sBuffer, sInstr(sBuffer, " ") - 1)
-                            If Right(sBuffer, 1) = Chr(34) AndAlso Left(sBuffer, 1) = Chr(34) Then sBuffer = sMid(sBuffer, 2, sBuffer.Length - 2)
-                            If AllowDevToSetColours OrElse (sBuffer.ToUpper = "#" & Hex(GetLinkColour.ToArgb).Substring(2) AndAlso sSource.Contains("</u>")) Then
-                                If sBuffer.ToLower = "default" Then
-                                    NewColour = GetOutputColour()
-                                Else
-                                    sBuffer = ColourLookup(sBuffer)
-
-                                    ' Interpret the colour
-                                    Dim rr As Byte = invhex(Left(sBuffer, 2))
-                                    Dim gg As Byte = invhex(Mid(sBuffer, 3, 2))
-                                    Dim bb As Byte = invhex(Right(sBuffer, 2))
-
-                                    NewColour = Color.FromArgb(rr, gg, bb)
-                                End If
-                            End If
-                        End If
-
-                        i = sInstr(sToken, "face=")
-                        If i > 0 Then
-                            sBuffer = sMid(sToken, i + 5, sToken.Length - i - 5)
-                            If Left(sBuffer, 1) = Chr(34) Then
-                                sBuffer = sMid(sBuffer, 2, sInstr(2, sBuffer, Chr(34)) - 2)
-                            Else
-                                If sInstr(1, sBuffer, " ") > 0 Then sBuffer = Left(sBuffer, sInstr(1, sBuffer, " "))
-                            End If
-
-                            If CBool(GetSetting("ADRIFT", "Runner", "AllowFonts", "1")) OrElse sSource.StartsWith("<font face=""Wingdings"" size=14>�</font>") OrElse sSource.StartsWith("<font face=""Wingdings"" size=18>@</font>") Then
-                                NewFont = New Font(sBuffer, f.Size, f.Style, GraphicsUnit.Point)
-                                f = NewFont
-                            End If
-                        End If
-
-                        i = sInstr(sToken, "size=")
-                        If i > 0 Then
-                            sBuffer = sMid(sToken, i + 5, sToken.Length - i - 5)
-                            If Left(sBuffer, 1) = Chr(34) Then
-                                sBuffer = sMid(sBuffer, 2, sInstr(2, sBuffer, Chr(34)) - 2)
-                            Else
-                                If sInstr(1, sBuffer, " ") > 0 Then sBuffer = Left(sBuffer, sInstr(1, sBuffer, " "))
-                            End If
-
-                            If CSng(sBuffer) < 0 Then
-                                sBuffer = (arlFonts(iFontLevel - 1).Size + CSng(sBuffer)).ToString
-                            End If
-                            If Left(sBuffer, 1) = "+" Then
-                                sBuffer = (arlFonts(iFontLevel - 1).Size + CSng(sBuffer.Substring(1))).ToString
-                            End If
-
-                            If CBool(GetSetting("ADRIFT", "Runner", "AllowFonts", "1")) Then
-                                NewFont = New Font(f.FontFamily, CSng(sBuffer), f.Style, GraphicsUnit.Point)
-                            End If
-                        End If
-
-                        arlFonts.Add(NewFont)
-                        arlColours.Add(NewColour)
-
-                    End If
-
-                    sSource = sRight(sSource, sSource.Length - iTokenLen)
-
-                End If
-
-                If sInstr(1, sSource, "<") > 0 Then
-                    sChunk = sLeft(sSource, sInstr(1, sSource, "<") - 1)
-                    sSource = sRight(sSource, sSource.Length - sInstr(1, sSource, "<") + 1)
-                Else
-                    sChunk = sSource
-                    sSource = ""
-                End If
-
-                With RichText
-                    If .IsDisposed Then Exit Sub
-
-                    .SelectionStart = .TextLength
-
-                    Dim fStyle As New FontStyle
-                    fStyle = FontStyle.Regular
-                    If bBold Then fStyle = FontStyle.Bold
-                    If bItalic Then fStyle = fStyle Or FontStyle.Italic
-                    If bUnderline Then fStyle = fStyle Or FontStyle.Underline
-                    If bColour Then Colour = GetInputColour() Else Colour = arlColours(iFontLevel)
-
-                    Try
-                        Select Case arlJust(iJustLevel)
-                            Case eJustification.Left
-                                If .SelectionAlignment <> HorizontalAlignment.Left AndAlso sRight(RichText.Text, 1) <> vbLf Then
-                                    .AppendText(vbCrLf) ' sChunk = vbCrLf & sChunk
-                                    If sChunk.StartsWith(vbLf) Then sChunk = sChunk.Substring(1)
-                                End If
-                                .SelectionAlignment = HorizontalAlignment.Left
-                            Case eJustification.Central
-                                If .SelectionAlignment <> HorizontalAlignment.Center AndAlso sRight(RichText.Text, 1) <> vbLf Then
-                                    .AppendText(vbCrLf)
-                                    If sChunk.StartsWith(vbLf) Then sChunk = sChunk.Substring(1)
-                                End If
-                                .SelectionAlignment = HorizontalAlignment.Center
-                            Case eJustification.Right
-                                If .SelectionAlignment <> HorizontalAlignment.Right AndAlso sRight(RichText.Text, 1) <> vbLf Then
-                                    .AppendText(vbCrLf) ' sChunk = vbCrLf & sChunk
-                                    If sChunk.StartsWith(vbLf) Then sChunk = sChunk.Substring(1)
-                                End If
-                                .SelectionAlignment = HorizontalAlignment.Right
-                        End Select
-                    Catch
-                    End Try
-
-                    Dim font As Font = New Font(arlFonts(iFontLevel), fStyle)
-                    If font IsNot Nothing Then
-                        Try
-                            .SelectionFont = font
-                            'sChunk = font.ToString & sChunk
-                        Catch ex As Exception
-                            'ErrMsg("Error setting font " & font.Name, ex)
-                        End Try
-                    End If
-
-                    Try
-                        If .SelectionColor <> Colour Then
-                            If sChunk.StartsWith(vbCrLf) Then sChunk = " " & sChunk
-                            '    .AppendText(" " & vbCrLf) ' A fudge, because for some reason we seem to be applying the new colour to the last char before the CR
-                            '    sChunk = sChunk.Substring(2)                                
-                            'End If
-                            .SelectionColor = Colour
-                        End If
-                    Catch ex As Exception
-                        'ErrMsg("Error setting selection colour", ex)
-                    End Try
-
-                    '.SelectedText = sChunk.Replace("&gt;", ">").Replace("&lt;", "<")
-                    .AppendText(sChunk.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", """"))
-
-                    ' A nasty workaround because there seems to be a bug colouring extended Ascii characters.  :-(
-                    Dim bRecolour As Boolean = False
-                    For Each c As Char In sChunk
-                        If Asc(c) > 128 Then
-                            bRecolour = True
-                            Exit For
-                        End If
-                    Next
-                    If bRecolour Then
-                        Dim iChunkLength As Integer = Math.Min(sChunk.Replace(vbCrLf, "@").Length, .TextLength)
-                        .SelectionStart = .TextLength - iChunkLength
-                        .SelectionLength = iChunkLength
-                        .SelectionColor = Colour
-                    End If
-                    '.ScrollToCaret()
-
-                    '                .SelectedText = sChunk
-                    '.SelectionStart = .TextLength
-
-                    'If Not bClearRTB Then
-                    '    .Focus()
-                    '    .ScrollToCaret()
-                    'End If
-
-                End With
-
-            End While
-
-            ScrollToEnd(RichText)
-
-        Catch exOD As ObjectDisposedException
-            ' Fail silently - we're shutting down            
-        Catch ex As Exception
-            ErrMsg("Source2HTML error", ex)
-        End Try
-
-#End If
-
     End Sub
 
 
@@ -1705,36 +539,12 @@ Module SharedModule
 
     ' Scrolls to the end of the text, and adds a <Wait> box if necessary
     Friend Sub ScrollToEnd(ByVal RichText As RichTextBox)
-#If Not Adravalon Then
-
-        With RichText
-            .SelectionStart = .TextLength + 1
-            .ScrollToCaret() ' Scroll to end
-#If Runner Then
-            If RichText Is fRunner.txtOutput Then
-                Dim iCurrentTop As Integer = .GetCharIndexFromPosition(New Point(0, 0))
-                If iCurrentTop > UserSession.iPreviousOffset Then
-                    .SelectionStart = UserSession.iPreviousOffset
-                    .ScrollToCaret() ' Scroll back to start of this text section
-
-                    If .GetCharIndexFromPosition(New Point(.Width, .Height)) < .TextLength - 1 Then
-                        fRunner.btnMore.Size = New Size(fRunner.pnlBottom.Size.Width - 1, fRunner.pnlBottom.Size.Height - 1)
-                        fRunner.btnMore.Location = New Point(fRunner.pnlBottom.Location.X - 1, fRunner.pnlBottom.Location.Y - 1)
-                        fRunner.btnMore.Visible = True
-                    End If
-                End If
-            End If
-#End If
-        End With
-#Else
         Glue.ScrollToEnd()
-#End If
     End Sub
 
 
     ' Escape any characters that are special in RE's
     Friend Function MakeTextRESafe(ByVal sText As String) As String
-
         sText = sText.Replace("+", "\+").Replace("*", "\*")
 
         Return sText
@@ -1742,7 +552,6 @@ Module SharedModule
 
 
     Friend Function invhex(ByVal hexcode As String) As Byte
-
         Dim n As Byte
 
         If Left(hexcode, 1) = "0" Then
@@ -1755,12 +564,9 @@ Module SharedModule
         Next n
         If Hex(255) = UCase(hexcode) Then Return 255
         Return 0
-
     End Function
 
-
     Friend Function ColourLookup(ByVal sCode As String) As String
-
         sCode = sCode.Replace("""", "")
 
         ColourLookup = Nothing
@@ -1770,7 +576,6 @@ Module SharedModule
             Case "blue" : ColourLookup = "0000ff"
             Case "cyan", "turquoise", "aqua" : ColourLookup = "00ffff"
             Case "default"
-                'ColourLookup = Right(Hex(colour(0)), 2) & sMid(Hex(colour(0)), 3, 2) & Left(Hex(colour(0)), 2)
             Case "gray" : ColourLookup = "808080"
             Case "green" : ColourLookup = "008000"
             Case "lime" : ColourLookup = "00ff00"
@@ -1795,81 +600,17 @@ Module SharedModule
                 End While
                 ColourLookup = sCode
         End Select
-
     End Function
 
     Public Function DirectionName(ByVal dir As DirectionsEnum) As String
-
         Dim sName As String = Adventure.sDirectionsRE(dir)
         If sName.Contains("/") Then sName = sName.Substring(0, sName.IndexOf("/"))
         Return sName
-
-        'Select Case dir
-        '    Case DirectionsEnum.North
-        '        Return "North"
-        '    Case DirectionsEnum.NorthEast
-        '        Return "North East"
-        '    Case DirectionsEnum.East
-        '        Return "East"
-        '    Case DirectionsEnum.SouthEast
-        '        Return "South East"
-        '    Case DirectionsEnum.South
-        '        Return "South"
-        '    Case DirectionsEnum.SouthWest
-        '        Return "South West"
-        '    Case DirectionsEnum.West
-        '        Return "West"
-        '    Case DirectionsEnum.NorthWest
-        '        Return "North West"
-        '    Case DirectionsEnum.Up
-        '        Return "Up"
-        '    Case DirectionsEnum.Down
-        '        Return "Down"
-        '    Case DirectionsEnum.In
-        '        Return "Inside"
-        '    Case DirectionsEnum.Out
-        '        Return "Outside"
-        'End Select
-
-        'Return Nothing
-
     End Function
 
 
 
     Public Function DirectionRE(ByVal dir As DirectionsEnum, Optional ByVal bBrackets As Boolean = True, Optional ByVal bRealRE As Boolean = False) As String
-
-        'Dim sRE As String = ""
-        'Dim sOr As String = CStr(IIf(bRealRE, "|", "/"))
-
-        '' Allow these to be customised later
-        'Select Case dir
-        '    Case DirectionsEnum.North
-        '        sRE = "north" & sOr & "n"
-        '    Case DirectionsEnum.NorthEast
-        '        sRE = "north east" & sOr & "northeast" & sOr & "north-east" & sOr & "ne"
-        '    Case DirectionsEnum.East
-        '        sRE = "east" & sOr & "e"
-        '    Case DirectionsEnum.SouthEast
-        '        sRE = "south east" & sOr & "southeast" & sOr & "south-east" & sOr & "se"
-        '    Case DirectionsEnum.South
-        '        sRE = "south" & sOr & "s"
-        '    Case DirectionsEnum.SouthWest
-        '        sRE = "south west" & sOr & "southwest" & sOr & "south-west" & sOr & "sw"
-        '    Case DirectionsEnum.West
-        '        sRE = "west" & sOr & "w"
-        '    Case DirectionsEnum.NorthWest
-        '        sRE = "north west" & sOr & "northwest" & sOr & "north-west" & sOr & "nw"
-        '    Case DirectionsEnum.Up
-        '        sRE = "up" & sOr & "u"
-        '    Case DirectionsEnum.Down
-        '        sRE = "down" & sOr & "d"
-        '    Case DirectionsEnum.In
-        '        sRE = "inside" & sOr & "in"
-        '    Case DirectionsEnum.Out
-        '        sRE = "outside" & sOr & "out" & sOr & "o"
-        'End Select
-
         Dim sRE As String = Adventure.sDirectionsRE(dir).ToLower
         If bRealRE Then sRE = sRE.Replace("/", "|")
 
@@ -1882,11 +623,9 @@ Module SharedModule
         Else
             Return sRE
         End If
-
     End Function
 
     Public Function KeyExists(ByVal sKey As String) As Boolean
-
         With Adventure
             If .htblLocations.ContainsKey(sKey) Then Return True
             If .htblObjects.ContainsKey(sKey) Then Return True
@@ -1899,13 +638,10 @@ Module SharedModule
             If .htblHints.ContainsKey(sKey) Then Return True
             If .htblAllProperties.ContainsKey(sKey) Then Return True
         End With
-
         Return False
-
     End Function
 
     Public Function FindProperty(ByVal arlStates As StringArrayList) As String
-
         Dim bMatch As Boolean
 
         For Each prop As clsProperty In Adventure.htblAllProperties.Values
@@ -1924,7 +660,6 @@ Module SharedModule
         Next
 
         Return Nothing
-
     End Function
 
     Public Function ToProper(ByVal sText As String, Optional ByVal bForceRestLower As Boolean = True) As String
@@ -1953,7 +688,6 @@ Module SharedModule
     End Function
 
     Public Function InstrCount(ByVal sText As String, ByVal sSubText As String) As Integer
-
         Dim iOffset As Integer = 1
         Dim iCount As Integer = 0
 
@@ -1967,23 +701,15 @@ Module SharedModule
         End While
 
         Return iCount
-
     End Function
 
-
     Public Function EvaluateExpression(ByVal sExpression As String) As String
-
         If sExpression = "" Then Return ""
 
         Dim var As New clsVariable
         var.Type = clsVariable.VariableTypeEnum.Text
         var.SetToExpression(sExpression)
-        'If var.StringValue <> "" Then ' Err, what if the function returns ""?
         Return var.StringValue
-        'Else
-        'Return sExpression
-        'End If
-
     End Function
     Public Function EvaluateExpression(ByVal sExpression As String, ByVal bInt As Boolean) As Integer
 
@@ -1996,18 +722,15 @@ Module SharedModule
 
 
     Public Function ReplaceExpressions(ByVal sText As String) As String
-
         Dim reExp As New System.Text.RegularExpressions.Regex("<#(?<expression>.*?)#>", System.Text.RegularExpressions.RegexOptions.Singleline)
         For Each m As System.Text.RegularExpressions.Match In reExp.Matches(sText)
             sText = sText.Replace(m.Value, EvaluateExpression(m.Groups("expression").Value))
         Next
         Return sText
-
     End Function
 
 
     Public Function ReplaceALRs(ByVal sText As String, Optional ByVal bAutoCapitalise As Boolean = True) As String
-
         Try
             If sText = "" Then Return ""
 
@@ -2015,17 +738,6 @@ Module SharedModule
             sText = ReplaceExpressions(sText)
 
             Dim bChanged As Boolean = False
-
-            '' Auto-capitalise - Do before ALRs as the user sees the final output so wants to replace that
-            'If bAutoCapitalise Then
-            '    Dim reCap As New System.Text.RegularExpressions.Regex("^(?<cap>[a-z])|\n(?<cap>[a-z])|[a-z][\.\!\?] ( )?(?<cap>[a-z])")
-            '    While reCap.IsMatch(sText)
-            '        Dim match As System.Text.RegularExpressions.Match = reCap.Match(sText)
-            '        Dim sCap As String = match.Groups("cap").Value
-            '        Dim iIndex As Integer = match.Groups("cap").Index
-            '        sText = sText.Substring(0, iIndex) & sCap.ToUpper & sText.Substring(iIndex + sCap.Length)
-            '    End While
-            'End If
 
             ' Replace ALRs
             For Each alr As clsALR In Adventure.htblALRs.Values
@@ -2065,34 +777,24 @@ Module SharedModule
             ErrMsg("ReplaceALRs error", ex)
             Return sText
         End Try
-
     End Function
 
-
-
     Public Function pSpace(ByRef sText As String) As String
-
         If sText Is Nothing OrElse sText.Length = 0 Then
             sText = ""
             Return sText
         Else
-            If sText.EndsWith(vbLf) Then Return sText ' OrElse sText.ToLower.EndsWith("<br>")
+            If sText.EndsWith(vbLf) Then Return sText
         End If
 
         sText &= "  "
         Return sText
-
     End Function
 
 
     Public Sub DisplayError(ByVal sText As String)
-#If Runner Then
-        UserSession.DebugPrint(Nothing, "", DebugDetailLevelEnum.Error, "<i><c>*** " & sText & "***</c></i>")
-#Else
         ErrMsg(sText)
-#End If
     End Sub
-
 
     ' A case ignoring search
     Public Function Contains(ByVal sTextToSearchIn As String, ByVal sTextToFind As String, Optional ByVal bExactWord As Boolean = False, Optional ByVal iStart As Integer = 0) As Boolean
@@ -2106,8 +808,6 @@ Module SharedModule
     End Function
 
     Public Function PreviousFunction(ByVal sFunction As String, ByVal sArgs As String) As String
-
-#If Runner Then
         With UserSession
             Dim sNewFunction As String = sFunction.Replace("prev", "")
             Dim PreviousState As clsGameState = CType(.States.Peek, clsGameState) ' Note the previous state
@@ -2118,24 +818,16 @@ Module SharedModule
 
             .States.Pop() ' Get rid of the 'current' state and load it back as present
         End With
-#Else
-        Return ""
-#End If
-
     End Function
-
 
     ' Chops the last character off a string 
     Public Function ChopLast(ByVal sText As String) As String
-
         If sText.Length > 0 Then
             Return sText.Substring(0, sText.Length - 1)
         Else
             Return ""
         End If
-
     End Function
-
 
     ' If this is in an expression, we need to replace anything with a quoted value
     Public Function ReplaceOO(ByVal sText As String, ByVal bExpression As Boolean) As String
@@ -2149,9 +841,7 @@ Module SharedModule
             Return sReturn.Replace(sGUID, sMatch)
         Else
             ' Match anything unless it's between <# ... #> symbols
-            'Dim re As New System.Text.RegularExpressions.Regex("(?!<#.*?)(?<firstkey>%?[A-Za-z][\w\|_-]*%?)(?<nextkey>\.%?[A-Za-z][\w\|_-]*%?(\(.+?\))?)+(?!.*?#>)")
             Dim re As New System.Text.RegularExpressions.Regex("(?!<#.*?)(?<firstkey>%?[A-Za-z][\w\|_]*%?)(?<nextkey>\.%?[A-Za-z][\w\|_]*%?(\(.+?\))?)+(?!.*?#>)")
-            'Dim re As New System.Text.RegularExpressions.Regex("(?!<#.*?)(?<firstkey>%?[A-Za-z]([\w\|_]|-(?!\d))*%?)(?<nextkey>\.%?[A-Za-z]([\w\|_]|-(?!\d))*%?(\(.+?\))?)+(?!.*?#>)")
             Dim sPrevious As String = ""
             Dim iStartAt As Integer = 0
 
@@ -2164,20 +854,6 @@ Module SharedModule
                 Dim iPrevStart As Integer = iStartAt
                 iStartAt = re.Match(sText, iStartAt).Index + sMatch.Length
 
-#If Generator Then
-                ' Replace functions with simple values, so that validation works on them ok (e.g. when typing an expression into an expression box, so we know it's a valid int etc)
-                If sReplace = "#*!~#" Then
-                    For Each p As clsProperty In Adventure.htblAllProperties.Values
-                        If sMatch.EndsWith("." & p.Key) Then
-                            Select Case p.Type
-                                Case clsProperty.PropertyTypeEnum.Integer
-                                    sReplace = "0"
-                            End Select
-                        End If
-                    Next
-                End If
-#End If
-
                 If sReplace <> "#*!~#" Then
                     If sReplace.Contains(sMatch) Then sReplace = sReplace.Replace(sMatch, "*** RECURSIVE REPLACE ***")
                     If bExpression AndAlso Not bIntValue AndAlso Not Contains(sText, """" & sMatch & """", , iPrevStart + 1) Then sReplace = """" & sReplace & """"
@@ -2189,12 +865,9 @@ Module SharedModule
 
             Return ReplaceFunctions(sText, , False)
         End If
-
     End Function
 
-
     Private Function ReplaceOOProperty(ByVal sProperty As String, Optional ByVal ob As clsObject = Nothing, Optional ByVal ch As clsCharacter = Nothing, Optional ByVal loc As clsLocation = Nothing, Optional ByVal lst As List(Of clsItemWithProperties) = Nothing, Optional ByVal lstDirs As List(Of DirectionsEnum) = Nothing, Optional ByVal evt As clsEvent = Nothing, Optional sPropertyKey As String = Nothing, Optional ByRef bInt As Boolean = False) As String
-
         Dim sFunction As String = sProperty
         Dim sArgs As String = ""
         Dim sRemainder As String = ""
@@ -2222,16 +895,6 @@ Module SharedModule
             sRemainder = sFunction.Substring(iIndexOfDot + 1)
             sFunction = sFunction.Substring(0, iIndexOfDot)
         End If
-
-        'If sFunction.Contains(".") Then
-        '    sFunction = sFunction.Substring(0, sFunction.IndexOf("."))
-        '    sRemainder = sProperty.Substring(sProperty.IndexOf(".") + 1)
-        'End If
-        'If sFunction.Contains("(") AndAlso sFunction.Contains(")") Then
-        '    sArgs = sFunction.Substring(sFunction.IndexOf("(") + 1, sFunction.LastIndexOf(")") - sFunction.IndexOf("(") - 1).ToLower
-        '    sFunction = sFunction.Substring(0, sFunction.IndexOf("("))
-        'End If
-
 
         If lst IsNot Nothing OrElse (lstDirs IsNot Nothing AndAlso (sFunction = "List" OrElse sFunction = "Count" OrElse sFunction = "Name" OrElse sFunction = "")) Then
             Select Case sFunction
@@ -2314,16 +977,12 @@ Module SharedModule
                     End If
 
                     Dim bForcePronoun As Boolean = False
-#If Runner Then
                     Dim ePronoun As PronounEnum = PronounEnum.Subjective
                     If sArgsTest.Contains("none") Then ePronoun = PronounEnum.None
                     If sArgsTest.Contains("force") Then bForcePronoun = True
                     If sArgsTest.Contains("objective") OrElse sArgsTest.Contains("object") OrElse sArgsTest.Contains("target") Then ePronoun = PronounEnum.Objective
                     If sArgsTest.Contains("possessive") OrElse sArgsTest.Contains("possess") Then ePronoun = PronounEnum.Possessive
                     If sArgsTest.Contains("reflective") OrElse sArgsTest.Contains("reflect") Then ePronoun = PronounEnum.Reflective
-#Else
-                    Dim ePronoun As Boolean = False
-#End If
 
                     Dim sList As String = ""
                     Dim i As Integer = 0
@@ -2341,8 +1000,6 @@ Module SharedModule
                                 sList &= CType(oItem, clsObject).FullName(Article)
                                 If bListInOn AndAlso CType(oItem, clsObject).Children(clsObject.WhereChildrenEnum.InsideOrOnObject).Count > 0 Then sList &= ".  " & ChopLast(CType(oItem, clsObject).DisplayObjectChildren)
                             ElseIf TypeOf oItem Is clsCharacter Then
-                                ' List(definite/the) - List the objects names - Default
-                                ' List(indefinite) - List a/an object
                                 Article = ArticleTypeEnum.Indefinite ' opposite default from objects
                                 If sArgsTest.Contains("definite") Then Article = ArticleTypeEnum.Definite
                                 sList &= CType(oItem, clsCharacter).Name(ePronoun, , , Article, bForcePronoun)
@@ -2465,9 +1122,7 @@ Module SharedModule
                         End Select
                     Next
 
-                    'If sRemainder <> "" OrElse lstNew.Count > 0 Then
                     Return ReplaceOOProperty(sRemainder, , , , lstNew, bInt:=bInt)
-                    'End If
 
                 Case "Objects"
                     Dim lstNew As New List(Of clsItemWithProperties)
@@ -2531,7 +1186,7 @@ Module SharedModule
                                                 Case "false", "0"
                                                     bValueOK = False
                                                 Case Else
-                                                    bValueOK = True ' p.Value = "True" ' True
+                                                    bValueOK = True
                                             End Select
                                             bInt = True
                                         Case Else
@@ -2571,8 +1226,6 @@ Module SharedModule
                                             lstNew.Add(oItem)
                                             sNewPropertyKey = sFunction
                                             bInt = p.Type = clsProperty.PropertyTypeEnum.Integer OrElse p.Type = clsProperty.PropertyTypeEnum.ValueList
-                                            'iTotal += p.IntData
-                                            'bIntResult = True
                                         Case clsProperty.PropertyTypeEnum.SelectionOnly
                                             ' Selection Only property to further reduce list
                                             lstNew.Add(oItem)
@@ -2690,9 +1343,7 @@ Module SharedModule
                                 lstNew.Add(oOb)
                             Next
                     End Select
-                    'If sRemainder <> "" OrElse lstNew.Count > 0 Then
                     Return ReplaceOOProperty(sRemainder, , , , lstNew, bInt:=bInt)
-                    'End If
 
                 Case "Contents"
                     Dim lstNew As New List(Of clsItemWithProperties)
@@ -2713,9 +1364,7 @@ Module SharedModule
                                 lstNew.Add(oOb)
                             Next
                     End Select
-                    'If sRemainder <> "" OrElse lstNew.Count > 0 Then
                     Return ReplaceOOProperty(sRemainder, , , , lstNew, bInt:=bInt)
-                    'End If
 
                 Case "Count"
                     bInt = True
@@ -2730,13 +1379,9 @@ Module SharedModule
                         Dim oLoc As clsLocation = Adventure.htblLocations(sLocKey)
                         lstNew.Add(oLoc)
                     Next
-                    'If sRemainder <> "" Then
                     Return ReplaceOOProperty(sRemainder, , , , lstNew, bInt:=bInt)
-                    'End If
 
                 Case "Name", "List"
-                    ' Name(definite/the) - List the objects names - Default
-                    ' Name(indefinite) - List a/an object
                     Dim Article As ArticleTypeEnum = ArticleTypeEnum.Definite
                     If sArgs.ToLower.Contains("indefinite") Then Article = ArticleTypeEnum.Indefinite
                     If sArgs.ToLower.Contains("none") Then Article = ArticleTypeEnum.None
@@ -2813,9 +1458,6 @@ Module SharedModule
 
         ElseIf ch IsNot Nothing Then
             Select Case sFunction
-                ' Case "Children"
-                '   No real reason we couldn't do this.  If we do, remember to add to List above
-
                 Case "Count"
                     bInt = True
                     Return "1"
@@ -2829,18 +1471,15 @@ Module SharedModule
                 Case "Exits"
                     Dim lstNew As New List(Of DirectionsEnum)
 
-                    For d As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest ' Adventure.iCompassPoints
-#If Runner Then
+                    For d As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest
                         If Adventure.Player.HasRouteInDirection(d, False, Adventure.Player.Location.LocationKey) Then
                             lstNew.Add(d)
                         End If
-#End If
                     Next
                     Return ReplaceOOProperty(sRemainder, , ch, , , lstNew, bInt:=bInt)
 
                 Case "Held"
                     Dim lstNew As New List(Of clsItemWithProperties)
-#If Runner Then
                     Select Case sArgs.ToLower
                         Case "", "true", "1", "-1"
                             For Each obHeld As clsObject In ch.HeldObjects(True).Values
@@ -2851,7 +1490,6 @@ Module SharedModule
                                 lstNew.Add(obHeld)
                             Next
                     End Select
-#End If
                     Return ReplaceOOProperty(sRemainder, , ch, , lstNew, bInt:=bInt)
 
                 Case "Location"
@@ -2866,7 +1504,6 @@ Module SharedModule
                     Dim bTheNames As Boolean = False ' opposite default from objects
                     Dim Article As ArticleTypeEnum = ArticleTypeEnum.Definite
                     Dim bExplicitArticle As Boolean = False
-#If Runner Then
                     Dim ePronoun As PronounEnum = PronounEnum.Subjective
                     Dim sArgsTest As String = sArgs.ToLower
 
@@ -2894,11 +1531,6 @@ Module SharedModule
                         Article = ArticleTypeEnum.Indefinite
                         bExplicitArticle = True
                     End If
-#Else
-                    Dim ePronoun As Boolean = False
-#End If
-                    ' List(definite/the) - List the objects names - Default
-                    ' List(indefinite) - List a/an object
 
                     Return ch.Name(ePronoun, , , Article, bForcePronoun, bExplicitArticle)
 
@@ -2917,7 +1549,6 @@ Module SharedModule
 
                 Case "Worn"
                     Dim lstNew As New List(Of clsItemWithProperties)
-#If Runner Then
                     Select Case sArgs.ToLower
                         Case "", "true", "1", "-1"
                             For Each obWorn As clsObject In ch.WornObjects(True).Values
@@ -2928,12 +1559,10 @@ Module SharedModule
                                 lstNew.Add(obWorn)
                             Next
                     End Select
-#End If
                     Return ReplaceOOProperty(sRemainder, , ch, , lstNew, bInt:=bInt)
 
                 Case "WornAndHeld"
                     Dim lstNew As New List(Of clsItemWithProperties)
-#If Runner Then
                     Select Case sArgs.ToLower
                         Case "", "true", "1", "-1"
                             For Each obWorn As clsObject In ch.WornObjects(True).Values
@@ -2950,7 +1579,6 @@ Module SharedModule
                                 lstNew.Add(obHeld)
                             Next
                     End Select
-#End If
                     Return ReplaceOOProperty(sRemainder, , ch, , lstNew, bInt:=bInt)
 
                 Case ""
@@ -2994,20 +1622,6 @@ Module SharedModule
                                     Return "0"
                             End Select
                         End If
-                        '' Ok, item doesn't have property.  Give it a default
-                        'If Adventure.htblAllProperties.TryGetValue(sNextKey, p) Then
-                        '    Select Case p.Type
-                        '        Case clsProperty.PropertyTypeEnum.CharacterKey, clsProperty.PropertyTypeEnum.LocationGroupKey, clsProperty.PropertyTypeEnum.LocationKey, clsProperty.PropertyTypeEnum.ObjectKey
-                        '            bList = True
-                        '        Case clsProperty.PropertyTypeEnum.Integer, clsProperty.PropertyTypeEnum.ValueList
-                        '            bReturnInt = True
-                        '        Case clsProperty.PropertyTypeEnum.SelectionOnly
-                        '            bReturnInt = True
-                        '        Case clsProperty.PropertyTypeEnum.Text, clsProperty.PropertyTypeEnum.StateList
-                        '    End Select
-                        '    Else
-                        '    ' Duff property
-                        'End If
                     End If
                     If sRemainder <> "" Then
                         Return ReplaceOOProperty(sRemainder, oOb, oCh, oLoc, lstNew, bInt:=bInt)
@@ -3066,11 +1680,9 @@ Module SharedModule
                     Dim lstNew As New List(Of DirectionsEnum)
 
                     For d As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest ' Adventure.iCompassPoints
-#If Runner Then
                         If loc.arlDirections(d).LocationKey <> "" Then
                             lstNew.Add(d)
                         End If
-#End If
                     Next
                     Return ReplaceOOProperty(sRemainder, , ch, , , lstNew, bInt:=bInt)
 
@@ -3099,23 +1711,6 @@ Module SharedModule
                         lstNew = Nothing
                     End If
                     Return ReplaceOOProperty(sRemainder, , , locTo, lstNew, bInt:=bInt)
-                    'Dim sLocTo As String = ""
-
-                    'For Each d As DirectionsEnum In [Enum].GetValues(GetType(DirectionsEnum))
-                    '    If sArgs.ToLower = d.ToString.ToLower Then
-                    '        sLocTo = loc.arlDirections(d).LocationKey
-                    '        If sLocTo Is Nothing Then sLocTo = ""
-                    '        Exit For
-                    '    End If
-                    'Next
-
-                    'Dim locTo As clsLocation = Nothing
-                    'Adventure.htblLocations.TryGetValue(sLocTo, locTo)
-                    'If locTo IsNot Nothing Then
-                    '    Return ReplaceOOProperty(sRemainder, , , locTo)
-                    'Else
-                    '    Return ""
-                    'End If
 
                 Case "Name", SHORTLOCATIONDESCRIPTION
                     Return loc.ShortDescription.ToString
@@ -3187,10 +1782,8 @@ Module SharedModule
             Select Case sFunction
                 Case "Length"
                     Return evt.Length.Value.ToString
-#If Runner Then
                 Case "Position"
                     Return evt.TimerFromStartOfEvent.ToString
-#End If
                 Case ""
                     Return evt.Key
 
@@ -3241,404 +1834,7 @@ Module SharedModule
 
     End Function
 
-#If 0 Then
-    Private Function ReplaceOOPropertyOld(ByVal lstKeys As StringArrayList, ByVal sProperty As String, ByVal bList As Boolean) As String
-
-        Dim sResults As New System.Text.StringBuilder
-        Dim iResult As Integer = 0
-        Dim bReturnInt As Boolean = False
-        Dim sAppend As New System.Text.StringBuilder
-        Dim re As New System.Text.RegularExpressions.Regex("(?<nextkey>[A-Za-z]([\w\|_-])*(\([A-Za-z ,]+?\))?)(?<followingkeys>\.[A-Za-z]([\w\|_-])*(\([A-Za-z ,]+?\))?)*")
-        Dim sMatch As String = ""
-        Dim sNextKey As String = ""
-        Dim lstSubKeys As New StringArrayList
-
-        If re.IsMatch(sProperty) Then
-            sMatch = re.Match(sProperty).Value
-            sNextKey = re.Match(sProperty).Groups("nextkey").Value
-        End If
-
-        For Each sKey As String In lstKeys
-            'Dim re As New System.Text.RegularExpressions.Regex("(?<nextkey>[A-Za-z]([\w\|_-])*(\([A-Za-z ,]+?\))?)(?<followingkeys>\.[A-Za-z]([\w\|_-])*(\([A-Za-z ,]+?\))?)*")
-            If sMatch <> "" Then ' re.IsMatch(sProperty) Then
-                'Dim sMatch As String = re.Match(sProperty).Value
-                'Dim sNextKey As String = re.Match(sProperty).Groups("nextkey").Value
-                'Dim lstSubKeys As New StringArrayList
-                '        Dim bList As Boolean = False
-
-                Dim item As clsItemWithProperties = Nothing
-                Dim ob As clsObject = Nothing
-                Dim ch As clsCharacter = Nothing
-                Dim loc As clsLocation = Nothing
-
-                If Adventure.htblObjects.TryGetValue(sKey, ob) Then
-                    item = ob
-                Else
-                    If Adventure.htblCharacters.TryGetValue(sKey, ch) Then
-                        item = ch
-                    Else
-                        If Adventure.htblLocations.TryGetValue(sKey, loc) Then
-                            item = loc
-                        End If
-                    End If
-                End If
-
-                Dim sFunction As String = sNextKey.Replace(" ", "")
-                Dim sArgs As String = ""
-                If sFunction.Contains("(") AndAlso sFunction.Contains(")") Then
-                    If sFunction.LastIndexOf(")") > sFunction.IndexOf("(") Then
-                        sArgs = sFunction
-                        sArgs = sArgs.Substring(sArgs.IndexOf("(") + 1, sArgs.LastIndexOf(")") - sArgs.IndexOf("(") - 1).ToLower
-                    End If
-                    sFunction = sFunction.Substring(0, sFunction.Length - sArgs.Length - 2)
-                End If
-
-                Select Case sFunction
-                    Case "Children"
-                        bList = True
-                        If ob IsNot Nothing Then
-                            Select Case sArgs
-                                Case "", "all", "onandin", "all,onandin"
-                                    For Each sChild As String In ob.Children(clsObject.WhereChildrenEnum.InsideOrOnObject, True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                    For Each sChild As String In ob.ChildrenCharacters(clsObject.WhereChildrenEnum.InsideOrOnObject).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "characters,in"
-                                    For Each sChild As String In ob.ChildrenCharacters(clsObject.WhereChildrenEnum.InsideObject).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "characters,on"
-                                    For Each sChild As String In ob.ChildrenCharacters(clsObject.WhereChildrenEnum.OnObject).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "characters,onandin"
-                                    For Each sChild As String In ob.ChildrenCharacters(clsObject.WhereChildrenEnum.InsideOrOnObject).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "in"
-                                    For Each sChild As String In ob.Children(clsObject.WhereChildrenEnum.InsideObject, True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                    For Each sChild As String In ob.ChildrenCharacters(clsObject.WhereChildrenEnum.InsideObject).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "objects,in"
-                                    For Each sChild As String In ob.Children(clsObject.WhereChildrenEnum.InsideObject, True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "objects,on"
-                                    For Each sChild As String In ob.Children(clsObject.WhereChildrenEnum.OnObject, True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "objects,onandin", "objects"
-                                    For Each sChild As String In ob.Children(clsObject.WhereChildrenEnum.InsideOrOnObject, True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                            End Select
-                        End If
-
-                    Case "Contents"
-                        bList = True
-                        If ob IsNot Nothing Then
-                            Select Case sArgs
-                                Case "", "all"
-                                    For Each sChild As String In ob.Children(clsObject.WhereChildrenEnum.InsideObject, True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                    For Each sChild As String In ob.ChildrenCharacters(clsObject.WhereChildrenEnum.InsideObject).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "characters"
-                                    For Each sChild As String In ob.ChildrenCharacters(clsObject.WhereChildrenEnum.InsideObject).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "objects"
-                                    For Each sChild As String In ob.Children(clsObject.WhereChildrenEnum.InsideObject, True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                            End Select
-                        ElseIf loc IsNot Nothing Then
-                            Select Case sArgs
-                                Case "", "all"
-                                    For Each sChild As String In loc.ObjectsInLocation.Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                    For Each sChild As String In loc.CharactersDirectlyInLocation.Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "characters"
-                                    For Each sChild As String In loc.CharactersDirectlyInLocation.Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "objects"
-                                    For Each sChild As String In loc.ObjectsInLocation.Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                            End Select
-                        End If
-
-                    Case "Count"
-                        iResult += 1
-                        bReturnInt = True
-
-                    Case "Description", LONGLOCATIONDESCRIPTION
-                        If ob IsNot Nothing Then
-                            sResults.Append(ob.Description.ToString)
-                        ElseIf ch IsNot Nothing Then
-                            sResults.Append(ch.Description.ToString)
-                        ElseIf loc IsNot Nothing Then
-                            Dim sResult As String = loc.ViewLocation
-                            If sResult = "" Then sResult = "There is nothing of interest here."
-                            sResults.Append(sResult)
-                        End If
-
-                    Case "Exits"
-#If Runner Then
-                        If loc IsNot Nothing Then
-                            For d As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest ' Adventure.iCompassPoints
-                                If Adventure.Player.HasRouteInDirection(d, False, Adventure.Player.Location.LocationKey) Then
-                                    lstSubKeys.Add(d.ToString)
-                                End If
-                            Next
-                        End If
-#End If
-                    Case "Held"
-#If Runner Then
-                        If ch IsNot Nothing Then
-                            Select Case sArgs
-                                Case "", "true", "1", "-1"
-                                    For Each sChild As String In ch.HeldObjects(True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "false", "0"
-                                    For Each sChild As String In ch.HeldObjects(False).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                            End Select
-
-                        End If
-#End If
-
-                    Case "Name", "List" ', "List(Or)", "List(True)", "List(1)", "List(False)", "List(0)"                            
-                        ' List(and) - And separated list - Default
-                        ' List(or) - Or separated list
-                        Dim sSeparator As String = " and "
-                        If sArgs.Contains("or") Then sSeparator = " or "
-
-                        ' List(definite/the) - List the objects names - Default
-                        ' List(indefinite) - List a/an object
-                        Dim bTheNames As Boolean = True
-                        If sArgs.Contains("indefinite") Then bTheNames = False
-
-                        ' List(true) - List anything in/on everything in the list (single level) - Default
-                        ' List(false) - Do not list anything in/on
-                        Dim bListInOn As Boolean = True ' List any objects in or on anything in this list
-                        If sFunction = "Name" OrElse sArgs.Contains("false") OrElse sArgs.Contains("0") Then
-                            bListInOn = False
-                        End If
-
-                        If lstKeys.Count > 1 AndAlso sResults.ToString <> "" Then
-                            If sKey = lstKeys(lstKeys.Count - 1) Then sResults.Append(sSeparator) Else sResults.Append(", ")
-                        End If
-                        If ob IsNot Nothing Then
-                            sResults.Append(ob.FullName(bTheNames))
-                            If bListInOn AndAlso ob.Children(clsObject.WhereChildrenEnum.InsideOrOnObject).Count > 0 Then sAppend.Append(".  " & ChopLast(ob.DisplayObjectChildren))
-                        ElseIf ch IsNot Nothing Then
-                            sResults.Append(ch.Name)
-                        ElseIf loc IsNot Nothing Then
-                            sResults.Append(loc.ShortDescription.ToString)
-                        End If
-
-                    Case "Objects"
-                        If loc IsNot Nothing Then
-                            For Each obLoc As clsObject In loc.ObjectsInLocation.Values
-                                lstSubKeys.Add(obLoc.Key)
-                            Next
-                        End If
-
-                    Case "Parent"
-                        If ob IsNot Nothing Then
-                            If ob.Parent <> "" Then lstSubKeys.Add(ob.Parent)
-                        ElseIf ch IsNot Nothing Then
-                            If ch.Parent <> "" Then lstSubKeys.Add(ch.Parent)
-                        End If
-
-                    Case "PrevParent"
-                        If ob IsNot Nothing Then
-                            If ob.Parent <> "" Then lstSubKeys.Add(ob.PrevParent)
-                        ElseIf ch IsNot Nothing Then
-                            If ch.Parent <> "" Then lstSubKeys.Add(ch.PrevParent)
-                        End If
-
-                    Case SHORTLOCATIONDESCRIPTION
-                        If loc IsNot Nothing Then sResults.Append(loc.ShortDescription.ToString)
-
-                    Case "Worn" ', "Worn(False)", "Worn(0)", "Worn(True)", "Worn(1)"
-#If Runner Then
-                        If ch IsNot Nothing Then
-                            Select Case sArgs
-                                Case "", "true", "1", "-1"
-                                    For Each sChild As String In ch.WornObjects(True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "false", "0"
-                                    For Each sChild As String In ch.WornObjects(False).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                            End Select
-                            If lstSubKeys.Count = 0 Then
-                                sResults.Append("nothing")
-                            End If
-                        End If
-#End If
-
-                    Case "WornAndHeld" ', "Worn(False)", "Worn(0)", "Worn(True)", "Worn(1)"
-#If Runner Then
-                        If ch IsNot Nothing Then
-                            Select Case sArgs
-                                Case "", "true", "1", "-1"
-                                    For Each sChild As String In ch.WornObjects(True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                    For Each sChild As String In ch.HeldObjects(True).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                Case "false", "0"
-                                    For Each sChild As String In ch.WornObjects(False).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                                    For Each sChild As String In ch.HeldObjects(False).Keys
-                                        lstSubKeys.Add(sChild)
-                                    Next
-                            End Select
-                            If lstSubKeys.Count = 0 Then
-                                sResults.Append("nothing")
-                            End If
-                        End If
-#End If
-
-                    Case Else
-                        If item IsNot Nothing Then
-                            Dim p As clsProperty = Nothing
-                            If item.htblProperties.TryGetValue(sNextKey, p) Then
-                                Select Case p.Type
-                                    Case clsProperty.PropertyTypeEnum.CharacterKey, clsProperty.PropertyTypeEnum.LocationGroupKey, clsProperty.PropertyTypeEnum.LocationKey, clsProperty.PropertyTypeEnum.ObjectKey
-                                        bList = True
-                                        lstSubKeys.Add(p.Value)
-                                    Case clsProperty.PropertyTypeEnum.Integer, clsProperty.PropertyTypeEnum.ValueList
-                                        iResult += p.IntData
-                                        bReturnInt = True
-                                    Case clsProperty.PropertyTypeEnum.SelectionOnly
-                                        iResult += 1
-                                        bReturnInt = True
-                                    Case clsProperty.PropertyTypeEnum.Text, clsProperty.PropertyTypeEnum.StateList
-                                        If lstKeys.Count > 1 AndAlso sResults.ToString <> "" Then
-                                            If sKey = lstKeys(lstKeys.Count - 1) Then sResults.Append(" and ") Else sResults.Append(", ")
-                                        End If
-                                        sResults.Append(p.Value)
-                                End Select
-                            Else
-                                ' Ok, item doesn't have property.  Give it a default
-                                If Adventure.htblAllProperties.TryGetValue(sNextKey, p) Then
-                                    Select Case p.Type
-                                        Case clsProperty.PropertyTypeEnum.CharacterKey, clsProperty.PropertyTypeEnum.LocationGroupKey, clsProperty.PropertyTypeEnum.LocationKey, clsProperty.PropertyTypeEnum.ObjectKey
-                                            bList = True
-                                        Case clsProperty.PropertyTypeEnum.Integer, clsProperty.PropertyTypeEnum.ValueList
-                                            bReturnInt = True
-                                        Case clsProperty.PropertyTypeEnum.SelectionOnly
-                                            bReturnInt = True
-                                        Case clsProperty.PropertyTypeEnum.Text, clsProperty.PropertyTypeEnum.StateList
-                                    End Select
-                                Else
-                                    ' Duff property
-                                End If
-                            End If
-                        ElseIf lstKeys.Count > 0 Then
-                            Dim p As clsProperty = Nothing
-                            If Adventure.htblAllProperties.TryGetValue(sNextKey, p) Then
-
-                            End If
-                        End If
-                End Select
-
-#If Debug And Runner Then
-                If Not bReturnInt AndAlso sMatch = sNextKey AndAlso sResults.ToString = "" AndAlso lstSubKeys.Count = 0 Then
-                    TODO(sNextKey)
-                End If
-#End If
-
-                'If bList AndAlso sMatch = sNextKey Then sMatch &= ".List"
-
-                If sMatch <> sNextKey Then
-                    Dim sSubProperty As String = sMatch.Substring(sNextKey.Length + 1)
-                    If sSubProperty.Length > 0 Then
-                        If lstSubKeys.Count = 0 AndAlso sResults.ToString <> "" Then
-                            Return sResults.ToString
-                        Else
-                            Return ReplaceOOPropertyOld(lstSubKeys, sSubProperty, bList)
-                        End If
-                    End If
-                Else
-                    If lstSubKeys.Count > 0 AndAlso sResults.ToString = "" Then
-                        For Each sSubKey As String In lstSubKeys
-                            If sResults.Length > 0 Then sResults.Append("|")
-                            sResults.Append(sSubKey)
-                        Next
-                    End If
-                End If
-
-            End If
-        Next
-
-        If sAppend.ToString <> "" Then sResults.Append(sAppend.ToString)
-
-        If lstKeys.Count = 0 Then
-            ' We need to work out the datatype
-            Select Case sProperty
-                Case "Count"
-                    bReturnInt = True
-                Case "List"
-                    bReturnInt = False
-                    Return ""
-                Case Else
-                    If sNextKey <> "" AndAlso sNextKey <> sMatch Then
-                        Dim sSubProperty As String = sMatch.Substring(sNextKey.Length + 1)
-                        If sSubProperty.Length > 0 Then
-                            Return ReplaceOOPropertyOld(lstKeys, sSubProperty, bList)
-                        End If
-                    Else
-                        Dim p As clsProperty = Nothing
-                        If Adventure.htblAllProperties.TryGetValue(sProperty, p) Then
-                            Select Case p.Type
-                                Case clsProperty.PropertyTypeEnum.CharacterKey, clsProperty.PropertyTypeEnum.LocationGroupKey, clsProperty.PropertyTypeEnum.LocationKey, clsProperty.PropertyTypeEnum.ObjectKey
-                                    ' Recurse again...
-                                Case clsProperty.PropertyTypeEnum.Integer, clsProperty.PropertyTypeEnum.ValueList
-                                    bReturnInt = True
-                                Case clsProperty.PropertyTypeEnum.StateList, clsProperty.PropertyTypeEnum.Text
-                                    bReturnInt = False
-                                    Return "#*!~#" ' We don't want to replace Properties of nothing (e.g. notakey.Property)
-                            End Select
-                        Else
-                            Return "#*!~#"
-                        End If
-                    End If
-            End Select
-        End If
-
-        If bReturnInt Then
-            Return iResult.ToString
-        Else
-            Return sResults.ToString
-        End If
-
-    End Function
-#End If
-
-
     Private Function SplitArgs(ByVal sArgs As String) As List(Of String)
-
         Dim lArgs As New List(Of String)
         Dim iLevel As Integer = 0
         Dim sArg As String = ""
@@ -3665,12 +1861,10 @@ Module SharedModule
         If sArg <> "" Then lArgs.Add(sArg)
 
         Return lArgs
-
     End Function
 
 
     Private Sub EvaluateUDF(ByVal udf As clsUserFunction, ByRef sText As String)
-
         ' This will need to be a bit more sophisticated once we have arguments...
         Dim re As New System.Text.RegularExpressions.Regex("%" & udf.Name & "(\[.*?\])?%")
 
@@ -3689,23 +1883,19 @@ Module SharedModule
             Dim sMatch As String = re.Match(sText).Value
             Dim dOut As Description = udf.Output.Copy
 
-#If Runner Then
             ' Backup existing Refs
             Dim refsCopy As clsNewReference() = UserSession.NewReferences
             Dim refsUDF As clsNewReference() = {}
             Dim iRefNo As Integer = 0
-#End If
 
             If sMatch.Contains("[") AndAlso sMatch.Contains("]") Then
                 Dim sArgs As String = sMatch.Substring(sMatch.IndexOf("["c) + 1, sMatch.LastIndexOf("]"c) - sMatch.IndexOf("["c) - 1)
 
-                'Dim sArg() As String = sArgs.Split(","c)
                 Dim sArg As List(Of String) = SplitArgs(sArgs)
                 Dim i As Integer = 0
                 For Each arg As clsUserFunction.Argument In udf.Arguments
                     Dim sEvaluatedArg As String = ReplaceFunctions(sArg(i))
 
-#If Runner Then
                     If sEvaluatedArg.Contains("|") Then ' Means it evaluated to multiple items                            
                         ' Depending on arg type, create an objects parameter, and set the refs
                         Select Case arg.Type
@@ -3725,7 +1915,6 @@ Module SharedModule
                                 iRefNo += 1
                         End Select
                     End If
-#End If
 
                     ' Our function argument could be an expression
                     If New System.Text.RegularExpressions.Regex("\d( )*[+-/*^]( )*\d").IsMatch(sEvaluatedArg) Then
@@ -3744,22 +1933,16 @@ Module SharedModule
                 Next
             End If
 
-#If Runner Then
             UserSession.NewReferences = refsUDF
-#End If
             Dim sFunctionResult As String = dOut.ToString
-#If Runner Then
             ' Restore Refs
             UserSession.NewReferences = refsCopy
-#End If
             sText = ReplaceFunctions(re.Replace(sText, sFunctionResult, 1))
         End If
 
     End Sub
 
-
     Public Function ReplaceFunctions(ByVal sText As String, Optional ByVal bExpression As Boolean = False, Optional ByVal bAllowOO As Boolean = True) As String
-
         Try
             Dim dictGUIDs As New Dictionary(Of String, String)
             While sText.Contains("<#")
@@ -3776,9 +1959,7 @@ Module SharedModule
             Next
 
             If sInstr(sText, "%") > 0 Then
-
                 Dim sCheck As String
-
                 Do
                     sCheck = sText
 
@@ -3792,17 +1973,11 @@ Module SharedModule
                     sText = ReplaceIgnoreCase(sText, "%text%", "%text1%")
                     sText = ReplaceIgnoreCase(sText, "%number%", "%number1%")
 
-                    'If bExpression Then
-                    '    sText = ReplaceIgnoreCase(sText, "%text%", """" & Adventure.sReferencedText & """")
-                    'Else
-                    '    sText = ReplaceIgnoreCase(sText, "%text%", Adventure.sReferencedText)
-                    'End If
                     sText = ReplaceIgnoreCase(sText, "%ConvCharacter%", Adventure.sConversationCharKey)
                     sText = ReplaceIgnoreCase(sText, "%turns%", Adventure.Turns.ToString)
                     Dim sVersion As String = System.Reflection.Assembly.GetExecutingAssembly.GetName.Version.ToString
-                    sText = ReplaceIgnoreCase(sText, "%version%", sVersion.Substring(0, 1) & sVersion.Substring(2, 1) & sVersion.Substring(4)) ' .dVersion.ToString)
+                    sText = ReplaceIgnoreCase(sText, "%version%", sVersion.Substring(0, 1) & sVersion.Substring(2, 1) & sVersion.Substring(4))
                     sText = ReplaceIgnoreCase(sText, "%release%", Adventure.BabelTreatyInfo.Stories(0).Releases.Attached.Release.Version.ToString)
-                    'sText = ReplaceIgnoreCase(sText, "%room%", Adventure.htblLocations(Adventure.Player.Location.LocationKey).ShortDescription.ToString)
 
                     If Contains(sText, "%AloneWithChar%") Then
                         Dim sAloneWithChar As String = Adventure.Player.AloneWithChar
@@ -3816,19 +1991,15 @@ Module SharedModule
                     End If
                     sText = ReplaceIgnoreCase(sText, "%CharacterName%", "%CharacterName[%Player%]%") ' Function without args points to Player
 
-#If Runner Then
                     With UserSession
                         If .NewReferences IsNot Nothing Then
                             For iObRef As Integer = 1 To 5
-                                If Contains(sText, "%object" & iObRef & "%") Then ' sInstr(sText, "%object" & iObRef & "%") > 0 Then
-                                    ' Get the first object reference       
-                                    'Dim iActRef As Integer = 0
+                                If Contains(sText, "%object" & iObRef & "%") Then
+                                    ' Get the first object reference
                                     Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%object" & iObRef & "%.") AndAlso Not Contains(sText, """%object" & iObRef & "%""")
                                     For Each nr As clsNewReference In .NewReferences
                                         If nr.ReferenceType = ReferencesType.Object Then
-                                            'iActRef += 1
-                                            'nr.ReferenceMatch = "objects" OrElse 
-                                            If nr.ReferenceMatch = "object" & iObRef Then ' iActRef = iObRef Then
+                                            If nr.ReferenceMatch = "object" & iObRef Then
                                                 Dim sObjects As String = ""
                                                 For Each itm As clsSingleItem In nr.Items
                                                     If sObjects <> "" Then sObjects &= "|"
@@ -3847,7 +2018,7 @@ Module SharedModule
                                 ' Get the first object reference            
                                 Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%objects%.") AndAlso Not Contains(sText, """%objects%""")
                                 For Each nr As clsNewReference In .NewReferences
-                                    If nr.ReferenceType = ReferencesType.Object AndAlso nr.ReferenceMatch = "objects" Then ' AndAlso nr.bMultiple Then
+                                    If nr.ReferenceType = ReferencesType.Object AndAlso nr.ReferenceMatch = "objects" Then
                                         Dim sObjects As String = ""
                                         For Each itm As clsSingleItem In nr.Items
                                             If sObjects <> "" Then sObjects &= "|"
@@ -3861,14 +2032,12 @@ Module SharedModule
                             End If
 
                             For iCharRef As Integer = 1 To 5
-                                If Contains(sText, "%character" & iCharRef & "%") Then ' sInstr(sText, "%character" & iCharRef & "%") > 0 Then
+                                If Contains(sText, "%character" & iCharRef & "%") Then
                                     ' Get the first character reference       
-                                    'Dim iActRef As Integer = 0
                                     Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%character" & iCharRef & "%.") AndAlso Not Contains(sText, """%character" & iCharRef & "%""")
                                     For Each nr As clsNewReference In .NewReferences
                                         If nr.ReferenceType = ReferencesType.Character Then
-                                            'iActRef += 1
-                                            If nr.ReferenceMatch = "character" & iCharRef Then ' iActRef = iCharRef Then
+                                            If nr.ReferenceMatch = "character" & iCharRef Then
                                                 Dim sCharacters As String = ""
                                                 For Each itm As clsSingleItem In nr.Items
                                                     If sCharacters <> "" Then sCharacters &= "|"
@@ -3887,7 +2056,7 @@ Module SharedModule
                                 ' Get the first character reference 
                                 Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%characters%.") AndAlso Not Contains(sText, """%characters%""")
                                 For Each nr As clsNewReference In .NewReferences
-                                    If nr.ReferenceType = ReferencesType.Character Then ' AndAlso nr.bMultiple Then
+                                    If nr.ReferenceType = ReferencesType.Character Then
                                         Dim sCharacters As String = ""
                                         For Each itm As clsSingleItem In nr.Items
                                             If sCharacters <> "" Then sCharacters &= "|"
@@ -3906,8 +2075,7 @@ Module SharedModule
                                     Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%location" & iLocRef & "%.") AndAlso Not Contains(sText, """%location" & iLocRef & "%""")
                                     For Each nr As clsNewReference In .NewReferences
                                         If nr.ReferenceType = ReferencesType.Location Then
-                                            'iActRef += 1
-                                            If nr.ReferenceMatch = "location" & iLocRef Then ' iActRef = iLocRef Then
+                                            If nr.ReferenceMatch = "location" & iLocRef Then
                                                 Dim sLocations As String = ""
                                                 For Each itm As clsSingleItem In nr.Items
                                                     If sLocations <> "" Then sLocations &= "|"
@@ -3928,8 +2096,7 @@ Module SharedModule
                                     Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%item" & iItemRef & "%.") AndAlso Not Contains(sText, """%item" & iItemRef & "%""")
                                     For Each nr As clsNewReference In .NewReferences
                                         If nr.ReferenceType = ReferencesType.Item Then
-                                            'iActRef += 1
-                                            If nr.ReferenceMatch = "item" & iItemRef Then ' iActRef = iItemRef Then
+                                            If nr.ReferenceMatch = "item" & iItemRef Then
                                                 Dim sItems As String = ""
                                                 For Each itm As clsSingleItem In nr.Items
                                                     If sItems <> "" Then sItems &= "|"
@@ -3950,8 +2117,7 @@ Module SharedModule
                                     Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%direction" & iDirRef & "%.") AndAlso Not Contains(sText, """%direction" & iDirRef & "%""")
                                     For Each nr As clsNewReference In .NewReferences
                                         If nr.ReferenceType = ReferencesType.Direction Then
-                                            'iActRef += 1
-                                            If nr.ReferenceMatch = "direction" & iDirRef Then ' iActRef = iDirRef Then
+                                            If nr.ReferenceMatch = "direction" & iDirRef Then
                                                 Dim sDirections As String = ""
                                                 For Each itm As clsSingleItem In nr.Items
                                                     If sDirections <> "" Then sDirections &= "|"
@@ -3966,22 +2132,15 @@ Module SharedModule
                                 End If
                             Next iDirRef
 
-
                             For i As Integer = 1 To 5
-                                Dim iRef As Integer = i '- 1
-                                'If iRef > 0 Then iRef -= 1
+                                Dim iRef As Integer = i
 
                                 Dim sNumber As String = "%number" & If(i > 0, i.ToString, "").ToString & "%"
                                 If Contains(sText, sNumber) Then
                                     Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%number" & If(i > 0, i.ToString, "").ToString & "%.") AndAlso Not Contains(sText, """%number" & If(i > 0, i.ToString, "").ToString & "%""")
                                     For Each ref As clsNewReference In .NewReferences
                                         If ref.ReferenceType = ReferencesType.Number Then
-                                            'iNumRef += 1
-                                            If ref.ReferenceMatch = "number" & iRef Then ' iNumRef - 1 = iRef Then
-                                                'If ref.Items.Count = 1 AndAlso ref.Items(0).MatchingPossibilities.Count = 1 Then
-                                                '    sText = ReplaceIgnoreCase(sText, sNumber, ref.Items(0).MatchingPossibilities(0))
-                                                'End If
-                                                'Exit For
+                                            If ref.ReferenceMatch = "number" & iRef Then
                                                 Dim sNumbers As String = ""
                                                 For Each itm As clsSingleItem In ref.Items
                                                     If sNumbers <> "" Then sNumbers &= "|"
@@ -3993,8 +2152,6 @@ Module SharedModule
                                             End If
                                         End If
                                     Next
-
-                                    'sText = ReplaceIgnoreCase(sText, sNumber, Adventure.iReferencedNumber(iRef).ToString)                                    
                                 End If
 
                                 Dim sRefText As String = "%text" & If(i > 0, i.ToString, "").ToString & "%"
@@ -4002,8 +2159,7 @@ Module SharedModule
                                     Dim bQuote As Boolean = bExpression AndAlso Not Contains(sText, "%text" & If(i > 0, i.ToString, "").ToString & "%.") AndAlso Not Contains(sText, """%text" & If(i > 0, i.ToString, "").ToString & "%""")
                                     For Each ref As clsNewReference In .NewReferences
                                         If ref.ReferenceType = ReferencesType.Text Then
-                                            'iTextRef += 1
-                                            If ref.ReferenceMatch = "text" & iRef Then ' iTextRef - 1 = iRef Then
+                                            If ref.ReferenceMatch = "text" & iRef Then
                                                 If ref.Items.Count = 1 AndAlso ref.Items(0).MatchingPossibilities.Count = 1 Then
                                                     If bExpression Then
                                                         sText = ReplaceIgnoreCase(sText, sRefText, """" & ref.Items(0).MatchingPossibilities(0) & """")
@@ -4024,13 +2180,12 @@ Module SharedModule
 
                         End If
                     End With
-#End If
 
                     For Each var As clsVariable In Adventure.htblVariables.Values
                         If var.Length = 1 Then
                             While InStr(sText, "%" & var.Name & "%", CompareMethod.Text) > 0
                                 If var.Type = clsVariable.VariableTypeEnum.Numeric Then
-                                    sText = ReplaceIgnoreCase(sText, "%" & var.Name & "%", var.IntValue.ToString) ' sText.Replace("%" & var.Name & "%", var.IntValue.ToString)
+                                    sText = ReplaceIgnoreCase(sText, "%" & var.Name & "%", var.IntValue.ToString)
                                 Else
                                     If bExpression Then
                                         sText = ReplaceIgnoreCase(sText, "%" & var.Name & "%", """" & var.StringValue & """")
@@ -4092,9 +2247,7 @@ Module SharedModule
                         End If
                     Next
 
-                    'For Each sFunction As String In FunctionNames()
                     If sFirstFunction <> "" Then
-                        'sFunction = sFunction.ToLower
                         Dim sFunction As String = sFirstFunction
                         Dim iMatchLoc As Integer = sInstr(sText.ToLower, "%" & sFunction & "[")
                         While iMatchLoc > 0
@@ -4103,13 +2256,11 @@ Module SharedModule
                             Dim bFunctionIsArgument As Boolean = (iMatchLoc > 1 AndAlso sText.Substring(iMatchLoc - 2, 1) = "[" AndAlso sText.Substring(iMatchLoc + sFunction.Length + iArgsLength, 2) = "]%")
 
                             If iArgsLength > 0 OrElse sFunction.ToLower = "sum" Then
-
                                 Dim sOldArgs As String = sArgs
                                 sArgs = ReplaceFunctions(sArgs)
-                                sText = sText.Substring(0, iMatchLoc - 1) & Replace(sText, sOldArgs, sArgs, iMatchLoc, 1) ' sText.Replace(sOldArgs, sArgs) ' Only replace 1 because subsequent functions could return different values (e.g. CharacterName)
+                                sText = sText.Substring(0, iMatchLoc - 1) & Replace(sText, sOldArgs, sArgs, iMatchLoc, 1)
 
                                 If sInstr(sText.ToLower, "%" & sFunction & "[" & sArgs.ToLower & "]%") > 0 Then
-
                                     Dim bAllowBlank As Boolean = False
                                     Dim sResult As String = ""
                                     Dim htblObjects As New ObjectHashTable
@@ -4146,7 +2297,6 @@ Module SharedModule
                                             Dim sKeys() As String = Split(sArgs.Replace(" ", ""), ",")
                                             Dim sKey As String = ""
                                             If sKeys.Length > 0 Then sKey = sKeys(0)
-#If Runner Then
                                             Dim ePronoun As PronounEnum = PronounEnum.Subjective
                                             If sKeys.Length = 2 Then
                                                 Select Case sKeys(1).ToLower
@@ -4169,66 +2319,16 @@ Module SharedModule
                                                         sResult = PCase(sResult)
                                                     End If
                                                 End If
-
-                                                'sResult = AutoCapitalise(sText, sResult, iMatchLoc)
-#If Runner Then
-                                                'If bDisplaying Then Perspectives.Add(New PerspectiveOffset(iMatchLoc, htblCharacters(sArgs).Perspective))
                                                 If UserSession.bDisplaying Then UserSession.PronounKeys.Add(sKey, ePronoun, htblCharacters(sKey).Gender, UserSession.sOutputText.Length + iMatchLoc)
-                                                'Select Case htblCharacters(sKey).Gender
-                                                '    Case clsCharacter.GenderEnum.Male
-                                                '        Select Case ePronoun
-                                                '            Case PronounEnum.Objective
-                                                '                UserSession.LastObjectiveMalePronoun = sKey
-                                                '            Case PronounEnum.Possessive
-                                                '                UserSession.LastPossessiveMalePronoun = sKey
-                                                '            Case PronounEnum.Reflective
-                                                '                UserSession.LastReflectiveMalePronoun = sKey
-                                                '            Case PronounEnum.Subjective
-                                                '                UserSession.LastSubjectiveMalePronoun = sKey
-                                                '        End Select                                                        
-                                                '    Case clsCharacter.GenderEnum.Female
-                                                '        Select Case ePronoun
-                                                '            Case PronounEnum.Objective
-                                                '                UserSession.LastObjectiveFemalePronoun = sKey
-                                                '            Case PronounEnum.Possessive
-                                                '                UserSession.LastPossessiveFemalePronoun = sKey
-                                                '            Case PronounEnum.Reflective
-                                                '                UserSession.LastReflectiveFemalePronoun = sKey
-                                                '            Case PronounEnum.Subjective
-                                                '                UserSession.LastSubjectiveFemalePronoun = sKey
-                                                '        End Select
-                                                '    Case clsCharacter.GenderEnum.Unknown
-                                                '        Select Case ePronoun
-                                                '            Case PronounEnum.Objective
-                                                '                UserSession.LastObjectiveItPronoun = sKey
-                                                '            Case PronounEnum.Possessive
-                                                '                UserSession.LastPossessiveItPronoun = sKey
-                                                '            Case PronounEnum.Reflective
-                                                '                UserSession.LastReflectiveItPronoun = sKey
-                                                '            Case PronounEnum.Subjective
-                                                '                UserSession.LastSubjectiveItPronoun = sKey
-                                                '        End Select
-                                                'End Select                                                
-#End If
                                             ElseIf sKey = NOCHARACTER Then
                                                 sResult = "Nobody"
                                             Else
                                                 DisplayError("Bad Argument to &perc;CharacterName[]&perc; - Character Key """ & sArgs & """ not found")
                                             End If
-#Else
-                                            If Adventure.htblCharacters.ContainsKey(sKey) Then
-                                                sResult = htblCharacters(sKey).Name()
-                                            End If
-#End If
 
                                         Case "CharacterProper".ToLower, "ProperName".ToLower
                                             If Adventure.htblCharacters.ContainsKey(sArgs) Then
                                                 sResult = htblCharacters(sArgs).ProperName
-                                                'sResult = AutoCapitalise(sText, sResult, iMatchLoc)
-                                                '#If Runner Then
-                                                '                                            If bDisplaying Then Perspectives.Add(New PerspectiveOffset(iMatchLoc, htblCharacters(sArgs).Perspective))
-                                                '#End If
-
                                             Else
                                                 DisplayError("Bad Argument to &perc;CharacterProper[]&perc; - Character Key """ & sArgs & """ not found")
                                             End If
@@ -4258,7 +2358,6 @@ Module SharedModule
                                             End If
 
                                         Case "Held".ToLower
-#If Runner Then
                                             If Adventure.htblCharacters.ContainsKey(sArgs) Then
                                                 For Each ob As clsObject In Adventure.htblCharacters(sArgs).HeldObjects.Values
                                                     If sResult <> "" Then sResult &= "|"
@@ -4268,7 +2367,6 @@ Module SharedModule
                                                 DisplayError("Bad Argument to &perc;Held[]&perc; - Character Key """ & sArgs & """ not found")
                                             End If
                                             bAllowBlank = True
-#End If
                                         Case "LCase".ToLower
                                             sResult = sArgs.ToLower
 
@@ -4294,21 +2392,17 @@ Module SharedModule
                                             End If
 
                                         Case "ListHeld".ToLower
-#If Runner Then
                                             If Adventure.htblCharacters.ContainsKey(sArgs) Then
                                                 sResult = Adventure.htblCharacters(sArgs).HeldObjects.List(, True, ArticleTypeEnum.Indefinite)
                                             Else
                                                 DisplayError("Bad Argument to &perc;ListHeld[]&perc; - Character Key """ & sArgs & """ not found")
                                             End If
-#End If
                                         Case "ListExits".ToLower
-#If Runner Then
                                             If Adventure.htblCharacters.ContainsKey(sArgs) Then
                                                 sResult = Adventure.htblCharacters(sArgs).ListExits
                                             Else
                                                 DisplayError("Bad Argument to &perc;ListExits[]&perc; - Character Key """ & sArgs & """ not found")
                                             End If
-#End If
                                         Case "ListObjectsAtLocation".ToLower
                                             If Adventure.htblLocations.ContainsKey(sArgs) Then
                                                 sResult = Adventure.htblLocations(sArgs).ObjectsInLocation(clsLocation.WhichObjectsToListEnum.AllObjects, True).List(, , ArticleTypeEnum.Indefinite)
@@ -4341,20 +2435,12 @@ Module SharedModule
                                             Else
                                                 DisplayError("Bad Argument to &perc;ListObjectsOnAndIn[]&perc; - Object Key """ & sArgs & """ not found")
                                             End If
-                                            'If Adventure.htblObjects.ContainsKey(sArgs) Then
-                                            '    sResult = Adventure.htblObjects(sArgs).DisplayObjectChildren
-                                            'Else
-                                            '    DisplayError("Bad Argument to &perc;ListObjectsOnAndIn[]&perc; - Object Key """ & sArgs & """ not found")
-                                            'End If
-
                                         Case "ListWorn".ToLower
-#If Runner Then
                                             If Adventure.htblCharacters.ContainsKey(sArgs) Then
                                                 sResult = Adventure.htblCharacters(sArgs).WornObjects.List("and", True, ArticleTypeEnum.Indefinite)
                                             Else
                                                 DisplayError("Bad Argument to &perc;ListWorn[]&perc; - Character Key """ & sArgs & """ not found")
                                             End If
-#End If
                                         Case "LocationName".ToLower
                                             If Adventure.htblLocations.ContainsKey(sArgs) Then
                                                 sResult = Adventure.htblLocations(sArgs).ShortDescription.ToString
@@ -4392,11 +2478,6 @@ Module SharedModule
                                             bAllowBlank = True
 
                                         Case "ParentOf".ToLower
-                                            'Dim htblParents As New ObjectHashTable
-                                            'For Each ob As clsObject In htblObjects.Values
-                                            '    htblParents.Add(Adventure.htblObjects(ob.Parent), ob.Parent)
-                                            'Next
-                                            'sResult = htblParents.List
                                             For Each ob As clsObject In htblObjects.Values
                                                 If sResult <> "" Then sResult &= "|"
                                                 sResult &= ob.Parent
@@ -4405,15 +2486,6 @@ Module SharedModule
                                                 If sResult <> "" Then sResult &= "|"
                                                 sResult &= ch.Parent
                                             Next
-                                            '' Just take the first one.  Not sure about multiple...
-                                            ''Dim htblParents As New ObjectHashTable
-                                            'For Each ob As clsObject In htblObjects.Values
-                                            '    sResult = ob.Parent
-                                            '    'If Not htblParents.Contains(ob.Parent) Then
-                                            '    'Return ob.Parent
-                                            '    'End If
-                                            '    'htblParents.Add(Adventure.htblObjects(ob.Parent), ob.Parent)
-                                            'Next
                                         Case "PCase".ToLower
                                             sResult = PCase(sArgs, , bExpression)
 
@@ -4438,9 +2510,6 @@ Module SharedModule
                                         Case "PopUpInput".ToLower
                                             Dim sKeys() As String = sArgs.Split(","c) ' TODO - Improve this to read quotes and commas properly
                                             If sKeys.Length = 1 OrElse sKeys.Length = 2 Then
-                                                'Dim var As New clsVariable
-                                                'var.Type = clsVariable.VariableTypeEnum.Text
-                                                'var.SetToExpression(sKeys(0))
                                                 Dim sDefault As String = ""
                                                 If sKeys.Length = 2 Then sDefault = EvaluateExpression(sKeys(1))
                                                 sResult = """" & InputBox(EvaluateExpression(sKeys(0)), "ADRIFT", sDefault) & """"
@@ -4501,13 +2570,6 @@ Module SharedModule
                                                 DisplayError("Bad call to &perc;PropertyValue[]&perc; - Two arguments expected; Object Key, Property Key")
                                             End If
 
-                                            'Case "ProperName".ToLower
-                                            '    If Adventure.htblCharacters.ContainsKey(sArgs) Then
-                                            '        sResult = htblCharacters(sArgs).ProperName
-                                            '    Else
-                                            '        DisplayError("Bad Argument to &perc;ProperName[]&perc; - Character Key """ & sArgs & """ not found")
-                                            '    End If
-
                                         Case "Sum".ToLower
                                             ' Sum the numbers from a string
                                             Dim sInput As New System.Text.StringBuilder
@@ -4542,7 +2604,6 @@ Module SharedModule
                                             sResult = sArgs.ToUpper
 
                                         Case "Worn".ToLower
-#If Runner Then
                                             If Adventure.htblCharacters.ContainsKey(sArgs) Then
                                                 For Each ob As clsObject In Adventure.htblCharacters(sArgs).WornObjects.Values
                                                     If sResult <> "" Then sResult &= "|"
@@ -4551,7 +2612,6 @@ Module SharedModule
                                             Else
                                                 DisplayError("Bad Argument to &perc;Worn[]&perc; - Character Key """ & sArgs & """ not found")
                                             End If
-#End If
                                     End Select
 
                                     If sResult = "" AndAlso Not bAllowBlank Then
@@ -4581,7 +2641,6 @@ Module SharedModule
 
                             iMatchLoc = sInstr(sText.ToLower, "%" & sFunction & "[")
                         End While
-                        'Next
                     End If
 
                 Loop While sText <> sCheck
@@ -4599,7 +2658,6 @@ Module SharedModule
 
             Dim rePerspective As New System.Text.RegularExpressions.Regex("\[(?<first>.*?)/(?<second>.*?)/(?<third>.*?)\]")
             While rePerspective.IsMatch(sText)
-                'If Adventure.LastPerspective = clsCharacter.PerspectiveEnum.None Then Adventure.LastPerspective = Adventure.Player.Perspective
                 Dim match As System.Text.RegularExpressions.Match = rePerspective.Match(sText)
                 Dim sFirst As String = match.Groups("first").Value
                 If sFirst.Contains("[") Then sFirst = sFirst.Substring(sFirst.LastIndexOf("[") + 1)
@@ -4609,7 +2667,7 @@ Module SharedModule
 
                 If sFirst.Contains("[") OrElse sFirst.Contains("]") OrElse sSecond.Contains("[") OrElse sSecond.Contains("]") OrElse sThird.Contains("[") OrElse sThird.Contains("]") Then Exit While
 
-                Select Case GetPerspective(match.Index) ' Adventure.LastPerspective
+                Select Case GetPerspective(match.Index)
                     Case PerspectiveEnum.FirstPerson
                         sValue = sFirst
                     Case PerspectiveEnum.SecondPerson
@@ -4619,11 +2677,6 @@ Module SharedModule
                 End Select
 
                 sText = sText.Replace("[" & sFirst & "/" & sSecond & "/" & sThird & "]", sValue)
-                'For Each p As PerspectiveOffset In Perspectives
-                '    If p.Offset > match.Index Then
-                '        p.Offset -= ("[" & sFirst & "/" & sSecond & "/" & sThird & "]").Length - sValue.Length
-                '    End If
-                'Next
             End While
 
             For Each sGUID As String In dictGUIDs.Keys
@@ -4638,41 +2691,6 @@ Module SharedModule
         End Try
 
     End Function
-
-
-    '' E.g. "one. two three", "two", 6 => "one. Two three" 
-    'Public Function AutoCapitalise(ByVal sWholeText As String, ByVal sText As String, ByVal iOffset As Integer) As String
-
-    '    Dim bCapitalise As Boolean = False
-
-    '    If iOffset = 1 Then
-    '        bCapitalise = True
-    '    Else
-    '        If iOffset > 1 AndAlso sWholeText(iOffset - 2) = vbLf Then
-    '            bCapitalise = True
-    '        End If
-    '        If sWholeText.Length > iOffset - 1 AndAlso iOffset > 1 AndAlso sWholeText(iOffset - 2) = " " Then
-    '            If sWholeText(iOffset - 3) = " " Then
-    '                If sWholeText(iOffset - 4) = "." Then
-    '                    bCapitalise = True
-    '                End If
-    '            ElseIf sWholeText(iOffset - 3) = "." Then
-    '                bCapitalise = True
-    '            End If
-    '        End If
-    '    End If
-
-    '    If bCapitalise Then
-    '        Return PCase(sText)
-    '    Else
-    '        Return sText
-    '    End If
-
-    'End Function
-
-
-    'Adventure.htblCharacters(PronounKeys(PronounKeys.Count - 1).Key).Perspective ' 
-    ' Return the highest perspective that is less the iOffset
     Private Function GetPerspective(ByVal iOffset As Integer) As PerspectiveEnum
 
         Dim iHighest As Integer = 0
@@ -4745,7 +2763,6 @@ Module SharedModule
 
         Return result.Trim()
     End Function
-
 
     ' Return a word representation of the whole number value.
     Private Function NumberToString(ByVal num_str As String, Optional ByVal use_us_group_names As Boolean = True) As String
@@ -4842,7 +2859,6 @@ Module SharedModule
 
     End Function
 
-
     Public Function OppositeDirection(ByVal dir As DirectionsEnum) As DirectionsEnum
         Select Case dir
             Case DirectionsEnum.North
@@ -4874,17 +2890,13 @@ Module SharedModule
         End Select
     End Function
 
-
-
     Public Function ReplaceIgnoreCase(ByVal Expression As String, ByVal Find As String, ByVal Replacement As String) As String
         If Replacement Is Nothing Then Replacement = ""
         Dim regex As New System.Text.RegularExpressions.Regex(Find.Replace("[", "\[").Replace("]", "\]").Replace("(", "\(").Replace(")", "\)").Replace("|", "\|").Replace("*", "\*").Replace("?", "\?").Replace("$", "\$").Replace("^", "\^").Replace("+", "\+"), System.Text.RegularExpressions.RegexOptions.IgnoreCase)
         Return regex.Replace(Expression, Replacement.Replace("$", "$$"), 1) ' Prevent Substitutions (http://msdn.microsoft.com/en-us/library/ewy2t5e0.aspx)
     End Function
 
-
     Public Function PCase(ByVal sText As String, Optional ByVal bStrictLower As Boolean = False, Optional ByVal bExpression As Boolean = False) As String
-
         Dim bQuotes As Boolean = False
         If bExpression AndAlso sText.StartsWith("""") AndAlso sText.EndsWith("""") Then
             bQuotes = True
@@ -4908,12 +2920,10 @@ Module SharedModule
         Finally
             If bQuotes Then PCase = """" & PCase & """"
         End Try
-
     End Function
 
 
     Public Function GetFunctionArgs(ByVal sText As String) As String
-
         Try
             If sInstr(sText, "[") = 0 OrElse sInstr(sText, "]") = 0 Then Return ""
 
@@ -4938,20 +2948,11 @@ Module SharedModule
             DisplayError("Error obtaining function arguments from """ & sText & """")
             Return ""
         End Try
-
     End Function
-
 
     Public Sub Sleep(ByVal iSeconds As Integer)
         Threading.Thread.Sleep(iSeconds * 1000)
     End Sub
-
-
-    Public Sub IntroMessage()
-        'MessageBox.Show("This is an early alpha release of ADRIFT 5.0 for <Ken Franklin>, dated 19th Nov 2006.  Please do NOT distribute!", "ADRIFT 5.0", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-    End Sub
-
-
 
     Public Function EnumParsePropertyPropertyOf(ByVal sValue As String) As clsProperty.PropertyOfEnum
         Select Case sValue
@@ -4968,7 +2969,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParsePropertyType(ByVal sValue As String) As clsProperty.PropertyTypeEnum
         Select Case sValue
@@ -4995,7 +2995,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseMoveCharacter(ByVal sValue As String) As clsAction.MoveCharacterToEnum
         Select Case sValue
@@ -5031,7 +3030,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseMoveLocation(ByVal sValue As String) As clsAction.MoveLocationToEnum
         Select Case sValue
             Case "ToGroup"
@@ -5044,7 +3042,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseSetTask(ByVal sValue As String) As clsAction.SetTasksEnum
         Select Case sValue
             Case "Execute"
@@ -5056,7 +3053,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseEndGame(ByVal sValue As String) As clsAction.EndGameEnum
         Select Case sValue
@@ -5071,7 +3067,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseMoveObject(ByVal sValue As String) As clsAction.MoveObjectToEnum
         Select Case sValue
@@ -5103,7 +3098,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseMust(ByVal sValue As String) As clsRestriction.MustEnum
         Select Case sValue
             Case "Must"
@@ -5115,7 +3109,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseLocation(ByVal sValue As String) As clsRestriction.LocationEnum
         If Adventure.dVersion < 5.000015 Then
@@ -5137,7 +3130,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseDirections(ByVal sValue As String) As DirectionsEnum
         Select Case sValue
@@ -5171,7 +3163,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseBeforeAfter(ByVal sValue As String) As clsTask.BeforeAfterEnum
         Select Case sValue
             Case "After"
@@ -5183,7 +3174,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseVariable(ByVal sValue As String) As clsRestriction.VariableEnum
         Select Case sValue
@@ -5203,7 +3193,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseItem(ByVal sValue As String) As clsRestriction.ItemEnum
         Select Case sValue
@@ -5237,7 +3226,6 @@ Module SharedModule
                 TODO()
         End Select
     End Function
-
 
     Public Function EnumParseCharacter(ByVal sValue As String) As clsRestriction.CharacterEnum
         Select Case sValue
@@ -5294,12 +3282,10 @@ Module SharedModule
             Case "BeVisibleToCharacter"
                 Return clsRestriction.CharacterEnum.BeVisibleToCharacter
             Case Else
-                'Throw New Exception("Value """ & sValue & """ not parsed!")
                 Return Nothing
         End Select
 
     End Function
-
 
     Public Function EnumParseObject(ByVal sValue As String) As clsRestriction.ObjectEnum
         Select Case sValue
@@ -5341,7 +3327,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseSubEventMeasure(ByVal sValue As String) As clsEvent.SubEvent.MeasureEnum
         Select Case sValue
             Case "Turns"
@@ -5370,7 +3355,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseTaskType(ByVal sValue As String) As clsTask.TaskTypeEnum
         Select Case sValue
             Case "General"
@@ -5384,7 +3368,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseSpecificType(ByVal sValue As String) As ReferencesType
         Select Case sValue
@@ -5408,7 +3391,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseCharacterType(ByVal sValue As String) As clsCharacter.CharacterTypeEnum
         Select Case sValue
             Case "NonPlayer"
@@ -5421,7 +3403,6 @@ Module SharedModule
         End Select
     End Function
 
-
     Public Function EnumParseVariableType(ByVal sValue As String) As clsVariable.VariableTypeEnum
         Select Case sValue
             Case "Numeric"
@@ -5433,7 +3414,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
 
     Public Function EnumParseGroupType(ByVal sValue As String) As clsGroup.GroupTypeEnum
         Select Case sValue
@@ -5448,8 +3428,6 @@ Module SharedModule
                 Return Nothing
         End Select
     End Function
-
-
 
     Public Function WriteEnum(ByVal e As clsAction.EndGameEnum) As String
         Select Case e
@@ -5653,7 +3631,6 @@ Module SharedModule
         End Select
         Return Nothing
     End Function
-
 
     Public Function WriteEnum(ByVal c As clsRestriction.CharacterEnum) As String
         Select Case c
@@ -5895,6 +3872,7 @@ Module SharedModule
             Return 0
         End Try
     End Function
+
     Public Function SafeDbl(ByVal Expression As Object) As Double
         Try
             Dim sExpression As String = SafeString(Expression)
@@ -5909,6 +3887,7 @@ Module SharedModule
             Return 0
         End Try
     End Function
+
     Public Function SafeInt(ByVal Expression As Object) As Integer
         Try
             If Expression Is Nothing OrElse IsDBNull(Expression) Then Return 0
@@ -5920,6 +3899,7 @@ Module SharedModule
             Return 0
         End Try
     End Function
+
     Public Function SafeBool(ByVal Expression As Object) As Boolean
         Try
             If Expression Is Nothing OrElse IsDBNull(Expression) Then Return False
@@ -5940,6 +3920,7 @@ Module SharedModule
             Return False
         End Try
     End Function
+
     Public Function SafeString(ByVal Expression As Object) As String
         Try
             If Expression Is Nothing OrElse IsDBNull(Expression) Then Return ""
@@ -5949,6 +3930,7 @@ Module SharedModule
             Return ""
         End Try
     End Function
+
     Public Function SafeDate(ByVal Expression As Object) As Date
         Try
             If Expression Is Nothing OrElse IsDBNull(Expression) OrElse Not IsDate(Expression) Then Return New Date
@@ -5958,7 +3940,6 @@ Module SharedModule
             Return New Date
         End Try
     End Function
-
 
     Public Class EventOrWalkControl
         Implements ICloneable
@@ -5987,7 +3968,6 @@ Module SharedModule
         End Function
 
     End Class
-
 
     Public Class FromTo
         Implements ICloneable
@@ -6028,7 +4008,6 @@ Module SharedModule
 
     End Class
 
-
     <DebuggerDisplay("{Description}")>
     Public Class SingleDescription
         Implements ICloneable
@@ -6056,7 +4035,6 @@ Module SharedModule
 
     End Class
 
-
     Public Class Description
         Inherits List(Of SingleDescription)
 
@@ -6074,24 +4052,6 @@ Module SharedModule
 
         End Sub
 
-        'Shadows Sub Add(ByVal desc As SingleDescription)
-        '    MyBase.Add(desc)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal desc As SingleDescription)
-        '    MyBase.Remove(Dir)
-        'End Sub
-
-        'Default Shadows Property Item(ByVal idx As Integer) As SingleDescription
-        '    Get
-        '        Return CType(MyBase.Item(idx), SingleDescription)
-        '    End Get
-        '    Set(ByVal Value As SingleDescription)
-        '        MyBase.Item(idx) = Value
-        '    End Set
-        'End Property
-
-
         Public Function ReferencesKey(ByVal sKey As String) As Integer
 
             Dim iCount As Integer = 0
@@ -6103,7 +4063,6 @@ Module SharedModule
             Return iCount
 
         End Function
-
 
         Public Function DeleteKey(ByVal sKey As String) As Boolean
 
@@ -6118,7 +4077,6 @@ Module SharedModule
 
         'Should we add spaces between one desctiption tab and another
         Private Function AddSpace(ByVal sText As String) As Boolean
-
             If sText = "" Then Return False
             If sText.EndsWith(" ") OrElse sText.EndsWith(vbLf) Then Return False
 
@@ -6133,16 +4091,13 @@ Module SharedModule
 
             ' Otherwise return False
             Return False
-
         End Function
-
 
         ' If bTesting is set, we're just testing the value, so don't mark text as having been output
         Public Shadows ReadOnly Property ToString(Optional ByVal bTesting As Boolean = False) As String
             Get
                 Dim sb As New System.Text.StringBuilder
 
-#If Runner Then
                 Dim sRestrictionTextIn As String = UserSession.sRestrictionText
                 Dim iRestNumIn As Integer = UserSession.iRestNum
                 Dim sRouteErrorIn As String = UserSession.sRouteError
@@ -6211,23 +4166,14 @@ Module SharedModule
                     UserSession.iRestNum = iRestNumIn
                     UserSession.sRouteError = sRouteErrorIn
                 End Try
-#Else
-                If Me.Count > 0 Then
-                    Return Me(0).Description
-                End If
-#End If
 
                 Return sb.ToString
-
             End Get
         End Property
 
-
         Public Function Copy() As Description
-
             Dim d As New Description
             d.Clear()
-
             For Each sd As SingleDescription In Me
                 Dim sdNew As New SingleDescription
                 sdNew.Description = sd.Description
@@ -6238,9 +4184,7 @@ Module SharedModule
                 sdNew.sTabLabel = sd.sTabLabel
                 d.Add(sdNew)
             Next
-
             Return d
-
         End Function
 
     End Class
@@ -6248,136 +4192,8 @@ Module SharedModule
 
     Public Sub TODO(Optional ByVal sFunction As String = "")
         If sFunction = "" Then sFunction = "This section" Else sFunction = "Function """ & sFunction & """"
-#If Not Adravalon Then
-        MsgBox("TODO - " & sFunction & " still has to be completed.  Please inform Campbell of what you were doing.", MsgBoxStyle.Exclamation)
-#Else
         Glue.ShowInfo("TODO: " & sFunction & " still has to be completed. Please inform Campbell of what you were doing.")
-#End If
     End Sub
-
-
-    'Private Declare Function QueryPerformanceCounter Lib "kernel32" (ByRef counts As Long) As Integer
-    'Public hDebugTimes As Collections.Generic.Dictionary(Of String, clsDebugTime)
-    'Private hPerformanceCounter As Collections.Generic.Dictionary(Of String, Long)
-    'Public lMaxMemory As Long = 0
-
-    'Friend Class clsDebugTime
-    '    Public dtDate As Date
-    '    Public lMemory As Long
-    'End Class
-
-    '    Public Sub DebugTimeRecord(ByVal sFunction As String)
-    '#If DEBUG Then
-
-    '        If hDebugTimes Is Nothing Then hDebugTimes = New Collections.Generic.Dictionary(Of String, clsDebugTime)
-
-    '        SyncLock hDebugTimes ' Make this procedure threadsafe
-    '            If hDebugTimes.ContainsKey(sFunction) Then
-    '                Debug.WriteLine("Mid " & sFunction & " (" & ((Now.Ticks - hDebugTimes(sFunction).dtDate.Ticks) / 10000000.0).ToString("#,##0.0##") & "s so far)")
-    '            Else
-    '                Dim oTime As New clsDebugTime
-
-    '                oTime.dtDate = Now
-    '                oTime.lMemory = System.GC.GetTotalMemory(False)
-
-    '                hDebugTimes.Add(sFunction, oTime)
-    '                Debug.WriteLine("In  " & sFunction)
-    '            End If
-    '        End SyncLock
-
-    '#End If
-    '    End Sub
-
-    '    Dim lCountsPerSecond As Long
-    '    Public Sub DebugTimeRecord(ByVal sFunction As String, ByVal iCall As Integer, ByVal bSmallTimings As Boolean)
-    '#If DEBUG Then
-    '        'If Not bSmallTimings Then
-    '        '    DebugTimeRecord(sFunction)
-    '        '    Exit Sub
-    '        'End If
-
-    '        'Dim lResult As Long
-    '        'QueryPerformanceCounter(lResult)
-
-    '        'If lResult = 0 Then
-    '        '    ErrMsg("Performance Counter not supported by current hardware")
-    '        '    DebugTimeRecord(sFunction)
-    '        '    Exit Sub
-    '        'End If
-
-    '        'If hPerformanceCounter Is Nothing Then
-    '        '    ' Work out a rough estimate of counts per second
-    '        '    Threading.Thread.Sleep(1000)
-    '        '    Dim lStart As Long = lResult
-    '        '    QueryPerformanceCounter(lResult)
-    '        '    lCountsPerSecond = lResult - lStart
-
-    '        '    hPerformanceCounter = New Collections.Generic.Dictionary(Of String, Long)
-    '        'End If
-
-
-    '        'SyncLock hPerformanceCounter ' Make this procedure threadsafe
-    '        '    If hPerformanceCounter.ContainsKey(sFunction) Then
-    '        '        Debug.WriteLine("Mid " & sFunction & " call " & iCall & ", Performance Counter: " & ((lResult - hPerformanceCounter(sFunction)) / 10000).ToString("#,##0") & ", approx " & ((lResult - hPerformanceCounter(sFunction)) / lCountsPerSecond).ToString("0.000000") & " seconds")
-    '        '    Else
-    '        '        hPerformanceCounter.Add(sFunction, lResult)
-    '        '        Debug.WriteLine("In  " & sFunction)
-    '        '    End If
-    '        'End SyncLock
-
-    '#End If
-    '    End Sub
-
-    '    Public Sub DebugTimeFinish(ByVal sFunction As String)
-    '#If DEBUG Then
-    '        If (Not hDebugTimes Is Nothing) Then
-    '            Dim oTime As clsDebugTime = Nothing
-    '            Try
-    '                If hDebugTimes.ContainsKey(sFunction) Then oTime = hDebugTimes(sFunction)
-
-    '                If oTime IsNot Nothing Then
-    '                    If System.GC.GetTotalMemory(False) > lMaxMemory Then lMaxMemory = System.GC.GetTotalMemory(False)
-
-    '                    Debug.WriteLine("Out " & sFunction & " (" & ((Now.Ticks - oTime.dtDate.Ticks) / 10000000.0).ToString("#,##0.0##") & "s) Total memory used " & (System.GC.GetTotalMemory(False) / 1048576L).ToString("#,##0") & "Mb Function added " & (System.GC.GetTotalMemory(False) - oTime.lMemory).ToString("#,##0") & " bytes  MaxMemory " & (lMaxMemory / 1048576L).ToString("#,##0") & "Mb")
-    '                    hDebugTimes.Remove(sFunction)
-    '                Else
-    '                    Debug.WriteLine("Unable to find Debug Time for function " & sFunction)
-    '                End If
-    '            Catch ex As Exception
-    '                Debug.WriteLine("Unable to find Debug Time for function " & sFunction)
-    '            End Try
-
-    '        End If
-    '#End If
-    '    End Sub
-
-    '    Public Sub DebugTimeFinish(ByVal sFunction As String, ByVal bSmallTimings As Boolean)
-    '#If DEBUG Then
-    '        'If Not bSmallTimings Then
-    '        '    DebugTimeFinish(sFunction)
-    '        '    Exit Sub
-    '        'End If
-
-    '        'If (Not hPerformanceCounter Is Nothing) Then
-    '        '    Try
-    '        '        Dim lResult As Long
-    '        '        QueryPerformanceCounter(lResult)
-
-    '        '        If lResult > 0 Then
-    '        '            Debug.WriteLine("Out " & sFunction & ", Performance Counter: " & ((lResult - hPerformanceCounter(sFunction)) / 10000).ToString("#,##0") & ", approx " & ((lResult - hPerformanceCounter(sFunction)) / lCountsPerSecond).ToString("0.000000") & " seconds")
-    '        '            hPerformanceCounter.Remove(sFunction)
-    '        '        Else
-    '        '            Debug.WriteLine("Performance Counter not supported by current hardware")
-    '        '            DebugTimeRecord(sFunction)
-    '        '            Exit Sub
-    '        '        End If
-    '        '    Catch ex As Exception
-    '        '        Debug.WriteLine("Unable to find Debug Time for function " & sFunction)
-    '        '    End Try
-
-    '        'End If
-    '#End If
-    '    End Sub
 
     Public Class clsSearchOptions
 
@@ -6407,96 +4223,10 @@ Module SharedModule
         Public bFindExactWord As Boolean = False
 
     End Class
+
     Public SearchOptions As New clsSearchOptions
 
-#If Not Adravalon Then
-    Public Class SearchResult
-        Dim item As clsItem
-        Dim iOccuranceNumber As Integer
-        Dim ctrlFound As System.Windows.Forms.Control
-    End Class
-    Public LastSearchResult As SearchResult
-
-    Public Function Search(ByVal sFind As String) As Boolean
-
-        With SearchOptions
-            If sFind <> .sLastSearch Then .sLastKey = ""
-            .sLastSearch = sFind
-            Dim bFoundStart As Boolean = (.sLastKey = "")
-            For Each item As clsItem In Adventure.dictAllItems.Values
-                If bFoundStart Then
-                    Dim bLookIn As Boolean = False
-                    Select Case .SearchInWhat
-                        Case clsSearchOptions.SearchInWhatEnum.AllItems
-                            bLookIn = True
-                        Case clsSearchOptions.SearchInWhatEnum.NonLibraryItems
-                            bLookIn = Not item.IsLibrary
-                    End Select
-                    If bLookIn AndAlso item.SearchFor(sFind) Then
-                        'MsgBox("Item " & item.CommonName & " matches.")
-                        item.EditItem()
-                        .sLastKey = item.Key
-#If Generator Then
-                        fGenerator.UTMMain.Tools("FindNext").SharedProps.Enabled = True
-                        fGenerator.UTMMain.Tools("FindNext").SharedProps.ToolTipText = "Find Next """ & sFind & """"
-#End If
-                        Return True
-                    End If
-                End If
-                If item.Key = .sLastKey Then bFoundStart = True
-            Next
-            MessageBox.Show("The following specified text was not found: " & sFind, "ADRIFT - Search", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            .sLastKey = ""
-            Return False
-        End With
-
-    End Function
-
-
-    Public Function FindAll(ByVal sFind As String) As List(Of clsItem)
-
-        Dim lstResults As New List(Of clsItem)
-
-        With SearchOptions
-            If sFind <> .sLastSearch Then .sLastKey = ""
-            .sLastSearch = sFind
-            'Dim bFoundStart As Boolean = (.sLastKey = "")
-            For Each item As clsItem In Adventure.dictAllItems.Values
-                'If bFoundStart Then
-                Dim bLookIn As Boolean = False
-                Select Case .SearchInWhat
-                    Case clsSearchOptions.SearchInWhatEnum.AllItems
-                        bLookIn = True
-                    Case clsSearchOptions.SearchInWhatEnum.NonLibraryItems
-                        bLookIn = Not item.IsLibrary
-                End Select
-                If bLookIn AndAlso item.SearchFor(sFind) Then
-                    'MsgBox("Item " & item.CommonName & " matches.")
-                    'item.EditItem()
-                    .sLastKey = item.Key
-                    '#If Generator Then
-                    '                    fGenerator.UTMMain.Tools("FindNext").SharedProps.Enabled = True
-                    '                    fGenerator.UTMMain.Tools("FindNext").SharedProps.ToolTipText = "Find Next """ & sFind & """"
-                    '#End If
-                    lstResults.Add(item)
-                End If
-                'End If
-                'If item.Key = .sLastKey Then bFoundStart = True
-            Next
-            If lstResults.Count = 0 Then
-                MessageBox.Show("The following specified text was not found: " & sFind, "ADRIFT - Search", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-                .sLastKey = ""
-            End If
-        End With
-
-        Return lstResults
-
-    End Function
-    
-#End If
-
     Public Sub SearchAndReplace(ByVal sFind As String, ByVal sReplace As String, Optional ByVal bSilent As Boolean = False)
-
         Dim iReplacements As Integer = 0
 
         With SearchOptions
@@ -6511,92 +4241,6 @@ Module SharedModule
                 If bLookIn Then iReplacements += item.SearchAndReplace(sFind, sReplace)
             Next
         End With
-
-        If Not bSilent Then
-#If Not Adravalon Then
-            If iReplacements = 0 Then
-                MessageBox.Show("The following specified text was not found: " & sFind, "ADRIFT - Search & Replace", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-            Else
-                MessageBox.Show(iReplacements & " occurance(s) replaced.", "ADRIFT - Search & Replace", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End If
-#End If
-        End If
     End Sub
-
-    Public Sub SetCombo(ByRef cmb As ComboBox, ByVal sKey As String, Optional ByVal bBoldSelections As Boolean = False)
-
-        cmb.SelectedItem = sKey
-        'For Each vli As Infragistics.Win.ValueListItem In cmb.Items
-        '    If CStr(vli.DataValue) = sKey Then
-        '        cmb.SelectedItem = vli
-        '        If bBoldSelections AndAlso sKey <> "" Then cmb.Font = New Font(cmb.Font, FontStyle.Bold) Else cmb.Font = New Font(cmb.Font, FontStyle.Regular)
-        '        Exit Sub
-        '    End If
-        'Next
-
-    End Sub
-    Public Sub SetCombo(ByRef cmb As ComboBox, ByVal iKey As Integer, Optional ByVal bBoldSelections As Boolean = False)
-
-        cmb.SelectedItem = iKey
-        'For Each vli As Infragistics.Win.ValueListItem In cmb.Items
-        '    If CInt(vli.DataValue) = iKey Then
-        '        cmb.SelectedItem = vli
-        '        If bBoldSelections AndAlso iKey > -1 Then cmb.Font = New Font(cmb.Font, FontStyle.Bold) Else cmb.Font = New Font(cmb.Font, FontStyle.Regular)
-        '        Exit Sub
-        '    End If
-        'Next
-
-    End Sub
-
-#If Not Mono AndAlso Not www AndAlso Not Adravalon Then ' Can't go in Infragistics module because it can't detect signatures are different :-(
-    Public Sub SetCombo(ByRef cmb As Infragistics.Win.UltraWinEditors.UltraComboEditor, ByVal sKey As String, Optional ByVal bBoldSelections As Boolean = False)
-
-        For Each vli As Infragistics.Win.ValueListItem In cmb.Items
-            If CStr(vli.DataValue) = sKey Then
-                cmb.SelectedItem = vli
-                If bBoldSelections AndAlso sKey <> "" Then cmb.Font = New Font(cmb.Font, FontStyle.Bold) Else cmb.Font = New Font(cmb.Font, FontStyle.Regular)
-                Exit Sub
-            End If
-        Next
-
-    End Sub
-    Public Sub SetCombo(ByRef cmb As Infragistics.Win.UltraWinEditors.UltraComboEditor, ByVal iKey As Integer, Optional ByVal bBoldSelections As Boolean = False)
-
-        For Each vli As Infragistics.Win.ValueListItem In cmb.Items
-            If CInt(vli.DataValue) = iKey Then
-                cmb.SelectedItem = vli
-                If bBoldSelections AndAlso iKey > -1 Then cmb.Font = New Font(cmb.Font, FontStyle.Bold) Else cmb.Font = New Font(cmb.Font, FontStyle.Regular)
-                Exit Sub
-            End If
-        Next
-
-    End Sub
-
-#If Not Runner Then
-
-    Public Sub SetCombo(ByRef cmb As AutoCompleteCombo, ByVal sKey As String, Optional ByVal bBoldSelections As Boolean = False)
-
-        For Each vli As Infragistics.Win.ValueListItem In cmb.Items
-            If CStr(vli.DataValue) = sKey Then
-                cmb.SelectedItem = vli
-                If bBoldSelections AndAlso sKey <> "" Then cmb.Font = New Font(cmb.Font, FontStyle.Bold) Else cmb.Font = New Font(cmb.Font, FontStyle.Regular)
-                Exit Sub
-            End If
-        Next
-
-    End Sub
-    Public Sub SetCombo(ByRef cmb As AutoCompleteCombo, ByVal iKey As Integer, Optional ByVal bBoldSelections As Boolean = False)
-
-        For Each vli As Infragistics.Win.ValueListItem In cmb.Items
-            If CInt(vli.DataValue) = iKey Then
-                cmb.SelectedItem = vli
-                If bBoldSelections AndAlso iKey > -1 Then cmb.Font = New Font(cmb.Font, FontStyle.Bold) Else cmb.Font = New Font(cmb.Font, FontStyle.Regular)
-                Exit Sub
-            End If
-        Next
-
-    End Sub
-#End If
-#End If
 
 End Module

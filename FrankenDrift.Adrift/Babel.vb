@@ -1,12 +1,10 @@
 ﻿Imports System.Xml.Serialization
 
-#If Adravalon Then
 Imports FrankenDrift.Glue
-#End If
 
-<System.SerializableAttribute(),
-    System.Xml.Serialization.XmlTypeAttribute([Namespace]:="http://babel.ifarchive.org/protocol/iFiction/"),
-    System.Xml.Serialization.XmlRootAttribute("ifindex", [Namespace]:="http://babel.ifarchive.org/protocol/iFiction/",
+<SerializableAttribute(),
+    XmlTypeAttribute([Namespace]:="http://babel.ifarchive.org/protocol/iFiction/"),
+    XmlRootAttribute("ifindex", [Namespace]:="http://babel.ifarchive.org/protocol/iFiction/",
     IsNullable:=False)>
 Public Class clsBabelTreatyInfo
 
@@ -392,21 +390,8 @@ Public Class clsBabelTreatyInfo
         ' image; and the information must, of course, be correct.
 
         Public Class clsCover
-
             Friend imgCoverArt As System.Drawing.Image
 
-
-            'Private sFilename As String
-            '<System.Xml.Serialization.XmlIgnoreAttribute()> _
-            'Public Property Filename() As String
-            '    Get
-            '        Return sFilename
-            '    End Get
-            '    Set(ByVal value As String)
-            '        If sFormat = "" Then sFormat = sRight(value, 3)
-            '        sFilename = value
-            '    End Set
-            'End Property
 
             ' This is required to be either "jpg" or "png". No other casings,
             ' spellings or image formats are permitted.

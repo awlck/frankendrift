@@ -2,7 +2,6 @@ Public Class clsGroup
     Inherits clsItem
 
     Private sName As String
-    'Private sKey As String        
 
     Public Enum GroupTypeEnum
         Locations = 0
@@ -29,20 +28,6 @@ Public Class clsGroup
         End Set
     End Property
 
-    'Public Property Key() As String
-    '    Get
-    '        Return sKey
-    '    End Get
-    '    Set(ByVal Value As String)
-    '        If Not KeyExists(Value) Then
-    '            sKey = Value
-    '        Else
-    '            Throw New Exception("Key " & sKey & " already exists")
-    '        End If
-    '    End Set
-    'End Property
-
-
     Public Property Name() As String
         Get
             Return sName
@@ -66,30 +51,6 @@ Public Class clsGroup
             Return arlMembers(Random(Me.arlMembers.Count - 1))
         End Get
     End Property
-    'Private bIsLibrary As Boolean
-    'Public Property IsLibrary() As Boolean
-    '    Get
-    '        Return bIsLibrary
-    '    End Get
-    '    Set(ByVal value As Boolean)
-    '        bIsLibrary = value
-    '    End Set
-    'End Property
-
-    'Private dtLastUpdated As Date
-    'Friend Property LastUpdated() As Date
-    '    Get
-    '        If dtLastUpdated > Date.MinValue Then
-    '            Return dtLastUpdated
-    '        Else
-    '            Return Now
-    '        End If
-    '    End Get
-    '    Set(ByVal value As Date)
-    '        dtLastUpdated = value
-    '    End Set
-    'End Property
-
     Public Overrides ReadOnly Property Clone() As clsItem
         Get
             Return CType(Me.MemberwiseClone, clsGroup)
@@ -117,13 +78,6 @@ Public Class clsGroup
         Return iReplacements - iCount
     End Function
 
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fRoomGroup As New frmGroup(Me, True)
-#End If
-    End Sub
-
     Public Overrides Function ReferencesKey(ByVal sKey As String) As Integer
 
         Dim iCount As Integer = 0
@@ -137,7 +91,6 @@ Public Class clsGroup
 
     End Function
 
-
     Public Overrides Function DeleteKey(ByVal sKey As String) As Boolean
 
         For Each d As Description In AllDescriptions
@@ -147,8 +100,6 @@ Public Class clsGroup
         If Not htblProperties.DeleteKey(sKey) Then Return False
 
         Return True
-
     End Function
-
 
 End Class

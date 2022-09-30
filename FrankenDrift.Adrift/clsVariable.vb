@@ -1,12 +1,9 @@
-#If Adravalon Then
 Imports FrankenDrift.Glue
-#End If
 
 Public Class clsVariable
     Inherits clsItem
 
     Private sName As String
-    'Private sKey As String
     Private iIntValue(0) As Integer
     Private sStringValue(0) As String
     Private iLength As Integer = 1
@@ -17,20 +14,6 @@ Public Class clsVariable
     End Enum
     Private eVariableType As VariableTypeEnum
 
-    'Public Property Key() As String
-    '    Get
-    '        Return sKey
-    '    End Get
-    '    Set(ByVal Value As String)
-    '        If Not KeyExists(Value) Then
-    '            sKey = Value
-    '        Else
-    '            Throw New Exception("Key " & sKey & " already exists")
-    '        End If
-    '    End Set
-    'End Property
-
-
     Public Property Name() As String
         Get
             Return sName
@@ -39,30 +22,6 @@ Public Class clsVariable
             sName = Value
         End Set
     End Property
-
-    'Private bIsLibrary As Boolean
-    'Public Property IsLibrary() As Boolean
-    '    Get
-    '        Return bIsLibrary
-    '    End Get
-    '    Set(ByVal value As Boolean)
-    '        bIsLibrary = value
-    '    End Set
-    'End Property
-
-    'Private dtLastUpdated As Date
-    'Friend Property LastUpdated() As Date
-    '    Get
-    '        If dtLastUpdated > Date.MinValue Then
-    '            Return dtLastUpdated
-    '        Else
-    '            Return Now
-    '        End If
-    '    End Get
-    '    Set(ByVal value As Date)
-    '        dtLastUpdated = value
-    '    End Set
-    'End Property
 
     Public Overrides ReadOnly Property Clone() As clsItem
         Get
@@ -201,7 +160,7 @@ Public Class clsVariable
                     If var.Length > 1 AndAlso text.ToLower.StartsWith("%" & var.Name.ToLower & "[") Then
                         Dim sArgs As String = GetFunctionArgs(text.Substring(InStr(text.ToLower, "%" & var.Name.ToLower & "[") + var.Name.Length))
                         GetToken = "var-" & var.Key & "[" & ReplaceFunctions(sArgs) & "]"
-                        sParseString = sParseString.Replace("%" & var.Name & "[" & sArgs & "]%", "") ' sRight(sParseString, sParseString.Length - var.Name.Length - 2)
+                        sParseString = sParseString.Replace("%" & var.Name & "[" & sArgs & "]%", "")
                         Exit Function
                     End If
                     If sLeft(text, var.Name.Length + 2) = "%" & var.Name & "%" Then
@@ -210,15 +169,6 @@ Public Class clsVariable
                         Exit Function
                     End If
                 Next
-                'For n = 0 To num_var - 1
-                '    With variable(n)
-                '        If sLeft(text, Len(.name) + 2) = "%" & .name & "%" Then
-                '            GetToken = "var" & n
-                '            sParseString = sRight(sParseString, sParseString.Length - Len(.name) - 2)
-                '            Exit Function
-                '        End If
-                '    End With
-                'Next n
                 If sLeft(text.ToLower, 6) = "%loop%" Then
                     GetToken = "lop"
                     sParseString = sRight(sParseString, sParseString.Length - 6)
@@ -255,25 +205,10 @@ Public Class clsVariable
                     GetToken = "ply"
                     sParseString = sRight(sParseString, sParseString.Length - 8)
                 End If
-                'If sLeft(text.ToLower, 15) = "%propertyvalue[" AndAlso text.ToLower.Contains("]%") Then
-                '    GetToken = "prv-" & sLeft(text, sInstr(text.ToLower, "]%") + 2)
-                '    sParseString = sRight(sParseString, sParseString.Length - sInstr(text.ToLower, "]%") - 1)
-                'End If
-                'If LCase(sLeft(text, 11)) = "%popupinput" AndAlso text.ToLower.Contains("]%") Then
-                '    GetToken = "pin-" & sLeft(text, sInstr(text.ToLower, "]%") + 2)
-                '    sParseString = sRight(sParseString, sParseString.Length - sInstr(text.ToLower, "]%") - 1)
-                '    Exit Function
-                'End If
-                'If LCase(sLeft(text, 12)) = "%popupchoice" AndAlso text.ToLower.Contains("]%") Then
-                '    GetToken = "pch-" & sLeft(text, sInstr(text.ToLower, "]%") + 2)
-                '    sParseString = sRight(sParseString, sParseString.Length - sInstr(text.ToLower, "]%") - 1)
-                '    Exit Function
-                'End If
                 For Each fn As String In FunctionNames()
                     If LCase(text).StartsWith("%" & fn.ToLower & "[") AndAlso text.ToLower.Contains("]%") Then
                         Dim sArgs As String = GetFunctionArgs(text.Substring(InStr(text.ToLower, "%" & fn & "[") + fn.Length + 1))
                         GetToken = "fun-%" & fn & "[" & sArgs & "]%"
-                        'sParseString = sRight(sParseString, sParseString.Length - sInstr(text.ToLower, "]%") - 1)
                         sParseString = sParseString.Replace(GetToken.Substring(4), "")
                         Exit Function
                     End If
@@ -350,16 +285,12 @@ Public Class clsVariable
                     sParseString = sRight(sParseString, sParseString.Length - 3)
                     Exit Function
                 End If
-                'GetToken = "a"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "e", "E"
                 If LCase(sLeft(text, 6)) = "either" Then
                     GetToken = "either"
                     sParseString = sRight(sParseString, sParseString.Length - 6)
                     Exit Function
                 End If
-                'GetToken = "e"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "i", "I"
                 If LCase(sLeft(text, 2)) = "if" Then
                     GetToken = "if"
@@ -371,8 +302,6 @@ Public Class clsVariable
                     sParseString = sRight(sParseString, sParseString.Length - 5)
                     Exit Function
                 End If
-                'GetToken = "i"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "l", "L"
                 If LCase(sLeft(text, 5)) = "lower" Or LCase(sLeft(text, 5)) = "lcase" Then
                     GetToken = "lwr"
@@ -389,8 +318,6 @@ Public Class clsVariable
                     sParseString = sRight(sParseString, sParseString.Length - 3)
                     Exit Function
                 End If
-                'GetToken = "l"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "m", "M"
                 If LCase(sLeft(text, 3)) = "max" Then
                     GetToken = "max"
@@ -412,8 +339,6 @@ Public Class clsVariable
                     sParseString = sRight(sParseString, sParseString.Length - 3)
                     Exit Function
                 End If
-                'GetToken = "m"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "o", "O"
                 If LCase(sLeft(text, 2)) = "or" Then
                     GetToken = "OR"
@@ -425,16 +350,12 @@ Public Class clsVariable
                     sParseString = sRight(sParseString, sParseString.Length - 5)
                     Exit Function
                 End If
-                'GetToken = "o"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "p", "P"
                 If LCase(sLeft(text, 6)) = "proper" Or LCase(sLeft(text, 5)) = "pcase" Then
                     GetToken = "ppr"
                     sParseString = sRight(sParseString, sParseString.Length - 5)
                     Exit Function
                 End If
-                'GetToken = "p"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "r", "R"
                 If LCase(sLeft(text, 4)) = "rand" Then
                     GetToken = "rand"
@@ -451,16 +372,12 @@ Public Class clsVariable
                     sParseString = sRight(sParseString, sParseString.Length - 5)
                     Exit Function
                 End If
-                'GetToken = "r"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "s", "S"
                 If LCase(sLeft(text, 3)) = "str" Then
                     GetToken = "str"
                     sParseString = sRight(sParseString, sParseString.Length - 3)
                     Exit Function
                 End If
-                'GetToken = "s"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "u", "U"
                 If LCase(sLeft(text, 5)) = "upper" Or LCase(sLeft(text, 5)) = "ucase" Then
                     GetToken = "upr"
@@ -472,20 +389,14 @@ Public Class clsVariable
                     sParseString = sRight(sParseString, sParseString.Length - 5)
                     Exit Function
                 End If
-                'GetToken = "u"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case "v", "V"
                 If LCase(sLeft(text, 3)) = "val" Then
                     GetToken = "val"
                     sParseString = sRight(sParseString, sParseString.Length - 3)
                     Exit Function
                 End If
-                'GetToken = "v"
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
             Case Else
-                'GetToken = sLeft(text, 1)
-                'sParseString = sRight(sParseString, sParseString.Length - 1)
-                'Exit Function
+
         End Select
 
         If GetToken Is Nothing Then GetToken = ""
@@ -502,50 +413,37 @@ Public Class clsVariable
                 End Select
             Next
         End If
-
     End Function
 
 
     Private Sub PrintTokens(Optional ByVal CurrentToken As TokenType = Nothing)
-
         Dim iToken As Integer = GetFirstToken() '0
         While iToken <> -1
             iToken = PrintToken(iToken, CurrentToken)
         End While
         Debug.WriteLine("")
-
     End Sub
 
-
     Private Function PrintToken(ByVal iToken As Integer, Optional ByVal CurrentToken As TokenType = Nothing) As Integer
-
         With Token(iToken)
             Dim bCurrent As Boolean = .Left = CurrentToken.Left AndAlso .Right = CurrentToken.Right AndAlso .Token = CurrentToken.Token
             Debug.Write("[" & If(bCurrent, "#", "").ToString & iToken & If(bCurrent, "#", "").ToString & ": " & .Token & "/" & .Value & "] ")
             Return .Right
         End With
-
     End Function
 
-
     Private Function GetFirstToken() As Integer
-
         For i As Integer = Token.Length - 1 To 0 Step -1
             If Token(i).Left = -1 Then Return i
         Next
-
     End Function
 
-
-
     Private Function NoRepeatRandom(ByVal iMin As Integer, ByVal iMax As Integer) As Integer
-
         Dim sDictKey As String = iMin & "-" & iMax
 
         If Not Adventure.dictRandValues.ContainsKey(sDictKey) Then Adventure.dictRandValues.Add(sDictKey, New List(Of Integer))
 
         Dim lValues As List(Of Integer) = Adventure.dictRandValues(sDictKey)
-
         If lValues.Count = 0 Then
             ' Create a new random list of values
             For i As Integer = iMin To iMax
@@ -557,12 +455,9 @@ Public Class clsVariable
         Dim iIndex As Integer = Random(lValues.Count - 1)
         NoRepeatRandom = lValues(iIndex)
         lValues.RemoveAt(iIndex)
-
     End Function
 
-
     Public Sub SetToExpression(ByVal sExpression As String, Optional ByVal iIndex As Integer = 1, Optional ByVal bThrowExceptionOnBadExpression As Boolean = False)
-
         Try
             sExpression = sExpression.Replace("%Loop%", iIndex.ToString)
             sExpression = ReplaceFunctions(sExpression, True)
@@ -617,8 +512,7 @@ Public Class clsVariable
                                 .Value = .Token
                                 .Token = "comma"
                             Case "txt"
-                                .Value = "" 'reftext
-#If Runner Then
+                                .Value = ""
                                 For Each ref As clsNewReference In UserSession.NewReferences
                                     If ref.ReferenceType = ReferencesType.Text Then
                                         If ref.Items.Count = 1 Then
@@ -628,7 +522,6 @@ Public Class clsVariable
                                         End If
                                     End If
                                 Next
-#End If
                                 .Token = "expr"
                             Case "min", "max", "if", "rand", "either", "abs", "upr", "lwr", "ppr", "rgt", "lft", "mid", "ist", "len", "val", "str", "replace", "oneof", "urand"
                                 .Value = .Token
@@ -643,8 +536,7 @@ Public Class clsVariable
                                 .Value = iIndex.ToString
                                 .Token = "expr"
                             Case "num"
-                                .Value = "" ' refnumber
-#If Runner Then
+                                .Value = ""
                                 For Each ref As clsNewReference In UserSession.NewReferences
                                     If ref.ReferenceType = ReferencesType.Number Then
                                         If ref.Items.Count = 1 Then
@@ -654,29 +546,26 @@ Public Class clsVariable
                                         End If
                                     End If
                                 Next
-#End If
                                 .Token = "expr"
                             Case "ver"
-                                .Value = Application.ProductVersion ' sLeft(Application.ProductVersion.Replace(".", ""), 4) ' App.Major & App.Minor & App.Revision & Format(build, "0000")
+                                .Value = Application.ProductVersion
                                 Dim sVer As String() = Application.ProductVersion.Split("."c)
                                 .Value = sVer(0) & CInt(sVer(1)).ToString("00") & CInt(sVer(2)).ToString("0000")
                                 .Token = "expr"
                             Case "sco"
-                                .Value = Adventure.Score.ToString ' scor
+                                .Value = Adventure.Score.ToString
                                 .Token = "expr"
                             Case "mxs"
                                 .Value = Adventure.MaxScore.ToString
                                 .Token = "expr"
                             Case "ply"
-#If Runner Then
                                 .Value = Adventure.Player.Name
                                 .Token = "expr"
-#End If
                             Case "trn"
                                 .Value = Adventure.Turns.ToString
                                 .Token = "expr"
                             Case "tim"
-                                .Value = "0" 'Int(Timer) - starttime
+                                .Value = "0"
                                 .Token = "expr"
                             Case Else
                                 If sLeft(.Token, 3) = "var" Then
@@ -700,22 +589,6 @@ Public Class clsVariable
                                     .Token = "expr"
                                 ElseIf sLeft(.Token, 3) = "prv" Then
                                     .Value = ReplaceFunctions(.Token.Substring(4))
-#If Generator Then
-                                    ' ReplaceFunctions may not be able to evaluate value if refs %object%
-                                    If .Value = "" Then
-                                        ' Grab out the property, and assign a default value for the datatype
-                                        Dim sPropKey As String = .Token.Split(","c)(1).Replace("]%", "")
-                                        If Adventure.htblAllProperties.ContainsKey(sPropKey) Then
-                                            Dim prop As clsProperty = Adventure.htblAllProperties(sPropKey)
-                                            Select Case prop.Type
-                                                Case clsProperty.PropertyTypeEnum.Integer
-                                                    .Value = "0"
-                                                Case Else
-                                                    .Value = "x"
-                                            End Select
-                                        End If
-                                    End If
-#End If
                                     .Token = "expr"
                                 ElseIf sLeft(.Token, 3) = "pin" Then
                                     .Value = ReplaceFunctions(.Token.Substring(4))
@@ -744,21 +617,15 @@ Public Class clsVariable
             Dim badexp As Boolean
             Dim run As Integer
 
-
-            currtoken = Token(GetFirstToken) '0)
+            currtoken = Token(GetFirstToken)
             run = 1
 
             ' Do while more than one token
             While Not (currtoken.Left = -1 And currtoken.Right = -1)
-
-                'Debug.Write("Run " & run & ": ")
-                'PrintTokens(currtoken)
-
                 changed = False
 
                 ' If at least two tokens
                 If currtoken.Right <> -1 Then
-
                     ' If at least three tokens
                     If Token(currtoken.Right).Right <> -1 Then
 
@@ -862,13 +729,13 @@ Public Class clsVariable
                                             Case "min"
                                                 addtoken("expr", Math.Min(CInt(Val(lefttoken.Value)), CInt(Val(righttoken.Value))).ToString, functoken.Left, rptoken.Right)
                                             Case "either"
-                                                If Random(1) = 1 Then ' Int(Rnd() * 2) = 1 Then
+                                                If Random(1) = 1 Then
                                                     addtoken("expr", lefttoken.Value, functoken.Left, rptoken.Right)
                                                 Else
                                                     addtoken("expr", righttoken.Value, functoken.Left, rptoken.Right)
                                                 End If
                                             Case "rand"
-                                                addtoken("expr", Random(SafeInt(lefttoken.Value), SafeInt(righttoken.Value)).ToString, functoken.Left, rptoken.Right) ' CInt((Rnd() * (Val(righttoken.Value) - Val(lefttoken.Value))) + Val(lefttoken.Value)).ToString
+                                                addtoken("expr", Random(SafeInt(lefttoken.Value), SafeInt(righttoken.Value)).ToString, functoken.Left, rptoken.Right)
                                             Case "urand"
                                                 addtoken("expr", NoRepeatRandom(SafeInt(lefttoken.Value), SafeInt(righttoken.Value)).ToString, functoken.Left, rptoken.Right)
                                             Case "lft"
@@ -933,10 +800,6 @@ Public Class clsVariable
                         optoken = Token(currtoken.Right)
                         righttoken = Token(optoken.Right)
 
-                        'Debug.Print lefttoken.token & "[" & lefttoken.value & "]   " & _
-                        '     optoken.token & "[" & optoken.value & "]   " & _
-                        '     righttoken.token & "[" & righttoken.value & "]"
-
                         ' expr op expr
                         If lefttoken.Token = "expr" And optoken.Token = "op" And righttoken.Token = "expr" Then
                             Select Case optoken.Value
@@ -945,9 +808,7 @@ Public Class clsVariable
                                 Case "*"
                                     addtoken("expr", (Val(lefttoken.Value) * Val(righttoken.Value)).ToString, lefttoken.Left, righttoken.Right)
                                 Case "/"
-                                    'addtoken("expr", (Math.Round((Val(lefttoken.Value) / Val(righttoken.Value)) + 0.000001)).ToString, lefttoken.Left, righttoken.Right)
                                     addtoken("expr", (Math.Round((Val(lefttoken.Value) / Val(righttoken.Value)), MidpointRounding.AwayFromZero)).ToString, lefttoken.Left, righttoken.Right)
-                                    ' Val(lefttoken.value) / Val(righttoken.value)
                                 Case "+"
                                     If IsNumeric(lefttoken.Value) And IsNumeric(righttoken.Value) Then
                                         If run = 2 Then addtoken("expr", (Val(lefttoken.Value) + Val(righttoken.Value)).ToString, lefttoken.Left, righttoken.Right)
@@ -967,7 +828,6 @@ Public Class clsVariable
                                 changed = True
                             End If
                         End If
-
 
                         If lefttoken.Token = "test" And optoken.Token = "LOGIC" And righttoken.Token = "test" Then
                             Select Case optoken.Value
@@ -1094,9 +954,6 @@ Public Class clsVariable
                     optoken = currtoken
                     righttoken = Token(optoken.Right)
 
-                    'Debug.Print optoken.token & "[" & optoken.value & "]   " & _
-                    '    righttoken.token & "[" & righttoken.value & "]"
-
                     ' op expr
                     If optoken.Token = "op" And righttoken.Token = "expr" Then
                         Select Case optoken.Value
@@ -1207,7 +1064,6 @@ nxt:
 
     End Sub
 
-
     Private Function StripRedundantSpaces(ByVal strExpression As String) As String
 
         Dim bolOkToStrip As Boolean
@@ -1215,10 +1071,8 @@ nxt:
         Dim strChunk As String
         Dim intPos As Integer
 
-
         StripRedundantSpaces = ""
 
-        'strExpression = strExpression.Replace(vbCrLf, " ")
         While strExpression <> ""
             intPos = sInstr(1, strExpression, Chr(34))
             If intPos > 0 Then
@@ -1235,7 +1089,6 @@ nxt:
             Debug.Print("Chunk: " & strChunk & " - " & bolOkToStrip)
             StripRedundantSpaces = StripRedundantSpaces & strChunk
         End While
-
     End Function
 
 
@@ -1262,16 +1115,7 @@ nxt:
         Return iReplacements - iCount
     End Function
 
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fVariable As New frmVariable(Me, True)
-#End If
-    End Sub
-
-
     Public Overrides Function ReferencesKey(ByVal sKey As String) As Integer
-
         Dim iCount As Integer = 0
         For Each d As Description In AllDescriptions
             iCount += d.ReferencesKey(sKey)
@@ -1279,12 +1123,9 @@ nxt:
         If Adventure.htblVariables.ContainsKey(sKey) AndAlso Me.StringValue.Contains("%" & Adventure.htblVariables(sKey).Name & "%") Then iCount += 1
 
         Return iCount
-
     End Function
 
-
     Public Overrides Function DeleteKey(ByVal sKey As String) As Boolean
-
         For Each d As Description In AllDescriptions
             If Not d.DeleteKey(sKey) Then Return False
         Next
@@ -1295,10 +1136,7 @@ nxt:
                 StringValue = StringValue.Replace("%" & Adventure.htblVariables(sKey).Name & "%", """""")
             End If
         End If
-
         Return True
-
     End Function
-
 
 End Class

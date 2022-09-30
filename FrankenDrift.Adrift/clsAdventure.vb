@@ -1,15 +1,9 @@
-#If Adravalon Then
 Imports System.Drawing
-#End If
 
 Public Class clsAdventure
 
     Friend dictAllItems As ItemDictionary
-#If Not Adravalon Then
-    Friend htblLocations As LocationHashTable
-#Else
     Public htblLocations As LocationHashTable
-#End If
     Friend htblObjects As ObjectHashTable
     Friend htblTasks As TaskHashTable
     Friend htblEvents As EventHashTable
@@ -26,14 +20,7 @@ Public Class clsAdventure
     Friend htblAllTopicKeys As StringArrayList
     Friend htblSynonyms As SynonymHashTable
     Friend listKnownWords As List(Of String)
-#If Generator Then
-    Friend dictFolders As FolderDictionary
-#End If
-#If Not Adravalon Then
-    Friend Map As clsMap
-#Else
     Public Map As clsMap
-#End If
 
     Private oIntroduction As Description
     Private oWinningText As Description
@@ -46,42 +33,24 @@ Public Class clsAdventure
 
     Public ReadOnly Property DynamicObjects As IEnumerable(Of clsObject)
         Get
-#If Mono Then
-            Dim l As New List(Of clsObject)
-            For Each o As clsObject In htblObjects.Values
-                If Not o.IsStatic Then l.Add(o)
-            Next
-            Return l
-#Else
             Return htblObjects.Values.Where(Function(o) o.IsStatic = False)
-#End If
         End Get
     End Property
 
-#If Mono Then
-    Public listExcludedItems As New List(Of String) ' Library items removed, so we don't keep reloading them
-#Else
-    Public listExcludedItems As New HashSet(Of String) ' List(Of String) ' Library items removed, so we don't keep reloading them
-#End If
+    Public listExcludedItems As New HashSet(Of String) ' Library items removed, so we don't keep reloading them
 
 
     Public dVersion As Double
-    'Public bV4Compatibility As Boolean
-
-    'Friend iCompassPoints As DirectionsEnum
     Private iMaxScore As Integer
     Public iScore As Integer
     Public Turns As Integer
     Public sReferencedText(4) As String
-    'Public iReferencedNumber(4) As Integer
     Friend sConversationCharKey As String ' Who we are in conversation with
     Friend sConversationNode As String ' Where we currently are in the conversation tree
-    'Friend LastPerspective As clsCharacter.PerspectiveEnum = clsCharacter.PerspectiveEnum.None
     Friend sGameFilename As String
     Friend eGameState As clsAction.EndGameEnum = clsAction.EndGameEnum.Running
     Friend bDisplayedWinLose As Boolean = False
     Friend qTasksToRun As New Generic.Queue(Of String)
-    'Friend Perspectives As New Dictionary(Of Integer, clsCharacter.PerspectiveEnum) ' Index where perspective starts in text   
     Friend iElapsed As Integer
     Friend sDirectionsRE(11) As String
     Friend lstTasks As List(Of clsTask) ' Simply a list, sorted by priority
@@ -116,7 +85,6 @@ Public Class clsAdventure
                     With BabelTreatyInfo.Stories(0).Cover
                         .imgCoverArt = Nothing
                         If IO.File.Exists(value) Then
-                            '.imgCoverArt = Image.FromFile(value)
                             Dim iLength As Integer = CInt(FileLen(value))
                             Dim bytImage As Byte()
                             Dim fs As New IO.FileStream(value, IO.FileMode.Open, IO.FileAccess.Read)
@@ -134,12 +102,10 @@ Public Class clsAdventure
             End If
         End Set
     End Property
-    '<VBFixedString(8)>
+
     Friend Password As String
 
     Friend lCharMentionedThisTurn As New Generic.Dictionary(Of clsCharacter.GenderEnum, Generic.List(Of String))
-    'Friend lSheMentionedThisTurn As Generic.List(Of String)
-    'Friend lItMentionedThisTurn As Generic.List(Of String)
 
     Public BabelTreatyInfo As New clsBabelTreatyInfo
 
@@ -173,9 +139,6 @@ Public Class clsAdventure
         End Get
         Set(ByVal Value As Boolean)
             bChanged = Value
-#If Generator Then
-            fGenerator.UTMMain.Tools("mnuSave").SharedProps.Enabled = bChanged
-#End If
         End Set
     End Property
 
@@ -226,11 +189,8 @@ Public Class clsAdventure
     Public ReadOnly Property Images As List(Of String)
         Get
             Dim lImages As New List(Of String)
-            'If BabelTreatyInfo.Stories(0).Cover IsNot Nothing AndAlso BabelTreatyInfo.Stories(0).Cover.Filename <> "" Then lImages.Add(BabelTreatyInfo.Stories(0).Cover.Filename)
             If Adventure.CoverFilename <> "" Then lImages.Add(Adventure.CoverFilename)
 
-            'For Each itm As clsItem In Me.dictAllItems.Values
-            'For Each d As Description In itm.AllDescriptions
             For Each sd As SingleDescription In AllDescriptions ' d
                 Dim s As String = sd.Description
                 s = s.Replace(" src =", " src=")
@@ -247,8 +207,6 @@ Public Class clsAdventure
                     i = s.IndexOf("<img ", i + 1)
                 End While
             Next
-            'Next
-            'Next
 
             Return lImages
         End Get
@@ -276,30 +234,6 @@ Public Class clsAdventure
         End Get
     End Property
 
-#If Generator Then
-    ' Returns a list of all references to images within the adventure
-    Public ReadOnly Property Sounds As List(Of String)
-        Get
-            Dim lSounds As New List(Of String)
-
-            For Each sd As SingleDescription In AllDescriptions ' d
-                Dim s As String = sd.Description
-                Dim re As New System.Text.RegularExpressions.Regex(AUDREGEX, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-                If re.IsMatch(s) Then
-                    For Each m As System.Text.RegularExpressions.Match In re.Matches(s)
-                        If m.Groups("src").Length > 0 Then
-                            Dim sLocation As String = m.Groups("src").Value ' sMid(sMatch, 10, sMatch.Length - 10)
-                            If IO.File.Exists(sLocation) AndAlso Not lSounds.Contains(sLocation) Then lSounds.Add(sLocation)
-                        End If
-                    Next
-                End If
-            Next
-
-            Return lSounds
-        End Get
-    End Property
-#End If
-
 
     Public BlorbMappings As New Dictionary(Of String, Integer)
 
@@ -318,9 +252,7 @@ Public Class clsAdventure
                 End If
             End If
             iScore = value
-#If Runner Then
             UserSession.UpdateStatusBar()
-#End If
         End Set
     End Property
 
@@ -336,9 +268,6 @@ Public Class clsAdventure
                 If htblVariables.ContainsKey("MaxScore") Then
                     htblVariables("MaxScore").IntValue = value
                 End If
-#If Generator Then
-                fGenerator.StatusBar1.Panels(2).Text = "Maximum score: " & value
-#End If
             End If
             iMaxScore = value
         End Set
@@ -398,9 +327,6 @@ Public Class clsAdventure
         If htblUDFs.ContainsKey(sKey) Then Return htblUDFs(sKey)
         If htblSynonyms.ContainsKey(sKey) Then Return htblSynonyms(sKey)
 
-#If Generator Then
-        If dictFolders.ContainsKey(sKey) Then Return dictFolders(sKey)
-#End If
         Return Nothing
 
     End Function
@@ -430,9 +356,6 @@ Public Class clsAdventure
         If htblAllProperties.ContainsKey(sKey) Then Return htblAllProperties(sKey).GetType
         If htblUDFs.ContainsKey(sKey) Then Return htblUDFs(sKey).GetType
         If htblSynonyms.ContainsKey(sKey) Then Return htblSynonyms(sKey).GetType
-#If Generator Then
-        If dictFolders.ContainsKey(sKey) Then Return dictFolders(sKey).GetType
-#End If
 
     End Function
 
@@ -452,9 +375,6 @@ Public Class clsAdventure
             If htblAllProperties.ContainsKey(sKey) Then Return "Properties"
             If htblUDFs.ContainsKey(sKey) Then Return "User Functions"
             If htblSynonyms.ContainsKey(sKey) Then Return "Synonyms"
-#If Generator Then
-            If dictFolders.ContainsKey(sKey) Then Return "Folders"
-#End If
         Else
             If htblLocations.ContainsKey(sKey) Then Return "Location"
             If htblObjects.ContainsKey(sKey) Then Return "Object"
@@ -468,9 +388,6 @@ Public Class clsAdventure
             If htblAllProperties.ContainsKey(sKey) Then Return "Property"
             If htblUDFs.ContainsKey(sKey) Then Return "User Function"
             If htblSynonyms.ContainsKey(sKey) Then Return "Synonym"
-#If Generator Then
-            If dictFolders.ContainsKey(sKey) Then Return "Folder"
-#End If
         End If
 
         Return ""
@@ -559,7 +476,6 @@ Public Class clsAdventure
         If sKey = ANYCHARACTER Then Return sO & "Any Character" & sC
         If sKey = NOOBJECT Then Return sO & "No Object" & sC
         If sKey = THEFLOOR Then Return sO & IIf(bPCase, "The Floor", "the Floor").ToString & sC
-        'If sKey = THEPLAYER Then Return sO & IIf(bPCase, "The", "the").ToString & " Player Character" & sC
         If sKey = THEPLAYER Then Return IIf(bPCase, sO & "The Player Character" & sC, "the Player character").ToString
         If sKey = CHARACTERPROPERNAME Then Return IIf(bPrefixItem, IIf(bPCase, "Property ", "property "), "").ToString & sQ & "Name" & sQ
         If sKey = PLAYERLOCATION Then Return IIf(bPCase, sO & "The Player's Location" & sC, "the Player's location").ToString
@@ -808,7 +724,6 @@ Public Class clsAdventure
         sFilename = "untitled.taf"
         oDefaultFont = Nothing
         sGameFilename = ""
-#If Runner Then
         With UserSession
             .sIt = ""
             .sThem = ""
@@ -816,7 +731,6 @@ Public Class clsAdventure
             .sHer = ""
             .ClearAutoCompletes()
         End With
-#End If
         For i As Integer = 0 To 11
             Enabled(CType(i, EnabledOptionEnum)) = True
         Next
@@ -856,20 +770,6 @@ Public Class clsAdventure
         sDirectionsRE(DirectionsEnum.Up) = "Up/U"
         sDirectionsRE(DirectionsEnum.Down) = "Down/D"
 
-#If Generator Then
-        fGenerator.Map1.Map = Map
-        dictFolders = New FolderDictionary
-        'For Each pane As Infragistics.Win.UltraWinDock.DockAreaPane In fGenerator.UDMGenerator.DockAreas
-        '    pane.Close()
-        'Next
-        'For Each cp As Infragistics.Win.UltraWinDock.DockableControlPane In fGenerator.UDMGenerator.ControlPanes
-        '    cp.Close()
-        'Next
-        For Each child As frmFolder In fGenerator.MDIFolders
-            child.Close()
-        Next
-#End If
-
         For Each eGen As clsCharacter.GenderEnum In New clsCharacter.GenderEnum() {clsCharacter.GenderEnum.Male, clsCharacter.GenderEnum.Female, clsCharacter.GenderEnum.Unknown}
             lCharMentionedThisTurn.Add(eGen, New Generic.List(Of String))
         Next
@@ -890,10 +790,7 @@ Public Class clsAdventure
         AutoComplete
         MouseClicks
     End Enum
-    'Friend Function Enabled(ByVal eOption As EnabledOptionEnum) As Boolean
 
-
-    'End Function
     Private bEnabled(11) As Boolean
     Friend Property Enabled(ByVal eOption As EnabledOptionEnum) As Boolean
         Get
@@ -945,11 +842,6 @@ Public Class clsAdventure
             For Each sKey As String In Me.htblUDFs.Keys
                 salKeys.Add(sKey)
             Next
-#If Generator Then
-            For Each sKey As String In dictFolders.Keys
-                salKeys.Add(sKey)
-            Next
-#End If
 
             Return salKeys
 

@@ -1,7 +1,6 @@
 Public Class clsTask
     Inherits clsItem
 
-    'Private sKey As String
     Friend arlCommands As New StringArrayList
     Private bRepeatable As Boolean
     Friend Property ContinueToExecuteLowerPriority As Boolean ' Multiple Matching    
@@ -29,7 +28,6 @@ Public Class clsTask
     Public PreventOverriding As Boolean
     Public bSystemTask As Boolean
 
-#If Runner Then
     Private _RegExs As List(Of System.Text.RegularExpressions.Regex)()
     Public ReadOnly Property RegExs As List(Of System.Text.RegularExpressions.Regex)()
         Get
@@ -48,8 +46,7 @@ Public Class clsTask
             Return _RegExs
         End Get
     End Property
-#End If
-    
+
     ' Want
     ' Specific Text + Parent Text, specific actions, parent actions     - Before*   (text+actions)
     ' Specific Text, specific actions, parent actions                   - Before    (actions)
@@ -89,14 +86,11 @@ Public Class clsTask
         End Set
     End Property
 
-
-
     Public Property LocationTrigger As String  = ""        
     Public Property Completed() As Boolean
 
-   
     Friend Class Specific
-        Public Type As ReferencesType ' SpecificTypeEnum
+        Public Type As ReferencesType
         Public Multiple As Boolean
         Public Keys As New StringArrayList
 
@@ -135,7 +129,6 @@ Public Class clsTask
     Friend Specifics() As Specific
     Public GeneralKey As String
 
-
     Public Property Description() As String
         Get
             If sDescription <> "" Then
@@ -169,8 +162,6 @@ Public Class clsTask
         End Get
     End Property
 
-
-
     Friend ReadOnly Property MakeNice() As String
         Get
             ' Makes things like "[get/take] {the} %object% {from {the/a {green}} box}" into "get the %object% from the box"
@@ -203,8 +194,6 @@ Public Class clsTask
         End Get
     End Property
 
-
-
     Friend Function RefsInCommand(ByVal sCommand As String) As StringArrayList
 
         Dim arlRefs As New StringArrayList
@@ -217,11 +206,10 @@ Public Class clsTask
                 End If
             Next
         Next
-      
+
         Return arlRefs
 
     End Function
-
 
     Friend ReadOnly Property References() As StringArrayList
         Get         
@@ -229,22 +217,14 @@ Public Class clsTask
         End Get
     End Property
 
-
-
-
     Public Function TaskCommand(ByVal task As clsTask, Optional ByVal bReplaceSpecifics As Boolean = True, Optional ByVal iMatchedTask As Integer = -1) As String
 
         Dim sTaskCommand As String = ""
         Dim iMatchedTaskCommand As Integer = 0
-#If Runner Then
         If iMatchedTask = -1 Then iMatchedTaskCommand = UserSession.iMatchedTaskCommand
-#End If
 
         Select Case task.TaskType
             Case TaskTypeEnum.General
-                ' Find the command with the most refs.  E.g.
-                ' # Get Object
-                ' get %object%
                 Dim iRefsCount As Integer = 0
                 If task.arlCommands.Count = 0 Then
                     ErrMsg("Error, general task """ & sDescription & """ has no commands!")
@@ -287,31 +267,7 @@ Public Class clsTask
 
     End Function
 
-
-    Private Function ParentTaskCommand2(ByVal task As clsTask) As StringArrayList
-
-        While task.TaskType = clsTask.TaskTypeEnum.Specific
-            task = Adventure.htblTasks(task.GeneralKey)
-        End While
-        For iSpec As Integer = 0 To Specifics.Length
-            Select Case Specifics(iSpec).Keys.Count
-                Case 0, 1
-                Case Else
-                    ' Replace the parent task %object% with our specific key
-
-            End Select
-        Next
-        If task.arlCommands.Count > 0 Then
-            Return task.arlCommands
-        Else
-            Return New StringArrayList
-        End If
-
-    End Function
-
-
-    Friend Property CompletionMessage() As Description       
-
+    Friend Property CompletionMessage() As Description
 
     Friend Property FailOverride() As Description
         Get
@@ -362,23 +318,11 @@ Public Class clsTask
     Public Property AggregateOutput As Boolean = True
 
     Public Sub New()
-
         CompletionMessage = New Description
         oFailOverride = New Description
 
-        If iLoading = 0 Then
-#If Generator Then
-            If fGenerator.SimpleMode = True Then
-                Me.TaskType = TaskTypeEnum.General
-            Else
-                Me.TaskType = TaskTypeEnum.Specific
-            End If
-#End If            
-        End If
-
-        ContinueToExecuteLowerPriority = False        
+        ContinueToExecuteLowerPriority = False
         Me.iAutoFillPriority = 10
-
     End Sub
 
     Private Class TaskPrioritySortComparer
@@ -402,25 +346,19 @@ Public Class clsTask
         End Get
     End Property
 
-
     Public ReadOnly Property Parent() As String
         Get
             Return Me.GeneralKey
         End Get
     End Property
 
-
-#If Runner Then
     Public Function IsCompleteable() As Boolean
         Return UserSession.PassRestrictions(Me.arlRestrictions, True, Me)
-        'Return PassRestrictions(Me.arlRestrictions)
         Return True ' Hmmm...
     End Function
 
-
     Friend NewReferences() As clsNewReference
     Friend NewReferencesWorking() As clsNewReference
-
 
     Friend Function CopyNewRefs(ByVal OriginalRefs() As clsNewReference) As clsNewReference()
 
@@ -431,31 +369,22 @@ Public Class clsTask
         For iRef As Integer = 0 To OriginalRefs.Length - 1
             If OriginalRefs(iRef) IsNot Nothing Then
                 Dim nr As New clsNewReference(OriginalRefs(iRef).ReferenceType)
-                'Dim NewItems(OriginalRefs(iRef).Items.Count - 1) As clsNewReference.clsSingleItem
                 For iItem As Integer = 0 To OriginalRefs(iRef).Items.Count - 1
                     Dim itm As New clsSingleItem
                     itm.MatchingPossibilities = OriginalRefs(iRef).Items(iItem).MatchingPossibilities.Clone
                     itm.bExplicitlyMentioned = OriginalRefs(iRef).Items(iItem).bExplicitlyMentioned
                     itm.sCommandReference = OriginalRefs(iRef).Items(iItem).sCommandReference
-                    'NewItems(iItem) = itm
                     nr.Items.Add(itm)
                 Next
                 nr.Index = OriginalRefs(iRef).Index
                 nr.ReferenceMatch = OriginalRefs(iRef).ReferenceMatch
-                'nr.Items = NewItems
-                'nr.Multiple = OriginalRefs(iRef).Multiple
-                'nr.ReferenceType = OriginalRefs(iRef).ReferenceType
                 NewRefCopy(iRef) = nr
             End If
         Next
-
         Return NewRefCopy
-
     End Function
 
-
     Public Function HasObjectExistRestriction() As Boolean
-
         Static bChecked As Boolean = False
         Static bResult As Boolean = False
 
@@ -471,12 +400,9 @@ Public Class clsTask
         Else
             Return bResult
         End If
-
     End Function
 
-
     Public Function HasCharacterExistRestriction() As Boolean
-
         Static bChecked As Boolean = False
         Static bResult As Boolean = False
 
@@ -492,12 +418,9 @@ Public Class clsTask
         Else
             Return bResult
         End If
-
     End Function
 
-
     Public Function HasLocationExistRestriction() As Boolean
-
         Static bChecked As Boolean = False
         Static bResult As Boolean = False
 
@@ -513,10 +436,7 @@ Public Class clsTask
         Else
             Return bResult
         End If
-
     End Function
-
-#End If
 
     Public Overrides ReadOnly Property Clone() As clsItem
         Get
@@ -534,36 +454,11 @@ Public Class clsTask
         End Get
     End Property
 
-    'Public Function Copy() As clsTask
-
-    '    Dim tas As New clsTask
-
-    '    With tas
-    '        .arlActions = Me.arlActions.Copy
-    '        .arlCommands = Me.arlCommands.Clone
-    '        .arlRestrictions = Me.arlRestrictions.Copy
-    '        .bCompleted = Me.bCompleted
-    '        .eContinueToExecuteLowerPriority = Me.eContinueToExecuteLowerPriority
-    '        .bRepeatable = Me.bRepeatable
-    '        .iAutoFillPriority = Me.iAutoFillPriority
-    '        .iPriority = Me.iPriority
-    '        .LowPriority = Me.LowPriority
-    '        .oCompletionMessage = Me.oCompletionMessage
-    '        .sDescription = Me.sDescription
-    '        .sTriedAgainMessage = Me.sTriedAgainMessage
-    '        .TaskType = Me.TaskType
-    '    End With
-
-    '    Return tas
-
-    'End Function
-
     Public Overrides ReadOnly Property CommonName() As String
         Get
             Return Description
         End Get
     End Property
-
 
     Friend Overrides ReadOnly Property AllDescriptions() As System.Collections.Generic.List(Of SharedModule.Description)
         Get
@@ -577,24 +472,13 @@ Public Class clsTask
         End Get
     End Property
 
-
     Friend Overrides Function FindStringLocal(sSearchString As String, Optional sReplace As String = Nothing, Optional bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
         Dim iCount As Integer = iReplacements
-        iReplacements += MyBase.FindStringInStringProperty(Me.sDescription, sSearchString, sReplace, bFindAll)        
+        iReplacements += MyBase.FindStringInStringProperty(Me.sDescription, sSearchString, sReplace, bFindAll)
         Return iReplacements - iCount
     End Function
 
-
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fTask As New frmTask(Me, True)
-#End If
-    End Sub
-
-
     Public Overrides Function ReferencesKey(ByVal sKey As String) As Integer
-
         Dim iCount As Integer = 0
         iCount += arlRestrictions.ReferencesKey(sKey)
         iCount += arlActions.ReferencesKey(sKey)
@@ -606,25 +490,20 @@ Public Class clsTask
 
     End Function
 
-
     Public Overrides Function DeleteKey(ByVal sKey As String) As Boolean
-
         If Not arlRestrictions.DeleteKey(sKey) Then Return False
         If Not arlActions.DeleteKey(sKey) Then Return False
         For Each d As Description In AllDescriptions
             If Not d.DeleteKey(sKey) Then Return False
         Next
         If GeneralKey = sKey Then GeneralKey = ""
-
         Return True
-
     End Function
 
 End Class
 
 
 Public Class clsRestriction
-
     Public Enum RestrictionTypeEnum
         Location
         [Object]
@@ -657,7 +536,7 @@ Public Class clsRestriction
     End Enum
     Public eLocation As LocationEnum
 
-    Public Enum ObjectEnum        
+    Public Enum ObjectEnum
         BeAtLocation
         BeHeldByCharacter
         BeWornByCharacter
@@ -713,9 +592,9 @@ Public Class clsRestriction
     Public eCharacter As CharacterEnum
 
     ' Can only be things common to all items
-    Public Enum ItemEnum        
+    Public Enum ItemEnum
         BeAtLocation
-        BeCharacter        
+        BeCharacter
         BeInSameLocationAsCharacter
         BeInSameLocationAsObject
         BeInsideObject
@@ -726,7 +605,7 @@ Public Class clsRestriction
         BeOnObject
         BeType
         Exist
-        HaveProperty        
+        HaveProperty
     End Enum
     Public eItem As ItemEnum
 
@@ -736,7 +615,7 @@ Public Class clsRestriction
         EqualTo
         GreaterThanOrEqualTo
         GreaterThan
-        Contain       
+        Contain
     End Enum
     Public eVariable As VariableEnum
 
@@ -802,7 +681,7 @@ Public Class clsRestriction
                                 Case ObjectEnum.BeInsideObject
                                     sSummary &= ("be inside " & Adventure.GetNameFromKey(sKey2))
                                 Case ObjectEnum.BeInState
-                                    sSummary &= "be in state '" & sKey2 & "'" 'StringValue
+                                    sSummary &= "be in state '" & sKey2 & "'"
                                 Case ObjectEnum.BeOnObject
                                     sSummary &= ("be on " & Adventure.GetNameFromKey(sKey2))
                                 Case ObjectEnum.BePartOfCharacter
@@ -811,8 +690,6 @@ Public Class clsRestriction
                                     sSummary &= ("be part of " & Adventure.GetNameFromKey(sKey2))
                                 Case ObjectEnum.HaveBeenSeenByCharacter
                                     sSummary &= "have been seen by " & Adventure.GetNameFromKey(sKey2)
-                                    'Case ObjectEnum.StaticOrDynamic
-                                    '    sSummary &= sKey2
                                 Case ObjectEnum.BeVisibleToCharacter
                                     sSummary &= "be visible to " & Adventure.GetNameFromKey(sKey2)
                                 Case ObjectEnum.BeWornByCharacter
@@ -978,7 +855,7 @@ Public Class clsRestriction
                                     End If
                                     sSummary &= "' "
                                 End If
-                            End If                         
+                            End If
 
                             Select Case eMust
                                 Case MustEnum.Must
@@ -1010,7 +887,7 @@ Public Class clsRestriction
                                         sSummary &= "contain "
                                 End Select
                             End If
-                           
+
 
                             If IntValue = Integer.MinValue Then
                                 sSummary &= Adventure.GetNameFromKey(StringValue)
@@ -1091,13 +968,11 @@ Public Class clsRestriction
             End Try
 
             Return sSummary
-
         End Get
     End Property
 
 
     Public Function Copy() As clsRestriction
-
         Dim rest As New clsRestriction
 
         rest.eCharacter = Me.eCharacter
@@ -1115,11 +990,10 @@ Public Class clsRestriction
         rest.oMessage = Me.oMessage.Copy
 
         Return rest
-
     End Function
 
     Public Sub New()
-        oMessage = New Description        
+        oMessage = New Description
     End Sub
 
 End Class
@@ -1303,17 +1177,13 @@ Public Class clsAction
 
     End Function
 
-
     Public Overrides Function ToString() As String
         Return Summary
     End Function
 
-
     Public Function ReferencesKey(ByVal sKey As String) As Boolean
         Return sKey1 = sKey OrElse sKey2 = sKey
     End Function
-
-
 
     Public ReadOnly Property Summary() As String
         Get
@@ -1457,14 +1327,13 @@ Public Class clsAction
                         End Select
                         If eMoveCharacterWho <> MoveCharacterWhoEnum.EveryoneWithProperty Then sSummary &= Adventure.GetNameFromKey(sKey1)
 
-                        'sSummary = "Move " & Adventure.GetNameFromKey(sKey1).TrimStart(" "c)
                         Select Case eMoveCharacterTo
                             Case MoveCharacterToEnum.InDirection
                                 sSummary &= " in direction"
                                 If sKey2.StartsWith("ReferencedDirection") Then
                                     sSummary &= sKey2.Replace("ReferencedDirection", " Referenced Direction ")
                                 Else
-                                    sSummary &= " " & DirectionName(EnumParseDirections(sKey2)) ' CType(IntValue, DirectionsEnum))
+                                    sSummary &= " " & DirectionName(EnumParseDirections(sKey2))
                                 End If
                             Case MoveCharacterToEnum.ToLocation
                                 sSummary &= " to " & Adventure.GetNameFromKey(sKey2)
@@ -1491,7 +1360,6 @@ Public Class clsAction
                             Case MoveCharacterToEnum.FromGroup
                                 sSummary &= " from " & Adventure.GetNameFromKey(sKey2)
                         End Select
-                        'sSummary = sSummary.Replace("on object 'the Floor'", "on the Floor")
 
                     Case ItemEnum.AddLocationToGroup, ItemEnum.RemoveLocationFromGroup
 
@@ -1532,14 +1400,12 @@ Public Class clsAction
                         End Select
                         If eMoveLocationWhat <> MoveLocationWhatEnum.EverywhereWithProperty Then sSummary &= Adventure.GetNameFromKey(sKey1)
 
-                        'sSummary = "Move " & Adventure.GetNameFromKey(sKey1).TrimStart(" "c)
                         Select Case eMoveLocationTo
                             Case MoveLocationToEnum.ToGroup
                                 sSummary &= " to " & Adventure.GetNameFromKey(sKey2)
                             Case MoveLocationToEnum.FromGroup
                                 sSummary &= " from " & Adventure.GetNameFromKey(sKey2)
                         End Select
-                        'sSummary = sSummary.Replace("on object 'the Floor'", "on the Floor")
 
                     Case ItemEnum.SetProperties
                         Dim p As clsProperty = Nothing
@@ -1647,21 +1513,16 @@ Public Class clsAction
                                 sSummary = "Tell " & Adventure.GetNameFromKey(sKey1) & " about '" & StringValue & "'"
                             Case ConversationEnum.Command
                                 sSummary = "Say '" & StringValue & "' to " & Adventure.GetNameFromKey(sKey1)
-                                'Case ConversationEnum.Farewell
-                                '   sSummary = "Leave " & Adventure.GetNameFromKey(sKey1)
                             Case ConversationEnum.EnterConversation
                                 sSummary = "Enter conversation with " & Adventure.GetNameFromKey(sKey1)
                             Case ConversationEnum.LeaveConversation
                                 sSummary = "Leave conversation with " & Adventure.GetNameFromKey(sKey1)
                         End Select
                 End Select
-
             Catch
                 sSummary = "Bad Action Definition"
             End Try
-
             Return sSummary
-
         End Get
     End Property
 

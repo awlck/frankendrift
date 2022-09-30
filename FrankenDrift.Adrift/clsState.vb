@@ -1,15 +1,9 @@
 Imports System.IO
-Imports ComponentAce.Compression.Libs.zlib
 Imports System.Collections.Generic
 
 
 ' Gives us the same functionality as a stack, but restricts it to 100
-#If Adravalon Then
 Public Class MyStack
-#Else
-Friend Class MyStack
-#End If
-
     Private Const MAXLENGTH As Integer = 100
 
     Private States(MAXLENGTH) As clsGameState
@@ -30,22 +24,19 @@ Friend Class MyStack
         States(iEnd) = state
     End Sub
 
-
     Friend Function Count() As Integer
         If iEnd >= iStart Then
             If iStart = -1 AndAlso iEnd = -1 Then Return 0
             Return iEnd - iStart + 1
         Else
-            Return MAXLENGTH + 1 ' iEnd + MAXLENGTH - iStart
+            Return MAXLENGTH + 1
         End If
     End Function
-
 
     Friend Function Peek() As clsGameState
         If Count() = 0 Then Return Nothing
         Return States(iEnd)
     End Function
-
 
     Friend Function Pop() As clsGameState
 
@@ -68,14 +59,8 @@ Friend Class MyStack
 
 End Class
 
-
-#If Adravalon Then
 Public Class StateStack
-#Else
-Friend Class StateStack
-#End If
     Inherits MyStack
-
 
     Friend Shadows Sub Push(ByVal state As clsGameState)
         If stateCurrent IsNot Nothing Then stateLast = stateCurrent
@@ -88,8 +73,6 @@ Friend Class StateStack
         RestoreState(CType(MyBase.Pop, clsGameState))
         Debug.WriteLine("Popped (" & MyBase.Count & " on stack)")
     End Sub
-
-
 
     Private Sub SaveDisplayOnce(ByVal AllDescriptions As List(Of Description), ByVal htblStore As Dictionary(Of String, Boolean))
 
@@ -107,7 +90,6 @@ Friend Class StateStack
         Next
     End Sub
 
-
     ' Get the current game state, and store in a GameState class
     Friend Function GetState() As clsGameState
         Dim NewState As New clsGameState
@@ -118,14 +100,13 @@ Friend Class StateStack
 
             For Each loc As clsLocation In Adventure.htblLocations.Values
                 Dim locs As New clsGameState.clsLocationState
-                For Each sPropKey As String In loc.htblActualProperties.Keys ' loc.htblProperties.Keys
+                For Each sPropKey As String In loc.htblActualProperties.Keys
                     Dim prop As clsProperty = loc.htblProperties(sPropKey)
                     Dim props As New clsGameState.clsLocationState.clsStateProperty
                     props.Value = prop.Value(True)
                     locs.htblProperties.Add(sPropKey, props)
                 Next
                 SaveDisplayOnce(loc.AllDescriptions, locs.htblDisplayedDescriptions)
-                'locs.bSeen = UserSession.Map.Map.FindNode(loc.Key).Seen
                 locs.bSeen = Adventure.Player.HasSeenLocation(loc.Key)
                 .htblLocationStates.Add(loc.Key, locs)
             Next
@@ -133,7 +114,7 @@ Friend Class StateStack
             For Each ob As clsObject In Adventure.htblObjects.Values
                 Dim obs As New clsGameState.clsObjectState
                 obs.Location = ob.Location.Copy
-                For Each sPropKey As String In ob.htblActualProperties.Keys ' ob.htblProperties.Keys
+                For Each sPropKey As String In ob.htblActualProperties.Keys
                     Dim prop As clsProperty = ob.htblProperties(sPropKey)
                     Dim props As New clsGameState.clsObjectState.clsStateProperty
                     props.Value = prop.Value(True)
@@ -185,7 +166,7 @@ Friend Class StateStack
                 For Each sChKey As String In Adventure.htblCharacters.Keys
                     If ch.HasSeenCharacter(sChKey) Then chs.lSeenKeys.Add(sChKey)
                 Next
-                For Each sPropKey As String In ch.htblActualProperties.Keys ' ch.htblProperties.Keys
+                For Each sPropKey As String In ch.htblActualProperties.Keys
                     Dim prop As clsProperty = ch.htblProperties(sPropKey)
                     Dim props As New clsGameState.clsCharacterState.clsStateProperty
                     props.Value = prop.Value(True)
@@ -214,16 +195,6 @@ Friend Class StateStack
                 ' TODO: Arrays
                 .htblVariableStates.Add(var.Key, vars)
             Next
-
-            'For Each grp As clsGroup In Adventure.htblGroups.Values
-            '    If .htblGroupStates.ContainsKey(grp.Key) Then
-            '        Dim grps As clsGameState.clsGroupState = CType(.htblGroupStates(grp.Key), clsGameState.clsGroupState)
-            '        grp.arlMembers.Clear()
-            '        For Each sMember As String In grps.lstMembers
-            '            grp.arlMembers.Add(sMember)
-            '        Next
-            '    End If
-            'Next
             For Each grp As clsGroup In Adventure.htblGroups.Values
                 Dim grps As New clsGameState.clsGroupState
                 For Each sMembers As String In grp.arlMembers
@@ -238,13 +209,10 @@ Friend Class StateStack
 
     End Function
 
-
     ' Save the current game state onto our stack
     Public Sub RecordState()
         Push(GetState)
     End Sub
-
-
 
     ' Load from file, and restore
     Friend Sub LoadState(ByVal sFilePath As String)
@@ -252,7 +220,6 @@ Friend Class StateStack
         LoadFile(sFilePath, FileTypeEnum.GameState_TAS, LoadWhatEnum.All, False, , NewState)
         If NewState IsNot Nothing Then RestoreState(NewState)
     End Sub
-
 
     Private Sub RestoreDisplayOnce(ByVal AllDescriptions As List(Of Description), ByVal htblStore As Dictionary(Of String, Boolean))
 
@@ -270,7 +237,6 @@ Friend Class StateStack
         Next
 
     End Sub
-
 
     Friend Sub RestoreState(ByVal state As clsGameState)
 
@@ -306,8 +272,6 @@ Friend Class StateStack
                             End If
                         End If
                     Next
-                    'UserSession.Map.Map.FindNode(loc.Key).Seen = locs.bSeen
-                    'Adventure.Player.HasSeenLocation(loc.Key) = locs.bSeen
                     loc.ResetInherited()
                     RestoreDisplayOnce(loc.AllDescriptions, locs.htblDisplayedDescriptions)
                 End If
@@ -457,7 +421,6 @@ Friend Class StateStack
 
     Public Function SetLastState() As Boolean
         If MyBase.Count > 1 Then
-            'If Adventure.eGameState = clsAction.EndGameEnum.Running Then 
             MyBase.Pop() ' Discard current state
             RestoreState(CType(MyBase.Peek, clsGameState))
             Adventure.eGameState = clsAction.EndGameEnum.Running
@@ -465,8 +428,6 @@ Friend Class StateStack
             Return True
         Else
             Return False
-            'RecordState() ' To make sure we have the latest on the stack
-            'RestoreState(stateLast)
         End If
     End Function
 
@@ -484,9 +445,7 @@ End Class
 
 
 Friend Class clsGameState
-
     Friend sOutputText As String
-
     Friend Class clsObjectState
         Friend Class clsStateProperty
             Friend Value As String

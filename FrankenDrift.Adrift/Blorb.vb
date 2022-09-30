@@ -1,16 +1,12 @@
 ﻿Imports System.Text.Encoding
 Imports System.Xml
-#If Adravalon Then
 Imports Eto.Drawing
-#Else
-Imports System.Drawing ' Makes it explicit over Web Image etc
-#End If
 
 
 Public Class clsBlorb
 
     Private Shared iReadOffset As Integer = 0
-    Private Shared stmBlorb As IO.FileStream ' .MemoryStream
+    Private Shared stmBlorb As IO.FileStream
     Private Shared BlorbOffset As Long ' Where does the Blorb start within the file
 
     Friend Shared ExecResource As Byte()
@@ -28,12 +24,7 @@ Public Class clsBlorb
 
     Private Shared cnkFORM As FormChunk
 
-
-    #If Adravalon Then
     Public Function GetImage(ByVal iResourceNumber As Integer, Optional ByVal bStore As Boolean = False, Optional ByRef sExtn As String = Nothing) As Image
-    #Else
-    Friend Function GetImage(ByVal iResourceNumber As Integer, Optional ByVal bStore As Boolean = False, Optional ByRef sExtn As String = Nothing) As Image
-    #End If
         Dim bStreamOpen As Boolean = stmBlorb.CanRead
 
         Try
@@ -53,7 +44,7 @@ Public Class clsBlorb
                     End If
                 End If
             End If
-            If ImageResources.ContainsKey(iResourceNumber) Then Return ImageResources(iResourceNumber)            
+            If ImageResources.ContainsKey(iResourceNumber) Then Return ImageResources(iResourceNumber)
 
         Catch ex As Exception
             ErrMsg("GetImage error", ex)
@@ -96,8 +87,6 @@ Public Class clsBlorb
 
     End Function
 
-
-
     Friend Class SoundFile ' Temp, for now 
         Public bytSound As Byte() = {}
         Public sExtn As String
@@ -109,7 +98,6 @@ Public Class clsBlorb
         End Function
 
     End Class
-
 
     Friend Class ImageFile
         Public bytImage As Byte() = {}
@@ -123,9 +111,7 @@ Public Class clsBlorb
         End Property
     End Class
 
-
     Private MustInherit Class Chunk
-
         Public MustOverride Property ID As String
 
         Private iLength As UInt32
@@ -140,7 +126,6 @@ Public Class clsBlorb
 
 
         Public Overridable Function LoadChunk(Optional ByVal iStartPos As Integer = -1) As Boolean
-
             Try
                 If iStartPos > -1 Then stmBlorb.Position = iStartPos
 
@@ -161,20 +146,15 @@ Public Class clsBlorb
 
         End Function
 
-
         Public Sub SkipPadding()
             If stmBlorb.Position Mod 2 = 1 Then stmBlorb.Position += 1
         End Sub
-
 
         Public Sub WritePadding()
             If stmBlorb.Position Mod 2 = 1 Then stmBlorb.WriteByte(CByte(0))
         End Sub
 
-
         Public Chunks As New List(Of Chunk)
-
-
         Public Overridable Function WriteChunk() As Boolean
             Try
                 stmBlorb.Write(UTF8.GetBytes(ID), 0, 4) ' Chunk Type
@@ -225,7 +205,6 @@ Public Class clsBlorb
         End Function
     End Class
 
-
     Private Class FrontispieceChunk
         Inherits Chunk
 
@@ -238,7 +217,6 @@ Public Class clsBlorb
             End Set
         End Property
 
-
         Public Overrides Function LoadChunk(Optional ByVal iStartPos As Integer = -1) As Boolean
             If Not MyBase.LoadChunk(iStartPos) Then Return False
 
@@ -250,9 +228,7 @@ Public Class clsBlorb
             SkipPadding()
 
             Return True
-
         End Function
-
 
         Public Overrides Function WriteChunk() As Boolean
 
@@ -265,9 +241,7 @@ Public Class clsBlorb
                 WritePadding()
             End If
             Return True
-
         End Function
-
     End Class
 
 
@@ -310,11 +284,9 @@ Public Class clsBlorb
                 WritePadding()
             End If
             Return True
-
         End Function
 
     End Class
-
 
     Private Class DataChunk
         Inherits Chunk
@@ -348,29 +320,16 @@ Public Class clsBlorb
 
             Select Case DataType
                 Case "RLAY"
-                    ' Restore Runner Layout                                   
-#If Runner AndAlso Not www AndAlso Not Mono Then
+                    ' Restore Runner Layout
                     Dim sIFID As String = ""
                     If MetaData IsNot Nothing Then
                         sIFID = MetaData.GetElementsByTagName("ifid").Item(0).InnerText
                         If sIFID <> "" Then sIFID = "-" & sIFID
-                    End If     
+                    End If
                     Dim sXMLFile As String = DataPath(True) & "RunnerLayout" & sIFID & ".xml"
-#Else
-                    Dim sXMLFile As String = DataPath(True) & "RunnerLayout.xml"
-#End If
 
                     If Not IO.File.Exists(sXMLFile) Then
-                        'If sLocalDataPath IsNot Nothing AndAlso Not IO.Directory.Exists(sLocalDataPath) Then IO.Directory.CreateDirectory(sLocalDataPath)
                         IO.File.WriteAllText(sXMLFile, Data)
-                        '#If Runner AndAlso Not www AndAlso Not Mono Then
-                        '                        If fRunner IsNot Nothing Then
-                        '                            fRunner.RestoreLayout()
-                        '                            Application.DoEvents()
-                        '                        Else
-                        '                            UserSession.bRequiresRestoreLayout = True
-                        '                        End If
-                        '#End If
                     End If
             End Select
 
@@ -389,7 +348,6 @@ Public Class clsBlorb
                 WritePadding()
             End If
             Return True
-
         End Function
 
     End Class
@@ -436,7 +394,6 @@ Public Class clsBlorb
                 WritePadding()
             End If
             Return True
-
         End Function
 
     End Class
@@ -474,30 +431,7 @@ Public Class clsBlorb
             End Set
         End Property
 
-        'Public img As Image
-        Public img As ImageFile ' As Byte()
-
-
-        Public Sub SetImage(ByVal sImage As String)
-            If IO.File.Exists(sImage) Then
-                Length = CUInt(FileLen(sImage))
-                Dim fs As New IO.FileStream(sImage, IO.FileMode.Open, IO.FileAccess.Read)
-                img = New ImageFile
-                ReDim img.bytImage(CInt(Length) - 1)
-                fs.Read(img.bytImage, 0, CInt(Length))
-                img.sExtn = IO.Path.GetExtension(sImage).ToLower.Substring(1)
-                fs.Close()
-                'Dim img As Image = Image.FromFile(sImage) ' Bitmap.FromFile(sImage)
-                'Me.img = img
-                'Select Case img.sExtn
-                '    Case ".jpeg", ".jpg"
-                '        ID = "JPEG"
-                '    Case ".png"
-                '        ID = "PNG "
-                'End Select
-                'Length = CUInt(FileLen(sImage))
-            End If
-        End Sub
+        Public img As ImageFile
 
 
         Public Overrides Function LoadChunk(Optional ByVal iStartPos As Integer = -1) As Boolean
@@ -520,15 +454,6 @@ Public Class clsBlorb
             img.bytImage = bytPict
             img.sExtn = sExtn
 
-            'Dim msImage As New IO.MemoryStream(bytPict)
-            'img = New Bitmap(msImage)
-            'Select Case ID
-            '    Case "PNG "
-            '        img.sExtn = "png"
-            '    Case "JPEG"
-            '        img.sExtn = "jpg"
-            'End Select
-
             SkipPadding()
 
             Return True
@@ -537,20 +462,10 @@ Public Class clsBlorb
 
         Public Overrides Function WriteChunk() As Boolean
             If Not MyBase.WriteChunk Then Return False
-
-            'Dim format As Drawing.Imaging.ImageFormat = Drawing.Imaging.ImageFormat.Jpeg
-            'Select ID
-            '    Case "PNG "
-            '        format = Drawing.Imaging.ImageFormat.Png
-            '    Case "JPEG"
-            '        format = Drawing.Imaging.ImageFormat.Jpeg
-            'End Select
-            'img.Save(stmBlorb, format)
             stmBlorb.Write(img.bytImage, 0, img.bytImage.Length)
 
             WritePadding()
             Return True
-
         End Function
 
     End Class
@@ -618,17 +533,14 @@ Public Class clsBlorb
             Dim bytSound(CInt(Length) - 1) As Byte
             iReadOffset += stmBlorb.Read(bytSound, 0, CInt(Length))
 
-            'ReDim Preserve Blorb.PictResources(Blorb.PictResources.Length)
             snd = New SoundFile
-            'Dim snd As New SoundFile
             snd.bytSound = bytSound
-            'Blorb.SoundResources.Add(snd)
 
-            With snd 'Blorb.SoundResources(Blorb.PictResources.Length - 1)
+            With snd
                 Dim msImage As New IO.MemoryStream(bytSound)
                 Select Case ID
-                    Case "AIFF"                        
-                        .sExtn = "aif"                        
+                    Case "AIFF"
+                        .sExtn = "aif"
                     Case "OGGV"
                         .sExtn = "ogg"
                     Case "MOD "
@@ -654,7 +566,6 @@ Public Class clsBlorb
 
             WritePadding()
             Return True
-
         End Function
 
     End Class
@@ -672,7 +583,6 @@ Public Class clsBlorb
             End Set
         End Property
 
-        'Private iNumberOfResources As Integer
         Public ReadOnly Property NumberOfResources As Integer
             Get
                 Return clsBlorb.ResourceIndex.Count
@@ -691,7 +601,6 @@ Public Class clsBlorb
 
 
         Friend Class ResourceIndex
-
             Private sUsage As String
             Public Property Usage As String
                 Get
@@ -728,8 +637,6 @@ Public Class clsBlorb
             End Property
         End Class
 
-        'Friend Resources() As ResourceIndex
-
         Public Overrides Function LoadChunk(Optional ByVal iStartPos As Integer = -1) As Boolean
             If Not MyBase.LoadChunk(iStartPos) Then Return False
 
@@ -738,29 +645,21 @@ Public Class clsBlorb
             iReadOffset += stmBlorb.Read(bytNum, 0, 4)
             Dim iNumberOfResources As Integer = CInt(ByteToInt(bytNum))
 
-            'ReDim Resources(CInt(NumberOfResources - 1))
-
             For iResource As Integer = 0 To iNumberOfResources - 1
 
                 Dim sKey As String
-                'Resources(iResource) = New ResourceIndex
-                'With Resources(iResource)
                 Dim bytUsage(3) As Byte
                 iReadOffset += stmBlorb.Read(bytUsage, 0, 4)
-                '.Usage = UTF8.GetString(bytUsage)
                 sKey = UTF8.GetString(bytUsage)
 
                 Dim btyNumber(3) As Byte
                 iReadOffset += stmBlorb.Read(btyNumber, 0, 4)
-                '.Number = ByteToInt(btyNumber)
                 sKey &= ByteToInt(btyNumber)
 
                 Dim bytStart(3) As Byte
                 iReadOffset += stmBlorb.Read(bytStart, 0, 4)
-                '.Start = ByteToInt(bytStart)
 
                 clsBlorb.ResourceIndex.Add(sKey, ByteToInt(bytStart))
-                'End With
             Next
 
             SkipPadding()
@@ -789,7 +688,6 @@ Public Class clsBlorb
 
     Private Class FormChunk
         Inherits Chunk
-
         Public Overrides Property ID As String
             Get
                 Return "FORM"
@@ -847,9 +745,9 @@ Public Class clsBlorb
                     Case "ZCOD", "GLUL", "TAD2", "TAD3", "HUGO", "ALAN", "ADRI", "LEVE", "AGT ", "MAGS", "ADVS", "EXEC"
                         cnk = New ExecResourceChunk
                     Case "GIF ", "PNG ", "JPEG"
-                        cnk = New SkipChunk 'PictResourceChunk
+                        cnk = New SkipChunk
                     Case "AIFF", "OGGV", "MOD ", "MP3 ", "WAVE", "MIDI"
-                        cnk = New SkipChunk 'SoundResourceChunk
+                        cnk = New SkipChunk
                     Case "IFmd"
                         cnk = New MetaDataChunk
                     Case "Fspc"
@@ -894,7 +792,7 @@ Public Class clsBlorb
             Dim iOffset As UInt32 = 12
             iResource = 0
             For Each c As Chunk In Chunks
-                iOffset = CUInt(iOffset) ' + 8)
+                iOffset = CUInt(iOffset)
                 Dim sKey As String = ""
                 Select Case True
                     Case TypeOf c Is ExecResourceChunk
@@ -926,8 +824,6 @@ Public Class clsBlorb
         End Function
     End Class
 
-
-
     Private Sub ClearBlorb()
         ExecType = Nothing
         ExecResource = Nothing
@@ -938,108 +834,15 @@ Public Class clsBlorb
         Frontispiece = -1
     End Sub
 
-
-
     Public Function LoadBlorb(ByVal stmBlorb As IO.FileStream, ByVal sFilename As String, Optional ByVal BlorbOffset As Long = 0) As Boolean
-
-        Try
-            ClearBlorb()
-            clsBlorb.BlorbOffset = BlorbOffset
-            clsBlorb.sFilename = sFilename
-            clsBlorb.stmBlorb = stmBlorb
-            iReadOffset = 0
-            cnkFORM = New FormChunk
-            Return cnkFORM.LoadChunk()
-        Finally
-            'stmBlorb.Close()
-            'stmBlorb.Dispose()
-        End Try
-
-    End Function
-
-
-#If Generator Then
-    ' Package current adventure into the Blorb
-    Public Function SaveBlorb(ByVal stmBlorb As IO.FileStream) As Boolean
-
         ClearBlorb()
-        cnkFORM = New FormChunk
-        Dim cnkResourceIndex As New ResourceIndexChunk
+        clsBlorb.BlorbOffset = BlorbOffset
+        clsBlorb.sFilename = sFilename
         clsBlorb.stmBlorb = stmBlorb
-
-        cnkFORM.Chunks.Add(cnkResourceIndex)
-
-        Dim iResource As Integer = 0
-
-        ' Add Exec (without Babel)
-        Dim stmExec As New IO.MemoryStream
-        If SaveFileToStream(stmExec, True, , True) Then
-            Dim cnkExec As New ExecResourceChunk
-            ExecResource = stmExec.ToArray
-            cnkExec.ID = "ADRI"
-            cnkExec.Length = CUInt(ExecResource.Length)
-            cnkFORM.Chunks.Add(cnkExec)
-        End If
-        stmExec.Close()
-
-        ' Add Images
-        For Each sImage As String In Adventure.Images
-            Dim cnkImage As New PictResourceChunk
-            cnkImage.SetImage(sImage)
-            cnkFORM.Chunks.Add(cnkImage)
-        Next
-
-        ' Add Sound
-        For Each sSound As String In Adventure.Sounds
-            Dim cnkSound As New SoundResourceChunk
-            cnkSound.SetSound(sSound)
-            cnkFORM.Chunks.Add(cnkSound)
-        Next
-
-        ' Add Metadata
-        If Adventure.BabelTreatyInfo IsNot Nothing Then
-            MetaData = New Xml.XmlDocument
-            MetaData.LoadXml(Adventure.BabelTreatyInfo.ToString())
-            Dim cnkMeta As New MetaDataChunk
-            cnkFORM.Chunks.Add(cnkMeta)
-
-            With Adventure.BabelTreatyInfo.Stories(0)
-                ' Set Version/Release Date
-                'With .Releases.Attached.Release
-                '    .ReleaseDate = Date.Today
-                '    '.Version += 1
-                'End With
-
-                ' Add Frontispiece
-                If Adventure.CoverFilename <> "" Then ' .Cover IsNot Nothing AndAlso .Cover.Filename <> "" Then
-                    Dim cnkFront As New FrontispieceChunk
-                    Frontispiece = 1 ' It's always the first resource after Exec, if it exists
-                    cnkFORM.Chunks.Add(cnkFront)
-                End If
-            End With
-
-        End If
-
-        ' Save Runner Layout
-        Dim sXMLFile As String = DataPath(True) & "RunnerLayout" & CurrentIFID() & ".xml"
-        If IO.File.Exists(sXMLFile) Then
-            DataType = "RLAY"
-            Data = IO.File.ReadAllText(sXMLFile)
-            Dim cnkData As New DataChunk
-            cnkFORM.Chunks.Add(cnkData)
-        End If
-
-        cnkFORM.WriteChunk()
-
-        ' Increment version after exporting Blorb
-        If Adventure.BabelTreatyInfo IsNot Nothing Then
-            With Adventure.BabelTreatyInfo.Stories(0).Releases.Attached.Release
-                .Version += 1
-            End With
-        End If
-
+        iReadOffset = 0
+        cnkFORM = New FormChunk
+        Return cnkFORM.LoadChunk()
     End Function
-#End If
 
     Friend Function CurrentIFID() As String
 
@@ -1050,134 +853,6 @@ Public Class clsBlorb
 
     End Function
 
-
-#If Not Adravalon Then
-    Public Function OutputToFolder(ByVal sFolder As String) As Boolean
-
-        Dim stmOutput As IO.FileStream = Nothing
-        Dim bw As IO.BinaryWriter
-
-        Try
-            Cursor.Current = Cursors.WaitCursor
-            If Not stmBlorb.CanRead Then stmBlorb = New IO.FileStream(sFilename, IO.FileMode.Open)
-
-            Dim iResource As Integer = 0
-            For Each sKey As String In ResourceIndex.Keys
-                iResource += 1
-                If sKey.StartsWith("Pict") Then
-                    Dim sExtn As String = ""
-                    Dim img As Image = GetImage(CInt(sKey.Replace("Pict", "")), , sExtn)
-                    If img IsNot Nothing Then
-                        img.Save(sFolder & IO.Path.DirectorySeparatorChar & "Image" & iResource & "." & sExtn)
-                        img.Dispose()
-                    End If
-                ElseIf sKey.StartsWith("Snd ") Then
-                    Dim sExtn As String = ""
-                    Dim snd As SoundFile = GetSound(CInt(sKey.Replace("Snd ", "")), , sExtn)
-                    If snd IsNot Nothing Then
-                        snd.Save(sFolder & IO.Path.DirectorySeparatorChar & "Audio" & iResource & "." & sExtn)
-                    End If
-                    'Dim snd As SoundFile = GetSound(CInt(sKey.Replace("Snd ", "")))
-                    'stmOutput = New IO.FileStream(sFolder & IO.Path.DirectorySeparatorChar & "Sound" & iResource & "." & snd.sExtn, IO.FileMode.CreateNew)
-                    'bw = New IO.BinaryWriter(stmOutput)
-                    'bw.Write(snd.bytSound)
-                    'bw.Close()
-                    'stmOutput.Close()
-                ElseIf sKey.StartsWith("Exec") Then
-                    If ExecResource IsNot Nothing Then
-                        Dim sExtn As String = "bin"
-                        Select Case ExecType
-                            Case "ZCOD"
-                                ' Hmm, which version...?
-                                Dim sVersion As String = "X"
-                                If MetaData IsNot Nothing Then
-                                    ' SelectSingleNode is just not working, even after assigning a namespacemanager :-(
-                                    For Each node As XmlNode In MetaData.DocumentElement.ChildNodes
-                                        If node.Name = "story" Then
-                                            For Each node2 As XmlNode In node.ChildNodes
-                                                If node2.Name = "releases" Then
-                                                    For Each node3 As XmlNode In node2.ChildNodes
-                                                        If node3.Name = "attached" Then
-                                                            For Each node4 As XmlNode In node3.ChildNodes
-                                                                If node4.Name = "release" Then
-                                                                    For Each node5 As XmlNode In node4.ChildNodes
-                                                                        If node5.Name = "compilerversion" Then
-                                                                            If node5.InnerXml.Length > 0 Then sVersion = node5.InnerXml(0)
-                                                                        End If
-                                                                    Next
-                                                                End If
-                                                            Next
-                                                        End If
-                                                    Next
-                                                End If
-                                            Next
-                                        End If
-                                    Next
-                                End If
-                                sExtn = "z" & sVersion
-                            Case "GLUL"
-                                sExtn = "ulx"
-                            Case "TAD2"
-                                sExtn = "gam"
-                            Case "TAD3"
-                                sExtn = "t3"
-                            Case "HUGO"
-                                sExtn = "hex"
-                            Case "ALAN"
-                                sExtn = "acd"
-                            Case "ADRI"
-                                sExtn = "taf"
-                            Case "LEVE"
-                            Case "AGT "
-                                sExtn = "dat"
-                            Case "MAGS"
-                            Case "ADVS"
-                                sExtn = "dat"
-                            Case "EXEC"
-                        End Select
-                        stmOutput = New IO.FileStream(sFolder & IO.Path.DirectorySeparatorChar & "Executable." & sExtn, IO.FileMode.CreateNew)
-                        bw = New IO.BinaryWriter(stmOutput)
-                        bw.Write(ExecResource)
-                        bw.Close()
-                        stmOutput.Close()
-                    End If
-                Else
-                    ErrMsg("Bad Resource key " & sKey)
-                End If
-            Next
-
-            If MetaData IsNot Nothing Then
-                Dim sExtn As String = "xml"
-                If MetaData.OuterXml.Contains("iFiction") Then sExtn = "iFiction"
-                MetaData.Save(sFolder & IO.Path.DirectorySeparatorChar & "Metadata." & sExtn)
-            End If
-
-#If Not Adravalon Then
-            Cursor.Current = Cursors.Arrow
-#End If
-            Return True
-
-        Catch exIO As IO.IOException
-#If Not Adravalon Then
-            Cursor.Current = Cursors.Arrow
-#End If
-            ErrMsg("Error expanding Blorb: " & exIO.Message)
-            Return False
-        Catch ex As Exception
-#If Not Adravalon Then
-            Cursor.Current = Cursors.Arrow
-#End If
-            ErrMsg("Error expanding Blorb", ex)
-            Return False
-        Finally
-            stmBlorb.Close()
-            stmBlorb.Dispose()
-        End Try
-
-    End Function
-
-#End If
-
     Private Shared Function ByteToInt(ByVal byt() As Byte) As UInt32
         ' Reverse the bytes
         Dim bytRev(byt.Length - 1) As Byte
@@ -1186,7 +861,6 @@ Public Class clsBlorb
         Next
         Return BitConverter.ToUInt32(bytRev, 0)
     End Function
-
 
     Private Shared Function IntToByte(ByVal int As UInt32) As Byte()
         Dim bytRev(3) As Byte
@@ -1197,6 +871,5 @@ Public Class clsBlorb
         Next
         Return byt
     End Function
-
 
 End Class

@@ -1,16 +1,9 @@
 Imports System.Collections.Generic
 
-#If Adravalon Then
 Public Module StronglyTypedCollections
-#Else
-Module StronglyTypedCollections
-#End If
-
-
     ' TODO - phase out the individual hashtables in favour of a single dictionary
 
     Public Class ItemDictionary
-        'Inherits Generic.Dictionary(Of String, clsItem)
         Private AllItems As Generic.Dictionary(Of String, clsItem)
 
         Public Sub New()
@@ -61,41 +54,27 @@ Module StronglyTypedCollections
         Shadows Sub Add(ByVal item As clsItem)
             Select Case True
                 Case TypeOf item Is clsLocation
-                    'If Not Adventure.htblLocations.ContainsKey(item.Key) Then 
                     Adventure.htblLocations.Add(CType(item, clsLocation), item.Key)
                 Case TypeOf item Is clsObject
-                    'If Not Adventure.htblObjects.ContainsKey(item.Key) Then 
                     Adventure.htblObjects.Add(CType(item, clsObject), item.Key)
                 Case TypeOf item Is clsTask
-                    'If Not Adventure.htblTasks.ContainsKey(item.Key) Then 
                     Adventure.htblTasks.Add(CType(item, clsTask), item.Key)
                 Case TypeOf item Is clsEvent
-                    'If Not Adventure.htblEvents.ContainsKey(item.Key) Then 
                     Adventure.htblEvents.Add(CType(item, clsEvent), item.Key)
                 Case TypeOf item Is clsCharacter
-                    'If Not Adventure.htblCharacters.ContainsKey(item.Key) Then 
                     Adventure.htblCharacters.Add(CType(item, clsCharacter), item.Key)
                 Case TypeOf item Is clsVariable
-                    'If Not Adventure.htblVariables.ContainsKey(item.Key) Then 
                     Adventure.htblVariables.Add(CType(item, clsVariable), item.Key)
                 Case TypeOf item Is clsALR
-                    'If Not Adventure.htblALRs.ContainsKey(item.Key) Then 
                     Adventure.htblALRs.Add(CType(item, clsALR), item.Key)
                 Case TypeOf item Is clsGroup
-                    'If Not Adventure.htblGroups.ContainsKey(item.Key) Then 
                     Adventure.htblGroups.Add(CType(item, clsGroup), item.Key)
                 Case TypeOf item Is clsHint
-                    'If Not Adventure.htblHints.ContainsKey(item.Key) Then 
                     Adventure.htblHints.Add(CType(item, clsHint), item.Key)
                 Case TypeOf item Is clsProperty
-                    'If Not Adventure.htblAllProperties.ContainsKey(item.Key) Then 
                     Adventure.htblAllProperties.Add(CType(item, clsProperty))
                 Case TypeOf item Is clsUserFunction
                     Adventure.htblUDFs.Add(CType(item, clsUserFunction), item.Key)
-#If Generator Then
-                Case TypeOf item Is clsFolder
-                    Adventure.dictFolders.Add(item.Key, CType(item, clsFolder))
-#End If
                 Case Else
                     TODO("Add item of type " & item.ToString)
             End Select
@@ -125,34 +104,12 @@ Module StronglyTypedCollections
                 Adventure.htblGroups.Remove(key)
             ElseIf Adventure.htblUDFs.ContainsKey(key) Then
                 Adventure.htblUDFs.Remove(key)
-#If Generator Then
-            ElseIf Adventure.dictFolders.ContainsKey(key) Then
-                Adventure.dictFolders.Remove(key)
-#End If
             Else
                 TODO("Remove item of type " & key)
             End If
         End Sub
 
     End Class
-
-
-#If Generator Then
-    Public Class FolderDictionary
-        Inherits Generic.Dictionary(Of String, clsFolder)
-
-        Public Shadows Sub Add(ByVal key As String, ByVal folder As clsFolder)
-            MyBase.Add(key, folder)
-            Adventure.dictAllItems.AddBase(folder)
-        End Sub
-
-        Public Shadows Sub Remove(ByVal key As String)
-            MyBase.Remove(key)
-            Adventure.dictAllItems.RemoveBase(key)
-        End Sub
-    End Class
-#End If
-
 
     Public Class LocationHashTable
         Inherits Dictionary(Of String, clsLocation)
@@ -197,7 +154,6 @@ Module StronglyTypedCollections
         End Function
     End Class
 
-
     Public Class ObjectHashTable
         Inherits Dictionary(Of String, clsObject)
 
@@ -213,7 +169,6 @@ Module StronglyTypedCollections
 
         Default Shadows Property Item(ByVal key As String) As clsObject
             Get
-                'Return CType(MyBase.Item(key), clsObject)
                 Try
                     Return MyBase.Item(key)
                 Catch ex As Exception
@@ -237,16 +192,9 @@ Module StronglyTypedCollections
                 If iCount = 1 Then List &= " " & sSeparator & " "
             Next
             If List = "" Then List = "nothing"
-            'List &= "."
 
             If bIncludeSubObjects Then
                 For Each ob As clsObject In MyBase.Values
-                    'If Not ob.Openable OrElse ob.IsOpen Then
-                    '    If ob.ChildrenInside.Count > 0 Then
-                    '        List &= ".  Inside " & ob.FullName & " is " & ob.ChildrenInside.list("and", True, False)
-                    '    End If
-                    'End If
-                    'If ob.ChildrenOn.Count > 0 Then List &= ".  On " & ob.FullName & " is " & ob.ChildrenOn.List("and", True, False)
 
                     If ob.Children(clsObject.WhereChildrenEnum.OnObject).Count > 0 Then
                         If List <> "" Then List &= ".  "
@@ -259,7 +207,6 @@ Module StronglyTypedCollections
                         List &= ob.FullName(ArticleTypeEnum.Definite)
                     End If
                     If (ob.Openable AndAlso ob.IsOpen) OrElse Not ob.Openable Then
-
                         If ob.Children(clsObject.WhereChildrenEnum.InsideObject).Count > 0 Then
                             If ob.Children(clsObject.WhereChildrenEnum.OnObject).Count > 0 Then
                                 List &= ", and inside"
@@ -276,13 +223,10 @@ Module StronglyTypedCollections
                         End If
 
                     End If
-                    'If ob.ChildrenOn.Count > 0 OrElse (ob.Openable AndAlso ob.IsOpen AndAlso ob.ChildrenInside.Count > 0) Then List &= "."
-
                 Next
             End If
         End Function
 
-#If Runner Then
         Public Function SeenBy(Optional ByVal sCharKey As String = "") As ObjectHashTable
 
             If sCharKey = "" OrElse sCharKey = "%Player%" Then sCharKey = Adventure.Player.Key
@@ -310,7 +254,6 @@ Module StronglyTypedCollections
             Return htbl
 
         End Function
-#End If
 
     End Class
 
@@ -333,7 +276,6 @@ Module StronglyTypedCollections
 
         Default Shadows Property Item(ByVal key As String) As clsTask
             Get
-                'Return CType(MyBase.Item(key), clsTask)
                 Try
                     Return MyBase.Item(key)
                 Catch ex As Exception
@@ -345,7 +287,6 @@ Module StronglyTypedCollections
             End Set
         End Property
     End Class
-
 
     ' Exposes an array of keys that we can iterate that are ordered in our original way
     Public Class OrderedHashTable
@@ -386,22 +327,11 @@ Module StronglyTypedCollections
 
     End Class
 
-
-
     Public Class StringHashTable
         Inherits Dictionary(Of String, String)
 
-        'Shadows Sub Add(ByVal key As String, ByVal str As String)
-        '    MyBase.Add(key, str)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal key As String)
-        '    MyBase.Remove(key)
-        'End Sub
-
         Default Shadows Property Item(ByVal key As String) As String
             Get
-                'Return CStr(MyBase.Item(key))
                 Try
                     Return MyBase.Item(key)
                 Catch ex As Exception
@@ -414,19 +344,6 @@ Module StronglyTypedCollections
         End Property
 
         Shadows Function Clone() As StringHashTable
-
-            ' This probably isn't ideal, but you can't cast an ArrayList to a StringArrayList, 
-            ' so we need to do the shallow copy ourselves.
-
-            'Dim htblTemp As Hashtable = CType(MyBase.Clone, Hashtable)
-            'Dim shtblTemp As New StringHashTable
-
-            'For Each sKey As String In htblTemp.Keys
-            '    shtblTemp.Add(sKey, CStr(htblTemp(sKey)))
-            'Next
-
-            'Return shtblTemp
-
             Dim htblReturn As New StringHashTable
 
             For Each entry As KeyValuePair(Of String, String) In Me
@@ -434,11 +351,9 @@ Module StronglyTypedCollections
             Next
 
             Return htblReturn
-
         End Function
 
     End Class
-
 
 
     Public Class EventHashTable
@@ -461,12 +376,12 @@ Module StronglyTypedCollections
                 Catch ex As Exception
                     Return Nothing
                 End Try
-                'Return CType(MyBase.Item(key), clsEvent)
             End Get
             Set(ByVal Value As clsEvent)
                 MyBase.Item(key) = Value
             End Set
         End Property
+
     End Class
 
 
@@ -489,7 +404,7 @@ Module StronglyTypedCollections
                     If Adventure.Player Is Nothing Then Return Nothing
                     key = Adventure.Player.Key
                 End If
-                Return MyBase.Item(key) ' CType(MyBase.Item(key), clsCharacter)
+                Return MyBase.Item(key)
             End Get
             Set(ByVal Value As clsCharacter)
                 MyBase.Item(key) = Value
@@ -502,17 +417,15 @@ Module StronglyTypedCollections
             List = Nothing
 
             For Each ch As clsCharacter In MyBase.Values
-                List &= "%CharacterName[" & ch.Key & "]%" ' ch.Name
+                List &= "%CharacterName[" & ch.Key & "]%"
                 iCount -= 1
                 If iCount > 1 Then List &= ", "
                 If iCount = 1 Then List &= " " & sSeparator & " "
             Next
             If List = "" Then List = "noone"
-
         End Function
 
         Public Function SeenBy(Optional ByVal sCharKey As String = "") As CharacterHashTable
-
             If sCharKey = "" OrElse sCharKey = "%Player%" Then sCharKey = Adventure.Player.Key
 
             Dim htbl As New CharacterHashTable
@@ -520,25 +433,19 @@ Module StronglyTypedCollections
             For Each ch As clsCharacter In Me.Values
                 If ch.SeenBy(sCharKey) Then htbl.Add(ch, ch.Key)
             Next
-
             Return htbl
-
         End Function
 
         Public Function VisibleTo(Optional ByVal sCharKey As String = "") As CharacterHashTable
-
             If sCharKey = "" OrElse sCharKey = "%Player%" Then sCharKey = Adventure.Player.Key
 
             Dim htbl As New CharacterHashTable
 
-#If Runner Then
             For Each ch As clsCharacter In Me.Values
                 If ch.CanSeeCharacter(sCharKey) Then htbl.Add(ch, ch.Key)
             Next
-#End If
 
             Return htbl
-
         End Function
 
     End Class
@@ -559,7 +466,6 @@ Module StronglyTypedCollections
 
         Default Shadows Property Item(ByVal key As String) As clsGroup
             Get
-                'Return CType(MyBase.Item(key), clsGroup)
                 Try
                     Return MyBase.Item(key)
                 Catch ex As Exception
@@ -588,7 +494,6 @@ Module StronglyTypedCollections
 
         Default Shadows Property Item(ByVal key As String) As clsALR
             Get
-                'Return CType(MyBase.Item(key), clsALR)
                 Try
                     Return MyBase.Item(key)
                 Catch ex As Exception
@@ -645,7 +550,6 @@ Module StronglyTypedCollections
 
         Default Shadows Property Item(ByVal key As String) As clsVariable
             Get
-                'Return CType(MyBase.Item(key), clsVariable)
                 Try
                     Return MyBase.Item(key)
                 Catch ex As Exception
@@ -689,7 +593,7 @@ Module StronglyTypedCollections
 
 
     Public Class RestrictionArrayList
-        Inherits List(Of clsRestriction) ' ArrayList
+        Inherits List(Of clsRestriction)
         Implements ICloneable
 
         Private sBracketSequence As String
@@ -707,18 +611,15 @@ Module StronglyTypedCollections
 
 
         Public Function ReferencesKey(ByVal sKey As String) As Integer
-
             Dim iCount As Integer = 0
             For Each r As clsRestriction In Me
                 If r.ReferencesKey(sKey) Then iCount += 1
             Next
             Return iCount
-
         End Function
 
 
         Public Function DeleteKey(ByVal sKey As String) As Boolean
-
             For i As Integer = MyBase.Count - 1 To 0 Step -1
                 If CType(MyBase.Item(i), clsRestriction).ReferencesKey(sKey) Then
                     RemoveAt(i)
@@ -733,12 +634,10 @@ Module StronglyTypedCollections
             Next
 
             Return True
-
         End Function
 
 
         Private Function StripRestriction(ByVal iRest As Integer) As Boolean
-
             Dim iFound As Integer = 0
 
             For i As Integer = 0 To BracketSequence.Length - 1
@@ -754,12 +653,10 @@ Module StronglyTypedCollections
                     Exit For
                 End If
             Next
-
         End Function
 
 
         Public Function IsBracketsValid() As Boolean
-
             If sBracketSequence Is Nothing Then Return True
             Dim sBS As String = sBracketSequence.Replace("[", "((").Replace("]", "))")
             Dim sTemp As String = Nothing
@@ -779,16 +676,7 @@ Module StronglyTypedCollections
             Else
                 Return False
             End If
-
         End Function
-
-        'Shadows Sub Add(ByVal rest As clsRestriction)
-        '    MyBase.Add(rest)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal rest As clsRestriction)
-        '    MyBase.Remove(rest)
-        'End Sub
 
         Default Shadows Property Item(ByVal idx As Integer) As clsRestriction
             Get
@@ -805,7 +693,6 @@ Module StronglyTypedCollections
         End Property
 
         Public Function Copy() As RestrictionArrayList
-
             Dim ral As New RestrictionArrayList
 
             ral.BracketSequence = sBracketSequence
@@ -815,7 +702,6 @@ Module StronglyTypedCollections
             Next
 
             Return ral
-
         End Function
 
         Private Function Clone() As Object Implements ICloneable.Clone
@@ -829,36 +715,23 @@ Module StronglyTypedCollections
 
 
     Public Class ActionArrayList
-        Inherits List(Of clsAction) ' ArrayList
-
-        'Shadows Sub Add(ByVal act As clsAction)
-        '    MyBase.Add(act)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal act As clsAction)
-        '    MyBase.Remove(act)
-        'End Sub
+        Inherits List(Of clsAction)
 
         Public Function ReferencesKey(ByVal sKey As String) As Integer
-
             Dim iCount As Integer = 0
             For Each a As clsAction In Me
                 If a.ReferencesKey(sKey) Then iCount += 1
             Next
             Return iCount
-
         End Function
 
         Public Function DeleteKey(ByVal sKey As String) As Boolean
-
             For i As Integer = MyBase.Count - 1 To 0 Step -1
                 If CType(MyBase.Item(i), clsAction).ReferencesKey(sKey) Then
                     RemoveAt(i)
                 End If
             Next
-
             Return True
-
         End Function
 
         Default Shadows Property Item(ByVal idx As Integer) As clsAction
@@ -876,7 +749,6 @@ Module StronglyTypedCollections
         End Property
 
         Public Function Copy() As ActionArrayList
-
             Dim aal As New ActionArrayList
 
             For i As Integer = 0 To MyBase.Count - 1
@@ -885,22 +757,13 @@ Module StronglyTypedCollections
             Next
 
             Return aal
-
         End Function
 
     End Class
 
 
     Public Class EventDescriptionArrayList
-        Inherits List(Of clsEventDescription) ' ArrayList
-
-        'Shadows Sub Add(ByVal ed As clsEventDescription)
-        '    MyBase.Add(ed)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal ed As clsEventDescription)
-        '    MyBase.Remove(ed)
-        'End Sub
+        Inherits List(Of clsEventDescription)
 
         Default Shadows Property Item(ByVal idx As Integer) As clsEventDescription
             Get
@@ -967,7 +830,6 @@ Module StronglyTypedCollections
                 Catch ex As Exception
                     Return Nothing
                 End Try
-                'Return CType(MyBase.Item(key), clsProperty)
             End Get
             Set(ByVal Value As clsProperty)
                 MyBase.Item(key) = Value
@@ -987,19 +849,6 @@ Module StronglyTypedCollections
         End Function
 
         Shadows Function Clone() As PropertyHashTable
-
-            ' This probably isn't ideal, but you can't cast an ArrayList to a StringArrayList, 
-            ' so we need to do the shallow copy ourselves.
-
-            'Dim htblTemp As Hashtable = CType(MyBase.Clone, Hashtable)
-            'Dim phtblTemp As New PropertyHashTable
-
-            'For Each key As String In htblTemp.Keys
-            '    phtblTemp.Add(CType(CType(htblTemp(key), clsProperty).Clone, clsProperty), key)
-            'Next
-
-            'Return phtblTemp
-
             Dim htblReturn As New PropertyHashTable
 
             For Each entry As KeyValuePair(Of String, clsProperty) In Me
@@ -1007,14 +856,11 @@ Module StronglyTypedCollections
             Next
 
             Return htblReturn
-
         End Function
 
 
         Public Function ReferencesKey(ByVal sKey As String) As Integer
-
             Dim iCount As Integer = 0
-
             If MyBase.ContainsKey(sKey) Then iCount += 1
             For Each p As clsProperty In MyBase.Values
                 If p.AppendToProperty = sKey Then iCount += 1
@@ -1024,9 +870,7 @@ Module StronglyTypedCollections
                     If p.Value = sKey Then iCount += 1
                 End If
             Next
-
             Return iCount
-
         End Function
 
 
@@ -1037,7 +881,6 @@ Module StronglyTypedCollections
         ''' <returns>True, if we remove a property</returns>
         ''' <remarks></remarks>
         Private Function ResetOrRemoveProperty(ByVal p As clsProperty) As Boolean
-
             ' If we're not mandatory we can just remove the property
             If Not p.Mandatory Then
                 ' Ok, just remove it
@@ -1088,12 +931,10 @@ Module StronglyTypedCollections
             End If
 
             Return False
-
         End Function
 
 
         Public Function DeleteKey(ByVal sKey As String) As Boolean
-
 restart:
             For Each p As clsProperty In MyBase.Values
                 If p.AppendToProperty = sKey Then p.AppendToProperty = ""
@@ -1106,11 +947,8 @@ restart:
                 End If
             Next
             If ContainsKey(sKey) Then Remove(sKey)
-
             Return True
-
         End Function
-
 
         ' Ensures any child properties have their Selected properties set
         Public Sub SetSelected()
@@ -1120,7 +958,6 @@ restart:
         End Sub
 
         Private Function IsPropertySelected(ByVal prop As clsProperty) As Boolean
-
             If SafeString(prop.DependentKey) <> "" Then
                 If MyBase.ContainsKey(prop.DependentKey) Then
                     If prop.DependentValue Is Nothing OrElse Item(prop.DependentKey).Value = prop.DependentValue Then
@@ -1132,7 +969,6 @@ restart:
             Else
                 Return prop.Selected
             End If
-
         End Function
 
     End Class
@@ -1145,10 +981,6 @@ restart:
             MyBase.Add(key, bool)
         End Sub
 
-        'Shadows Sub Remove(ByVal key As String)
-        '    MyBase.Remove(key)
-        'End Sub
-
         Default Shadows Property Item(ByVal key As String) As Boolean
             Get
                 Try
@@ -1156,7 +988,6 @@ restart:
                 Catch ex As Exception
                     Return Nothing
                 End Try
-                'Return CBool(MyBase.Item(key))
             End Get
             Set(ByVal Value As Boolean)
                 MyBase.Item(key) = Value
@@ -1186,7 +1017,6 @@ restart:
                 Catch ex As Exception
                     Return Nothing
                 End Try
-                'Return CType(MyBase.Item(key), clsHint)
             End Get
             Set(ByVal Value As clsHint)
                 MyBase.Item(key) = Value
@@ -1202,10 +1032,6 @@ restart:
             MyBase.Add(topic.Key, topic)
         End Sub
 
-        'Shadows Sub Remove(ByVal key As String)
-        '    MyBase.Remove(key)
-        'End Sub
-
         Default Shadows Property Item(ByVal key As String) As clsTopic
             Get
                 Try
@@ -1213,7 +1039,6 @@ restart:
                 Catch ex As Exception
                     Return Nothing
                 End Try
-                'Return CType(MyBase.Item(key), clsTopic)
             End Get
             Set(ByVal Value As clsTopic)
                 MyBase.Item(key) = Value
@@ -1221,19 +1046,6 @@ restart:
         End Property
 
         Shadows Function Clone() As TopicHashTable
-
-            '' This probably isn't ideal, but you can't cast an ArrayList to a StringArrayList, 
-            '' so we need to do the shallow copy ourselves.
-
-            'Dim htblTemp As Hashtable = CType(MyBase.Clone, Hashtable)
-            'Dim thtblTemp As New TopicHashTable
-
-            'For Each key As String In htblTemp.Keys
-            '    thtblTemp.Add(CType(htblTemp(key), clsTopic).Clone)
-            'Next
-
-            'Return thtblTemp
-
             Dim htblReturn As New TopicHashTable
 
             For Each entry As KeyValuePair(Of String, clsTopic) In Me
@@ -1241,33 +1053,22 @@ restart:
             Next
 
             Return htblReturn
-
         End Function
 
         Friend Function DoesTopicHaveChildren(ByVal key As String) As Boolean
-
             For Each sKey As String In Me.Keys
                 If key <> sKey Then
                     If Me.Item(sKey).ParentKey = key Then Return True
                 End If
             Next
             Return False
-
         End Function
 
     End Class
 
 
     Public Class StringArrayList
-        Inherits List(Of String) ' ArrayList
-
-        'Shadows Sub Add(ByVal strg As String)
-        '    MyBase.Add(strg)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal strg As String)
-        '    MyBase.Remove(strg)
-        'End Sub
+        Inherits List(Of String)
 
         Default Shadows Property Item(ByVal idx As Integer) As String
             Get
@@ -1287,27 +1088,12 @@ restart:
         End Property
 
         Sub Merge(ByVal sal As StringArrayList)
-
             For Each s As String In sal
                 MyBase.Add(s)
             Next
-
         End Sub
 
         Shadows Function Clone() As StringArrayList
-
-            '' This probably isn't ideal, but you can't cast an ArrayList to a StringArrayList, 
-            '' so we need to do the shallow copy ourselves.
-
-            'Dim arlTemp As ArrayList = CType(MyBase.Clone, ArrayList)
-            'Dim salTemp As New StringArrayList
-
-            'For i As Integer = 0 To arlTemp.Count - 1
-            '    salTemp.Add(CStr(arlTemp(i)))
-            'Next i
-
-            'Return salTemp
-
             Dim htblReturn As New StringArrayList
 
             For Each entry As String In Me
@@ -1315,17 +1101,13 @@ restart:
             Next
 
             Return htblReturn
-
         End Function
-
 
         Shadows Function Contains(ByVal strg As String) As Boolean
             Return MyBase.Contains(strg)
         End Function
 
-
         Function List() As String
-
             Dim iCount As Integer = MyBase.Count
 
             List = Nothing
@@ -1337,33 +1119,13 @@ restart:
                 If iCount = 1 Then List &= " and "
             Next
             If List = "" Then List = "nothing"
-
         End Function
-
-        'Function ContainsKey(ByVal sKey As String) As Boolean
-
-        '    For i As Integer = 0 To MyBase.Count - 1
-        '        If CStr(MyBase.Item(i)) = sKey Then
-        '            Return True
-        '        End If
-        '    Next
-        '    Return False
-
-        'End Function
 
     End Class
 
 
     Public Class DirectionArrayList
-        Inherits List(Of clsDirection) ' ArrayList
-
-        'Shadows Sub Add(ByVal dir As clsDirection)
-        '    MyBase.Add(dir)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal dir As clsDirection)
-        '    MyBase.Remove(dir)
-        'End Sub
+        Inherits List(Of clsDirection)
 
         Default Shadows Property Item(ByVal idx As DirectionsEnum) As clsDirection
             Get
@@ -1383,15 +1145,7 @@ restart:
 
 
     Public Class WalkArrayList
-        Inherits List(Of clsWalk) ' ArrayList
-
-        'Shadows Sub Add(ByVal walk As clsWalk)
-        '    MyBase.Add(walk)
-        'End Sub
-
-        'Shadows Sub Remove(ByVal walk As clsWalk)
-        '    MyBase.Remove(walk)
-        'End Sub
+        Inherits List(Of clsWalk)
 
         Default Shadows Property Item(ByVal idx As Integer) As clsWalk
             Get
@@ -1407,6 +1161,5 @@ restart:
         End Property
 
     End Class
-
 
 End Module

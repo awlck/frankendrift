@@ -12,7 +12,6 @@
         Text
     End Enum
 
-
     Friend Class Argument
         Public Property Name As String
         Public Property Type As ArgumentType
@@ -48,16 +47,10 @@
 
         For Each d As Description In AllDescriptions
             If Not d.DeleteKey(sKey) Then Return False
-        Next        
+        Next
 
         Return True
     End Function
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fUDF As New frmUserFunction(Me)
-#End If
-    End Sub
 
     Friend Overrides Function FindStringLocal(sSearchString As String, Optional sReplace As String = Nothing, Optional bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
         Dim iCount As Integer = iReplacements
@@ -68,5 +61,4 @@
     Public Overrides Function ReferencesKey(sKey As String) As Integer
 
     End Function
-
 End Class

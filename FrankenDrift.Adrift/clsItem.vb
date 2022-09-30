@@ -33,10 +33,6 @@ Public MustInherit Class clsItem
                 sKey = sLeft(sNewKey.ToString, 10)
                 If sKey.Length < 2 Then
                     sKey = GetNewKey(True)
-#If Generator Then
-                Else
-                    sKey = fGenerator.KeyPrefix.ToLower & sKey
-#End If
                 End If
                 If AllKeys.FindAll(Function(s) s.IndexOf(sKey, StringComparison.OrdinalIgnoreCase) >= 0).Count = 0 Then Return sKey ' Case insensitive Keys.Contains
 
@@ -83,10 +79,6 @@ Public MustInherit Class clsItem
                     sType = "Synonym"
                 Case TypeOf Me Is clsUserFunction
                     sType = "User Function"
-#If Generator Then
-                Case TypeOf Me Is clsFolder
-                    sType = "Folder"
-#End If
                 Case Else
                     TODO("Other types")
             End Select
@@ -103,12 +95,7 @@ Public MustInherit Class clsItem
 
 
     Public Function GetNewKey(ByVal sPrefix As String) As String
-
         Dim iNum As Integer = 1
-
-#If Generator Then
-        sPrefix = fGenerator.KeyPrefix.ToLower & sPrefix.Replace(" ", "")
-#End If
 
         While Not Adventure.GetTypeFromKey(sPrefix & iNum) Is Nothing
             iNum += 1
@@ -119,7 +106,6 @@ Public MustInherit Class clsItem
         If Adventure.listExcludedItems.Contains(sKey) Then Adventure.listExcludedItems.Remove(sKey)
 
         Return sKey
-
     End Function
 
 
@@ -160,8 +146,6 @@ Public MustInherit Class clsItem
     Public MustOverride ReadOnly Property Clone() As clsItem
     Friend MustOverride ReadOnly Property AllDescriptions() As Generic.List(Of Description)
 
-    Public MustOverride Sub EditItem()
-
     Public MustOverride Function ReferencesKey(ByVal sKey As String) As Integer
     Public MustOverride Function DeleteKey(ByVal sKey As String) As Boolean
     Friend MustOverride Function FindStringLocal(ByVal sSearchString As String, Optional ByVal sReplace As String = Nothing, Optional ByVal bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
@@ -174,7 +158,6 @@ Public MustInherit Class clsItem
         Else
             Return CInt(oSearch) > 0
         End If
-        'Return FindString(sSearchString, , False) IsNot Nothing
     End Function
 
 
@@ -187,60 +170,15 @@ Public MustInherit Class clsItem
                 If o IsNot Nothing AndAlso Not bFindAll Then Return o
             Next
             Return FindStringLocal(sSearchString, sReplace, bFindAll, iReplacements)
-#If False Then
-            For Each p As System.Reflection.PropertyInfo In Me.GetType.GetProperties(Reflection.BindingFlags.NonPublic Or Reflection.BindingFlags.Public Or Reflection.BindingFlags.Instance)
-                Select Case True
-                    Case p.PropertyType Is GetType(String)
-                        Try
-                            If p.CanWrite Then
-                                If Not p.Name.ToLower.Contains("key") Then
-                                    Dim params() As System.Reflection.ParameterInfo = p.GetIndexParameters()
-                                    If params.Length = 0 Then
-                                        Dim sValue As String = SafeString(p.GetValue(Me, Nothing))
-                                        If FindText(sValue, sSearchString) Then
-                                            If sReplace IsNot Nothing Then p.SetValue(Me, ReplaceString(sValue, sSearchString, sReplace, iReplacements), Nothing)
-                                            If Not bFindAll Then Return sValue
-                                        End If
-                                    End If
-                                End If
-                            End If
-                        Catch
-                        End Try
-                    Case p.PropertyType Is GetType(StringArrayList)
-                        Try
-                            If p.CanWrite Then
-                                Dim params() As System.Reflection.ParameterInfo = p.GetIndexParameters()
-                                If params.Length = 0 Then
-                                    Dim arlValue As StringArrayList = CType(p.GetValue(Me, Nothing), StringArrayList)
-                                    For i As Integer = arlValue.Count - 1 To 0 Step -1
-                                        Dim sValue As String = arlValue(i)
-                                        If FindText(sValue, sSearchString) Then
-                                            If sReplace IsNot Nothing Then arlValue(i) = ReplaceString(sValue, sSearchString, sReplace, iReplacements)
-                                            If Not bFindAll Then Return sValue
-                                        End If
-                                    Next
-                                End If
-                            End If
-                        Catch
-                        End Try
-                End Select
-            Next
-#End If
         Catch ex As Exception
             ErrMsg("Error finding string " & sSearchString & " in item " & CommonName, ex)
-        Finally
-#If Generator Then
-            If sCommonName <> Me.CommonName Then UpdateListItem(Me.Key, Me.CommonName)
-#End If
         End Try
 
         Return Nothing
-
     End Function
 
 
     Private Function FindText(ByVal sTextToSearch As String, ByVal sTextToFind As String) As Boolean
-
         If sTextToSearch Is Nothing Then Return False
 
         Dim re As System.Text.RegularExpressions.Regex
@@ -253,12 +191,10 @@ Public MustInherit Class clsItem
         End If
 
         Return re.IsMatch(sTextToSearch)
-
     End Function
 
 
     Friend Function FindStringInStringProperty(ByRef text As String, ByVal sSearchString As String, Optional ByVal sReplace As String = Nothing, Optional ByVal bFindAll As Boolean = True) As Integer
-
         If FindText(text, sSearchString) Then
             Dim iReplacements As Integer = 0
             If sReplace IsNot Nothing Then
@@ -270,14 +206,13 @@ Public MustInherit Class clsItem
         End If
 
         Return Nothing
-
     End Function
 
 
     Friend Function FindStringInDescription(ByVal d As Description, ByVal sSearchString As String, Optional ByVal sReplace As String = Nothing, Optional ByVal bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As SingleDescription
 
         For Each sd As SingleDescription In d
-            If FindText(sd.Description, sSearchString) Then ' sd.Description.Contains(sSearchString) Then
+            If FindText(sd.Description, sSearchString) Then
                 If sReplace IsNot Nothing Then sd.Description = ReplaceString(sd.Description, sSearchString, sReplace, iReplacements)
                 If Not bFindAll Then Return sd
             End If
@@ -294,24 +229,6 @@ Public MustInherit Class clsItem
 
 
     Private Function ReplaceString(ByRef sText As String, ByVal sFind As String, ByVal sReplace As String, ByRef iReplacements As Integer) As String
-
-        'Return re.IsMatch(sTextToSearch)
-
-        'While sText.Contains(sFind)
-        '    sText = Replace(sText, sFind, sReplace, , 1)
-        '    iReplacements += 1
-        'End While
-        'Dim iStart As Integer = 0
-        'Dim iLast As Integer = -1
-        'Dim comp As System.StringComparison = StringComparison.CurrentCultureIgnoreCase
-        'If SearchOptions.bSearchMatchCase Then comp = StringComparison.CurrentCulture
-        'While iStart <> iLast AndAlso iStart > -1
-        '    iLast = iStart
-        '    iStart = sText.IndexOf(sFind, iStart, comp)
-        '    If iStart > -1 AndAlso iStart <> iLast Then iReplacements += 1
-        'End While
-
-        'sText = sText.Replace(sFind, sReplace)
         Dim re As System.Text.RegularExpressions.Regex
         Dim sWordBound As String = CStr(IIf(SearchOptions.bFindExactWord, "\b", ""))
         sFind = sFind.Replace("\", "\\").Replace("*", ".*").Replace("?", "\?")
@@ -324,16 +241,12 @@ Public MustInherit Class clsItem
         sText = re.Replace(sText, sReplace)
 
         Return sText
-
     End Function
 
-
     Public Function SearchAndReplace(ByVal sFind As String, ByVal sReplace As String) As Integer
-
         Dim iReplacements As Integer = 0
         FindString(sFind, sReplace, True, iReplacements)
         Return iReplacements
-
     End Function
 
 End Class
@@ -341,7 +254,6 @@ End Class
 
 Public MustInherit Class clsItemWithProperties
     Inherits clsItem
-
 
     ' These are the properties that belong to the item
     Private _htblActualProperties As New PropertyHashTable
@@ -351,7 +263,6 @@ Public MustInherit Class clsItemWithProperties
         End Get
         Set(value As PropertyHashTable)
             _htblActualProperties = value
-            'bCalculatedGroups = False
             _htblProperties = Nothing ' To Ensure any subsequent calls to htblProperties doesn't take stale values
         End Set
     End Property
@@ -434,38 +345,6 @@ Public MustInherit Class clsItemWithProperties
         _htblProperties = Nothing
     End Sub
 
-    'Friend Function RecalculateProperties() As PropertyHashTable
-
-    '    Dim htblProp As PropertyHashTable = htblActualProperties.Clone
-    '    For Each grp As clsGroup In Adventure.htblGroups.Values
-    '        If grp.GroupType = PropertyGroupType Then
-    '            If grp.arlMembers.Contains(Key) Then
-    '                For Each prop As clsProperty In grp.htblProperties.Values
-    '                    If Not htblProp.ContainsKey(prop.Key) Then htblProp.Add(prop.Copy)
-    '                    With htblProp(prop.Key)
-    '                        .Value = prop.Value
-    '                        .StringData = prop.StringData.Copy
-    '                        .FromGroup = True
-    '                    End With
-    '                Next
-    '            End If
-    '        End If
-    '    Next
-
-    '    ' Copy existing values back
-    '    If m_htblProperties IsNot Nothing Then
-    '        For Each p As clsProperty In m_htblProperties.Values
-    '            If htblProp.ContainsKey(p.Key) Then
-    '                htblProp(p.Key).Value = p.Value(True)
-    '                htblProp(p.Key).StringData = p.StringData.Copy
-    '            End If
-    '        Next
-    '    End If
-
-    '    Return htblProp
-
-    'End Function
-
     Friend Function GetProperty(ByVal sPropertyKey As String) As clsProperty
         Return htblProperties(sPropertyKey)
     End Function
@@ -477,17 +356,6 @@ Public MustInherit Class clsItemWithProperties
         Else
             Return Nothing
         End If
-        '        Dim lhtblProperties As PropertyHashTable
-        '#If Runner Then
-        '        lhtblProperties = htblProperties
-        '#Else
-        '        lhtblProperties = htblActualProperties
-        '#End If
-        '        If lHasProperty(sPropertyKey) Then
-        '            Return lhtblProperties(sPropertyKey).Value
-        '        Else
-        '            Return Nothing
-        '        End If
     End Function
 
 
@@ -498,55 +366,12 @@ Public MustInherit Class clsItemWithProperties
 
 
     Friend Sub SetPropertyValue(ByVal sPropertyKey As String, ByVal sValue As String)
-        '        Dim lhtblProperties As PropertyHashTable
-        '#If Runner Then
-        '        If HasProperty(sPropertyKey) Then
-        '            lhtblProperties = htblProperties
-        '        Else
-        '            lhtblProperties = htblActualProperties
-        '            bCalculatedGroups = False
-        '        End If
-        '#Else
-        '        lhtblProperties = htblActualProperties
-        '#End If
-        '        If Not lHasProperty(sPropertyKey) Then
-        '            If Adventure.htblAllProperties.ContainsKey(sPropertyKey) Then
-        '                Dim p As clsProperty = Adventure.htblAllProperties(sPropertyKey).Copy
-        '                lhtblProperties.Add(p)
-        '            End If
-        '        End If
-
-        '        lhtblProperties(sPropertyKey).Value = sValue
-        'AddProperty(sPropertyKey)
         AddProperty(sPropertyKey)
         htblProperties(sPropertyKey).Value = sValue
     End Sub
 
 
     Friend Sub SetPropertyValue(ByVal sPropertyKey As String, ByVal bValue As Boolean)
-        '        Dim lhtblProperties As PropertyHashTable
-        '#If Runner Then
-        '        If HasProperty(sPropertyKey) Then
-        '            lhtblProperties = htblProperties
-        '        Else
-        '            lhtblProperties = htblActualProperties
-        '            bCalculatedGroups = False
-        '        End If
-        '#Else
-        '        lhtblProperties = htblActualProperties
-        '#End If
-        '        If bValue Then
-        '            If Not lHasProperty(sPropertyKey) Then
-        '                If Adventure.htblAllProperties.ContainsKey(sPropertyKey) Then
-        '                    Dim p As clsProperty = Adventure.htblAllProperties(sPropertyKey).Copy
-        '                    p.Selected = True
-        '                    lhtblProperties.Add(p)
-        '                End If
-        '            End If
-        '        Else
-        '            If lHasProperty(sPropertyKey) Then lhtblProperties.Remove(sPropertyKey)
-        '        End If
-
         ' Add/Remove the property from our collection
         If bValue Then
             AddProperty(sPropertyKey)
@@ -560,25 +385,8 @@ Public MustInherit Class clsItemWithProperties
 
     Friend Function HasProperty(ByVal sPropertyKey As String) As Boolean
         Return htblProperties.ContainsKey(sPropertyKey)
-        '        Dim lhtblProperties As PropertyHashTable
-        '#If Runner Then
-        '        lhtblProperties = htblProperties
-        '#Else
-        '        lhtblProperties = htblActualProperties
-        '#End If
-        '        Return lHasProperty(sPropertyKey)
     End Function
 
-
-    '    Friend Function RemoveProperty(ByVal sPropertyKey As String) As Boolean
-    '        Dim lhtblProperties As PropertyHashTable
-    '#If Runner Then
-    '        lhtblProperties = htblProperties
-    '#Else
-    '        lhtblProperties = htblActualProperties
-    '#End If
-    '        If lHasProperty(sPropertyKey) Then lhtblProperties.Remove(sPropertyKey)
-    '    End Function
     Friend Sub RemoveProperty(ByVal sPropertyKey As String)
         If _htblActualProperties.ContainsKey(sPropertyKey) Then
             _htblActualProperties.Remove(sPropertyKey)
@@ -588,17 +396,11 @@ Public MustInherit Class clsItemWithProperties
 
     Friend Sub AddProperty(ByVal prop As clsProperty, Optional ByVal bActualProperties As Boolean = True)
         If HasProperty(prop.Key) Then RemoveProperty(prop.Key)
-        'With htblProperties(prop.Key)
-        '    .Value = prop.Value
-        '    .StringData = prop.StringData.Copy                
-        'End With            
-        'Else
         If bActualProperties Then
             _htblActualProperties.Add(prop)
         Else
             _htblInheritedProperties.Add(prop)
         End If
-        'End If
         _htblProperties = Nothing
     End Sub
 
@@ -610,7 +412,6 @@ Public MustInherit Class clsItemWithProperties
             Else
                 Throw New Exception("Property " & sPropertyKey & " does not exist!")
             End If
-            'SetPropertyValue(sPropertyKey, sValue)
         End If
     End Sub
 
@@ -635,10 +436,6 @@ Public MustInherit Class clsItemWithProperties
     Public Overrides Function DeleteKey(sKey As String) As Boolean
 
     End Function
-
-    Public Overrides Sub EditItem()
-
-    End Sub
 
     Friend Overrides Function FindStringLocal(sSearchString As String, Optional sReplace As String = Nothing, Optional bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
 

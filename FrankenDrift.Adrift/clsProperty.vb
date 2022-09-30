@@ -2,22 +2,14 @@
 Public Class clsProperty
     Inherits clsItem
 
-#If Adravalon Then
     Public Enum PropertyOfEnum
-#Else
-    Friend Enum PropertyOfEnum
-#End If
         Locations = 0
         Objects = 1
         Characters = 2
         AnyItem = 3
     End Enum
 
-#If Adravalon Then
     Public Enum PropertyTypeEnum
-#Else
-    Friend Enum PropertyTypeEnum
-#End If
         SelectionOnly
         [Integer]
         Text
@@ -75,14 +67,11 @@ Public Class clsProperty
         End Set
     End Property
 
-
-
     Public Overrides ReadOnly Property Clone() As clsItem
         Get
             Return Copy()
         End Get
     End Property
-
 
     Public Property DependentKey() As String
         Get
@@ -96,8 +85,6 @@ Public Class clsProperty
             End If
         End Set
     End Property
-
-
 
     Friend ReadOnly Property PossibleValues(Optional ByVal CurrentProperties As PropertyHashTable = Nothing) As StringArrayList
         Get
@@ -147,7 +134,6 @@ Public Class clsProperty
                             Next
                         End If
                     Next
-                    'End If
                 Case clsProperty.PropertyTypeEnum.Text
                     TODO("Text values")
             End Select
@@ -164,7 +150,7 @@ Public Class clsProperty
                 Case PropertyTypeEnum.StateList, PropertyTypeEnum.ObjectKey, PropertyTypeEnum.CharacterKey, PropertyTypeEnum.LocationKey, PropertyTypeEnum.LocationGroupKey
                     Return StringData.ToString
                 Case PropertyTypeEnum.ValueList
-                    Return IntData.ToString 'SafeString(ValueList(sStringData.ToString))
+                    Return IntData.ToString
                 Case PropertyTypeEnum.Text
                     Return StringData.ToString(bTesting)
                 Case PropertyTypeEnum.Integer
@@ -234,8 +220,6 @@ Public Class clsProperty
         End Set
     End Property
 
-
-
     Public Function Copy() As clsProperty
 
         Dim p As New clsProperty
@@ -276,28 +260,20 @@ Public Class clsProperty
 
     End Function
 
-
-
     Public Shadows Function ToString() As String
         Return Me.Description & " (" & Me.Value & ")"
     End Function
-
-
 
     Public Sub New()
         Me.StringData = New Description
         Me.PropertyOf = PropertyOfEnum.Objects
     End Sub
 
-
-
     Public Overrides ReadOnly Property CommonName() As String
         Get
             Return Description
         End Get
     End Property
-
-
 
     Friend Overrides ReadOnly Property AllDescriptions() As System.Collections.Generic.List(Of SharedModule.Description)
         Get
@@ -307,23 +283,11 @@ Public Class clsProperty
         End Get
     End Property
 
-
-
     Friend Overrides Function FindStringLocal(sSearchString As String, Optional sReplace As String = Nothing, Optional bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
         Dim iCount As Integer = iReplacements
         iReplacements += MyBase.FindStringInStringProperty(Description, sSearchString, sReplace, bFindAll)
         Return iReplacements - iCount
     End Function
-
-
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fProperty As New frmProperty(Me, True)
-#End If
-    End Sub
-
-
 
     Public Overrides Function ReferencesKey(ByVal sKey As String) As Integer
         Dim iCount As Integer = 0
@@ -331,9 +295,6 @@ Public Class clsProperty
         If Me.RestrictProperty = sKey Then iCount += 1
         Return iCount
     End Function
-
-
-
     Public Overrides Function DeleteKey(ByVal sKey As String) As Boolean
         If Me.DependentKey = sKey Then Me.DependentKey = Nothing
         If Me.RestrictProperty = sKey Then Me.RestrictProperty = Nothing

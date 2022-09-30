@@ -1,6 +1,5 @@
 ﻿Public Class clsSynonym
     Inherits clsItem
-
     Friend Overrides ReadOnly Property AllDescriptions As System.Collections.Generic.List(Of SharedModule.Description)
         Get
             Dim all As New Generic.List(Of Description)
@@ -34,12 +33,6 @@
         Return True
 
     End Function
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fSynonym As New frmSynonym(Me)
-#End If
-    End Sub
 
     Friend Overrides Function FindStringLocal(sSearchString As String, Optional sReplace As String = Nothing, Optional bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
         Dim iCount As Integer = iReplacements

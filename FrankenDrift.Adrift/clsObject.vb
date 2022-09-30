@@ -1,13 +1,10 @@
 Public Class clsObject
     Inherits clsItemWithProperties
 
-    'Private sKey As String
     Private sPrefix As String
     Private oDescription As Description
     Private cLocation As clsObjectLocation
     Private sArticle As String
-    'Private htblSeenBy As New BooleanHashTable
-    'Private sParent As String    
 
     Friend m_arlNames As New StringArrayList
     Friend Property arlNames As StringArrayList
@@ -18,27 +15,6 @@ Public Class clsObject
             m_arlNames = value
         End Set
     End Property
-    'Friend htblProperties As New PropertyHashTable
-
-    'Friend Function GetPropertiesIncludingGroups() As PropertyHashTable
-
-    '    Dim htblProp As PropertyHashTable = htblProperties.Clone
-    '    For Each grp As clsGroup In Adventure.htblGroups.Values
-    '        If grp.GroupType = clsGroup.GroupTypeEnum.Objects Then
-    '            If grp.arlMembers.Contains(Key) Then
-    '                For Each prop As clsProperty In grp.htblProperties.Values
-    '                    If Not htblProp.ContainsKey(prop.Key) Then htblProp.Add(prop, prop.Key)
-    '                    With htblProp(prop.Key)
-    '                        .Value = prop.Value
-    '                        .FromGroup = True
-    '                    End With
-    '                Next
-    '            End If
-    '        End If
-    '    Next
-    '    Return htblProp
-
-    'End Function
 
     Private sarlPlurals As StringArrayList
     Friend ReadOnly Property arlPlurals() As StringArrayList
@@ -57,32 +33,7 @@ Public Class clsObject
         End Get
     End Property
 
-    'Private bIsLibrary As Boolean
-    'Public Property IsLibrary() As Boolean
-    '    Get
-    '        Return bIsLibrary
-    '    End Get
-    '    Set(ByVal value As Boolean)
-    '        bIsLibrary = value
-    '    End Set
-    'End Property
-
-    'Private dtLastUpdated As Date
-    'Friend Property LastUpdated() As Date
-    '    Get
-    '        If dtLastUpdated > Date.MinValue Then
-    '            Return dtLastUpdated
-    '        Else
-    '            Return Now
-    '        End If
-    '    End Get
-    '    Set(ByVal value As Date)
-    '        dtLastUpdated = value
-    '    End Set
-    'End Property
-
     Friend Function GuessPluralFromNoun(ByVal sNoun As String) As String
-
         If sNoun Is Nothing Then Return ""
 
         Select Case sNoun
@@ -127,8 +78,6 @@ Public Class clsObject
                         Return sNoun.Substring(0, sNoun.Length - 2) & "ices"
                     Case "is"
                         Return sNoun.Substring(0, sNoun.Length - 2) & "es"
-                        'Case "on"
-                        '    Return sNoun.Substring(0, sNoun.Length - 2) & "a"
                     Case "um"
                         Return sNoun.Substring(0, sNoun.Length - 2) & "a"
                     Case "us"
@@ -136,16 +85,12 @@ Public Class clsObject
                 End Select
                 Select Case sNoun.Substring(sNoun.Length - 1, 1)
                     Case "f"
-                        'Select Case sNoun.Substring(sNoun.Length - 2, 1)
-                        'Case "l"
                         Select Case sNoun
                             Case "dwarf", "hoof", "roof"  ' the exceptions
                                 Return (sNoun & "s")
                             Case Else
                                 Return sNoun.Substring(0, sNoun.Length - 1) & "ves"
                         End Select
-
-                        'End Select
                     Case "o" ' nouns ending in 'o' preceded by a consonant
                         Select Case sNoun.Substring(sNoun.Length - 2, 1)
                             Case "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "z"
@@ -170,31 +115,6 @@ Public Class clsObject
     End Function
 
 
-    'Public Class AlternativeDescription
-    '    Public sTaskKey As String
-    '    Public bTaskState As Boolean
-    '    Public sDescription As String
-    'End Class
-    'Public colAlternativeDescriptions As New Collection
-
-
-
-
-
-    'Public Property Key() As String
-    '    Get
-    '        Return sKey
-    '    End Get
-    '    Set(ByVal Value As String)
-    '        If Not KeyExists(Value) Then
-    '            sKey = Value
-    '        Else
-    '            Throw New Exception("Key " & sKey & " already exists")
-    '        End If
-    '    End Set
-    'End Property
-
-
     Private iIsStaticCache As Integer = Integer.MinValue
     Public Property IsStatic() As Boolean
         Get
@@ -210,54 +130,14 @@ Public Class clsObject
         End Set
     End Property
 
-    'Public Property IsStatic() As Boolean
-    '    Get
-    '        If htblActualProperties.ContainsKey("StaticOrDynamic") Then
-    '            With htblActualProperties("StaticOrDynamic")
-    '                If .StringData.ToString = "Static" Then
-    '                    Return True
-    '                Else
-    '                    Return False
-    '                End If
-    '            End With
-    '        Else
-    '            Return True
-    '        End If
-    '    End Get
-    '    Set(ByVal Value As Boolean)
-    '        With htblActualProperties("StaticOrDynamic")
-    '            If Value Then
-    '                .StringData = New Description("Static")
-    '            Else
-    '                .StringData = New Description("Dynamic")
-    '            End If
-    '        End With
-    '    End Set
-    'End Property
-
-
     Public Property HasSurface() As Boolean
         Get
             Return GetPropertyValue("Surface") IsNot Nothing
         End Get
         Set(value As Boolean)
-            'SetPropertyValue("StaticOrDynamic", IIf(value, "Static", "Dynamic").ToString)
             TODO("Set HasSurface()")
         End Set
     End Property
-    'Public Property HasSurface() As Boolean
-    '    Get
-    '        If htblActualProperties.ContainsKey("Surface") Then
-    '            Return True
-    '        Else
-    '            Return False
-    '        End If
-    '    End Get
-    '    Set(ByVal Value As Boolean)
-    '        Throw New Exception("Not done this yet...")
-    '    End Set
-    'End Property
-
 
     ' TODO - Enhance this, or make it user configuratble
     Public ReadOnly Property IsPlural As Boolean
@@ -272,68 +152,26 @@ Public Class clsObject
             Return GetPropertyValue("Container") IsNot Nothing
         End Get
         Set(value As Boolean)
-            'SetPropertyValue("StaticOrDynamic", IIf(value, "Static", "Dynamic").ToString)
             TODO("Set IsContainer()")
         End Set
     End Property
-    'Public Property IsContainer() As Boolean
-    '    Get
-    '        If htblActualProperties.ContainsKey("Container") Then
-    '            Return True
-    '        Else
-    '            Return False
-    '        End If
-    '    End Get
-    '    Set(ByVal Value As Boolean)
-    '        Throw New Exception("Not done this yet...")
-    '    End Set
-    'End Property
 
     Public Property IsWearable() As Boolean
         Get
             Return GetPropertyValue("Wearable") IsNot Nothing
         End Get
         Set(value As Boolean)
-            'SetPropertyValue("StaticOrDynamic", IIf(value, "Static", "Dynamic").ToString)
-            'TODO("Set IsWearable()")
             SetPropertyValue("Wearable", value)
         End Set
     End Property
-    'Public Property IsWearable() As Boolean
-    '    Get
-    '        If htblActualProperties.ContainsKey("Wearable") Then
-    '            Return True
-    '        Else
-    '            Return False
-    '        End If
-    '    End Get
-    '    Set(ByVal Value As Boolean)
-    '        Throw New Exception("Not done this yet...")
-    '    End Set
-    'End Property
 
 
     Public Property ExplicitlyList() As Boolean
         Get
-            'If HasProperty("ExplicitlyList") Then
-            '    Return True
-            'Else
-            '    Return False
-            'End If
             Return HasProperty("ExplicitlyList")
         End Get
         Set(ByVal Value As Boolean)
             SetPropertyValue("ExplicitlyList", Value)
-            'If Value Then
-            '    If Not HasProperty("ExplicitlyList") AndAlso Adventure.htblObjectProperties.ContainsKey("ExplicitlyList") Then
-            '        Dim p As New clsProperty
-            '        p = Adventure.htblObjectProperties("ExplicitlyList").Copy
-            '        p.Selected = True
-            '        htblProperties.Add(p)
-            '    End If
-            'Else
-            '    If HasProperty("ExplicitlyList") Then htblProperties.Remove("ExplicitlyList")
-            'End If
         End Set
     End Property
 
@@ -342,20 +180,16 @@ Public Class clsObject
         Get
             If IsStatic Then
                 Return GetPropertyValue("ListDescription")
-                'If HasProperty("ListDescription") Then Return htblProperties("ListDescription").Value
             Else
                 Return GetPropertyValue("ListDescriptionDynamic")
-                'If HasProperty("ListDescriptionDynamic") Then Return htblProperties("ListDescriptionDynamic").Value
             End If
             Return ""
         End Get
         Set(ByVal Value As String)
             If IsStatic Then
                 SetPropertyValue("ListDescription", Value)
-                'htblProperties("ListDescription").Value = Value
             Else
                 SetPropertyValue("ListDescriptionDynamic", Value)
-                'htblProperties("ListDescriptionDynamic").Value = Value
             End If
         End Set
     End Property
@@ -363,25 +197,10 @@ Public Class clsObject
 
     Public Property ExplicitlyExclude() As Boolean
         Get
-            'If HasProperty("ExplicitlyExclude") Then
-            '    Return True
-            'Else
-            '    Return False
-            'End If
             Return HasProperty("ExplicitlyExclude")
         End Get
         Set(ByVal Value As Boolean)
             SetPropertyValue("ExplicitlyExclude", Value)
-            'If Value Then
-            '    If Not HasProperty("ExplicitlyExclude") AndAlso Adventure.htblObjectProperties.ContainsKey("ExplicitlyExclude") Then
-            '        Dim p As New clsProperty
-            '        p = Adventure.htblObjectProperties("ExplicitlyExclude").Copy
-            '        p.Selected = True
-            '        htblProperties.Add(p)
-            '    End If
-            'Else
-            '    If HasProperty("ExplicitlyExclude") Then htblProperties.Remove("ExplicitlyExclude")
-            'End If
         End Set
     End Property
 
@@ -390,24 +209,9 @@ Public Class clsObject
     Public Property IsLieable() As Boolean
         Get
             Return HasProperty("Lieable")
-            'If HasProperty("Lieable") Then
-            '    Return True
-            'Else
-            '    Return False
-            'End If
         End Get
         Set(ByVal Value As Boolean)
             SetPropertyValue("Lieable", Value)
-            'If Value Then
-            '    If Not HasProperty("Lieable") Then
-            '        Dim p As New clsProperty
-            '        p = Adventure.htblAllProperties("Lieable").Copy
-            '        p.Selected = True
-            '        htblProperties.Add(p)
-            '    End If
-            'Else
-            '    If HasProperty("Lieable") Then htblProperties.Remove("Lieable")
-            'End If
         End Set
     End Property
 
@@ -415,26 +219,9 @@ Public Class clsObject
     Public Property IsSittable() As Boolean
         Get
             Return HasProperty("Sittable")
-            'If HasProperty("Sittable") Then
-            '    Return True
-            'Else
-            '    Return False
-            'End If
         End Get
         Set(ByVal Value As Boolean)
             SetPropertyValue("Sittable", Value)
-            'If Value Then
-            '    If Not HasProperty("Sittable") Then
-            '        Dim p As New clsProperty
-            '        p = Adventure.htblAllProperties("Sittable").Copy
-            '        p.Selected = True
-            '        htblProperties.Add(p)
-            '    End If
-            'Else
-            '    If HasProperty("Sittable") Then
-            '        htblProperties.Remove("Sittable")
-            '    End If
-            'End If
         End Set
     End Property
 
@@ -442,29 +229,11 @@ Public Class clsObject
     Public Property IsStandable() As Boolean
         Get
             Return HasProperty("Standable")
-            'If HasProperty("Standable") Then
-            '    Return True
-            'Else
-            '    Return False
-            'End If
         End Get
         Set(ByVal Value As Boolean)
             SetPropertyValue("Standable", Value)
-            'If Value Then
-            '    If Not HasProperty("Standable") Then
-            '        Dim p As New clsProperty
-            '        p = Adventure.htblAllProperties("Standable").Copy
-            '        p.Selected = True
-            '        htblProperties.Add(p)
-            '    End If
-            'Else
-            '    If HasProperty("Standable") Then
-            '        htblProperties.Remove("Standable")
-            '    End If
-            'End If
         End Set
     End Property
-
 
     ' Returns True if object is directly on parent, or if on/in something that is on it
     Public ReadOnly Property IsOn(ByVal sParentKey As String) As Boolean
@@ -482,7 +251,6 @@ Public Class clsObject
         End Get
     End Property
 
-
     ' Returns True if object is directly inside parent, or if on/in something that is inside it
     Public ReadOnly Property IsInside(ByVal sParentKey As String) As Boolean
         Get
@@ -499,7 +267,6 @@ Public Class clsObject
         End Get
     End Property
 
-
     Public ReadOnly Property ExistsAtLocation(ByVal sLocKey As String, Optional ByVal bDirectly As Boolean = False) As Boolean
         Get
             If IsStatic Then
@@ -507,7 +274,7 @@ Public Class clsObject
                     Case clsObjectLocation.StaticExistsWhereEnum.AllRooms
                         Return True
                     Case clsObjectLocation.StaticExistsWhereEnum.NoRooms
-                        Return sLocKey = HIDDEN 'False
+                        Return sLocKey = HIDDEN
                     Case clsObjectLocation.StaticExistsWhereEnum.PartOfCharacter
                         If bDirectly Then Return False Else Return Adventure.htblCharacters(Location.Key).Location.Key = sLocKey
                     Case clsObjectLocation.StaticExistsWhereEnum.PartOfObject
@@ -522,9 +289,9 @@ Public Class clsObject
                     Case clsObjectLocation.DynamicExistsWhereEnum.HeldByCharacter
                         If bDirectly Then Return False Else Return Adventure.htblCharacters(Location.Key).Location.Key = sLocKey
                     Case clsObjectLocation.DynamicExistsWhereEnum.Hidden
-                        Return sLocKey = HIDDEN ' False
+                        Return sLocKey = HIDDEN
                     Case clsObjectLocation.DynamicExistsWhereEnum.InLocation
-                        Return sLocKey = Location.Key '  Adventure.htblObjects(Location.Key).ExistsAtLocation(sLocKey)
+                        Return sLocKey = Location.Key
                     Case clsObjectLocation.DynamicExistsWhereEnum.InObject
                         If bDirectly Then Return False Else Return Adventure.htblObjects(Location.Key).ExistsAtLocation(sLocKey)
                     Case clsObjectLocation.DynamicExistsWhereEnum.OnObject
@@ -536,7 +303,6 @@ Public Class clsObject
         End Get
     End Property
 
-
     Public Property IsTransparent As Boolean
         Get
             Return False ' TODO
@@ -546,37 +312,15 @@ Public Class clsObject
         End Set
     End Property
 
-
-
     Public Property IsOpen() As Boolean
         Get
-            'If HasProperty("OpenStatus") Then
-            '    With htblProperties("OpenStatus")
-            '        If .StringData.ToString = "Open" Then
-            '            Return True
-            '        Else
-            '            Return False
-            '        End If
-            '    End With
-            'Else
-            '    Return True
-            'End If
             Dim s As String = GetPropertyValue("OpenStatus")
             Return s Is Nothing OrElse s = "Open"
         End Get
         Set(ByVal Value As Boolean)
             SetPropertyValue("OpenStatus", IIf(Value, "Open", "Closed").ToString)
-            'With htblProperties("OpenStatus")
-            '    If Value Then
-            '        .StringData = New Description("Open")
-            '    Else
-            '        .StringData = New Description("Closed")
-            '    End If
-            'End With
         End Set
     End Property
-
-
     Friend ReadOnly Property FullName(Optional ByVal Article As ArticleTypeEnum = ArticleTypeEnum.Indefinite) As String
         Get
             If arlNames.Count > 0 Then
@@ -588,7 +332,7 @@ Public Class clsObject
                         sArticle2 = sArticle & " "
                     Case ArticleTypeEnum.None
                         sArticle2 = ""
-                End Select                
+                End Select
                 If sPrefix <> "" Then
                     Return sArticle2 & sPrefix & " " & arlNames(0)
                 Else
@@ -599,7 +343,6 @@ Public Class clsObject
             End If
         End Get
     End Property
-
     Friend Property Article() As String
         Get
             Return sArticle
@@ -617,8 +360,6 @@ Public Class clsObject
             sPrefix = Value
         End Set
     End Property
-
-
 
     Public Function DisplayCharacterChildren() As String
 
@@ -638,7 +379,7 @@ Public Class clsObject
             End If
             sReturn &= FullName(ArticleTypeEnum.Definite)
         End If
-        If Not Openable OrElse IsOpen Then ' (Openable AndAlso IsOpen) OrElse Not Openable Then
+        If Not Openable OrElse IsOpen Then
             If ChildrenCharacters(WhereChildrenEnum.InsideObject).Count > 0 Then
                 If ChildrenCharacters(WhereChildrenEnum.OnObject).Count > 0 Then
                     sReturn &= ", and "
@@ -649,7 +390,7 @@ Public Class clsObject
                         sReturn &= "%PCase[" & ChildrenCharacters(WhereChildrenEnum.InsideObject).List("and") & "]%"
                     Else
                         sReturn &= ChildrenCharacters(WhereChildrenEnum.InsideObject).List("and")
-                    End If                    
+                    End If
                 End If
                 If ChildrenCharacters(WhereChildrenEnum.InsideObject).Count = 1 Then
                     sReturn &= " [am/are/is] "
@@ -662,17 +403,14 @@ Public Class clsObject
         If ChildrenCharacters(WhereChildrenEnum.OnObject).Count > 0 OrElse (((Openable AndAlso IsOpen) OrElse Not Openable) AndAlso ChildrenCharacters(WhereChildrenEnum.InsideObject).Count > 0) Then sReturn &= "."
 
         Return sReturn
-
     End Function
 
 
 
     Public Function DisplayObjectChildren() As String
-
         Dim sReturn As String = ""
 
         If Children(WhereChildrenEnum.OnObject).Count > 0 Then
-            'If sReturn <> "" Then sReturn &= "  "
             sReturn = pSpace(sReturn)
             sReturn &= ToProper(Children(WhereChildrenEnum.OnObject).List("and", False, ArticleTypeEnum.Indefinite))
             If Children(WhereChildrenEnum.OnObject).Count = 1 Then
@@ -687,7 +425,7 @@ Public Class clsObject
                 If Children(WhereChildrenEnum.OnObject).Count > 0 Then
                     sReturn &= ", and inside"
                 Else
-                    sReturn = pSpace(sReturn) ' If sReturn <> "" Then sReturn &= "  "
+                    sReturn = pSpace(sReturn)
                     sReturn &= "Inside " & FullName(ArticleTypeEnum.Definite)
                 End If
                 If Children(WhereChildrenEnum.InsideObject).Count = 1 Then
@@ -702,17 +440,14 @@ Public Class clsObject
 
         If sReturn = "" Then sReturn = "Nothing is on or inside " & FullName(ArticleTypeEnum.Definite) & "."
         Return sReturn
-
     End Function
 
 
     Friend Property Description() As Description
         Get
-#If Runner Then
             If oDescription.ToString(True) = "" Then
                 oDescription(0).Description = "There is nothing special about " & FullName(ArticleTypeEnum.Definite) & "."
             End If
-#End If
             Return oDescription
         End Get
         Set(ByVal Value As Description)
@@ -785,15 +520,7 @@ Public Class clsObject
 
     Public Property Location() As clsObjectLocation
         Get
-            'If cLocation IsNot Nothing Then Return cLocation -- this doesn't update if we change underlying properties such as OnWhat... :-/
-            'If cLocation Is Nothing Then cLocation = New clsObjectLocation
             cLocation = New clsObjectLocation
-            '            Dim htbl As PropertyHashTable
-            '#If Runner Then
-            '            htbl = htblProperties
-            '#Else
-            '            htbl = htblActualProperties
-            '#End If
             If Not Me.IsStatic AndAlso HasProperty("DynamicLocation") Then
 
                 Select Case GetPropertyValue("DynamicLocation")
@@ -815,18 +542,16 @@ Public Class clsObject
                         cLocation.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.WornByCharacter
                         If HasProperty("WornByWho") Then cLocation.Key = GetPropertyValue("WornByWho")
                 End Select
-
             ElseIf Me.IsStatic AndAlso HasProperty("StaticLocation") Then
-
                 Select Case GetPropertyValue("StaticLocation")
                     Case "Nowhere", "Hidden"
                         cLocation.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.NoRooms
                     Case "Single Location"
                         cLocation.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.SingleLocation
-                        If HasProperty("AtLocation") Then cLocation.Key = GetPropertyValue("AtLocation") ' StaticKey
+                        If HasProperty("AtLocation") Then cLocation.Key = GetPropertyValue("AtLocation")
                     Case "Location Group"
                         cLocation.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.LocationGroup
-                        If HasProperty("AtLocationGroup") Then cLocation.Key = GetPropertyValue("AtLocationGroup") ' StaticKey
+                        If HasProperty("AtLocationGroup") Then cLocation.Key = GetPropertyValue("AtLocationGroup")
                     Case "Everywhere"
                         cLocation.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.AllRooms
                     Case "Part of Character"
@@ -836,112 +561,87 @@ Public Class clsObject
                         cLocation.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.PartOfObject
                         If HasProperty("PartOfWhat") Then cLocation.Key = GetPropertyValue("PartOfWhat")
                 End Select
-
             End If
-
             Return cLocation
-
         End Get
+
         Set(ByVal Value As clsObjectLocation)
             cLocation = Value
-
-            '            Dim htbl As PropertyHashTable
-            '#If Runner Then
-            '            htbl = htblProperties
-            '#Else
-            '            htbl = htblActualProperties
-            '#End If
-
             If Not Me.IsStatic AndAlso HasProperty("DynamicLocation") Then
                 Select Case cLocation.DynamicExistWhere
                     Case clsObjectLocation.DynamicExistsWhereEnum.HeldByCharacter
                         SetPropertyValue("DynamicLocation", "Held By Character")
-                        'If HasProperty("HeldByWho") Then 
                         AddProperty("HeldByWho")
                         SetPropertyValue("HeldByWho", cLocation.Key)
                     Case clsObjectLocation.DynamicExistsWhereEnum.Hidden
                         SetPropertyValue("DynamicLocation", "Hidden")
                     Case clsObjectLocation.DynamicExistsWhereEnum.InLocation
                         SetPropertyValue("DynamicLocation", "In Location")
-                        'If HasProperty("InLocation") Then 
                         AddProperty("InLocation")
                         SetPropertyValue("InLocation", cLocation.Key)
                     Case clsObjectLocation.DynamicExistsWhereEnum.InObject
                         SetPropertyValue("DynamicLocation", "Inside Object")
-                        'If HasProperty("InsideWhat") Then 
                         AddProperty("InsideWhat")
                         SetPropertyValue("InsideWhat", cLocation.Key)
                     Case clsObjectLocation.DynamicExistsWhereEnum.OnObject
-                        SetPropertyValue("DynamicLocation", "On Object")                        
-                        'If HasProperty("OnWhat") Then
+                        SetPropertyValue("DynamicLocation", "On Object")
                         AddProperty("OnWhat")
                         SetPropertyValue("OnWhat", cLocation.Key)
                     Case clsObjectLocation.DynamicExistsWhereEnum.WornByCharacter
                         SetPropertyValue("DynamicLocation", "Worn By Character")
-                        'If HasProperty("WornByWho") Then 
                         AddProperty("WornByWho")
                         SetPropertyValue("WornByWho", cLocation.Key)
                 End Select
-
             ElseIf Me.IsStatic AndAlso HasProperty("StaticLocation") Then
-
                 Select Case cLocation.StaticExistWhere
                     Case clsObjectLocation.StaticExistsWhereEnum.AllRooms
                         SetPropertyValue("StaticLocation", "Everywhere")
                     Case clsObjectLocation.StaticExistsWhereEnum.LocationGroup
                         SetPropertyValue("StaticLocation", "Location Group")
-                        'If HasProperty("AtLocationGroup") Then 
                         AddProperty("AtLocationGroup")
                         SetPropertyValue("AtLocationGroup", cLocation.Key)
                     Case clsObjectLocation.StaticExistsWhereEnum.NoRooms
                         SetPropertyValue("StaticLocation", "Hidden")
                     Case clsObjectLocation.StaticExistsWhereEnum.PartOfCharacter
                         SetPropertyValue("StaticLocation", "Part of Character")
-                        'If HasProperty("PartOfWho") Then 
                         AddProperty("PartOfWho")
                         SetPropertyValue("PartOfWho", cLocation.Key)
                     Case clsObjectLocation.StaticExistsWhereEnum.PartOfObject
                         SetPropertyValue("StaticLocation", "Part of Object")
-                        'If HasProperty("PartOfWhat") Then 
                         AddProperty("PartOfWhat")
                         SetPropertyValue("PartOfWhat", cLocation.Key)
                     Case clsObjectLocation.StaticExistsWhereEnum.SingleLocation
                         SetPropertyValue("StaticLocation", "Single Location")
-                        'If HasProperty("AtLocation") Then 
                         AddProperty("AtLocation")
                         SetPropertyValue("AtLocation", cLocation.Key)
                 End Select
-
             End If
-
         End Set
     End Property
 
     Public ReadOnly Property Openable() As Boolean
         Get
-            'Return HasProperty("Openable")
             Return HasProperty("Openable")
         End Get
     End Property
 
     Public ReadOnly Property Lockable() As Boolean
         Get
-            Return HasProperty("Lockable") ' HasProperty("Lockable")
+            Return HasProperty("Lockable")
         End Get
     End Property
 
     Public ReadOnly Property Readable() As Boolean
         Get
-            Return HasProperty("Readable") ' HasProperty("Readable")
+            Return HasProperty("Readable")
         End Get
     End Property
 
     Public Property ReadText() As String
         Get
-            Return GetPropertyValue("ReadText") ' htblProperties("ReadText").Value
+            Return GetPropertyValue("ReadText")
         End Get
         Set(ByVal Value As String)
-            'htblProperties("ReadText").Value = Value
             SetPropertyValue("ReadText", Value)
         End Set
     End Property
@@ -959,7 +659,6 @@ Public Class clsObject
             sPrevParent = value
         End Set
     End Property
-
 
     Friend Overrides ReadOnly Property Parent() As String
         Get
@@ -987,11 +686,7 @@ Public Class clsObject
                 End Select
             End If
             Return Nothing
-            'Return sParent
         End Get
-        'Set(ByVal Value As String)
-        '    sParent = Value
-        'End Set
     End Property
 
 
@@ -1029,20 +724,6 @@ Public Class clsObject
         End Get
     End Property
 
-
-    'Public Property SeenBy(ByVal sCharKey As String) As Boolean
-    '    Get
-    '        Return CBool(htblSeenBy(sCharKey))
-    '    End Get
-    '    Set(ByVal Value As Boolean)
-    '        If Not htblSeenBy.ContainsKey(sCharKey) Then
-    '            htblSeenBy.Add(Value, sCharKey)
-    '        Else
-    '            htblSeenBy(sCharKey) = Value
-    '        End If
-    '    End Set
-    'End Property
-
     Public Property SeenBy(ByVal sCharKey As String) As Boolean
         Get
             If sCharKey = "%Player%" Then sCharKey = Adventure.Player.Key
@@ -1052,7 +733,6 @@ Public Class clsObject
             Adventure.htblCharacters(sCharKey).HasSeenObject(Key) = Value
         End Set
     End Property
-
 
     Public ReadOnly Property IsHeldByAnyone() As Boolean
         Get
@@ -1083,17 +763,14 @@ Public Class clsObject
                 Case clsObjectLocation.DynamicExistsWhereEnum.InLocation
                     Return False
                 Case clsObjectLocation.DynamicExistsWhereEnum.InObject
-                    Return False ' Adventure.htblObjects(Location.Key).IsWornByAnyone
+                    Return False
                 Case clsObjectLocation.DynamicExistsWhereEnum.OnObject
-                    Return False ' Adventure.htblObjects(Location.Key).IsWornByAnyone
+                    Return False
                 Case clsObjectLocation.DynamicExistsWhereEnum.WornByCharacter
                     Return True
             End Select
         End Get
     End Property
-
-
-#If Runner Then
 
     ' The maximum container for the visibility of the object
     Public ReadOnly Property BoundVisible As String
@@ -1183,89 +860,6 @@ Public Class clsObject
         End Get
     End Property
 
-    'Public ReadOnly Property IsVisibleTo(ByVal sCharKey As String) As Boolean
-    '    Get
-    '        If sCharKey = "%Player%" Then sCharKey = Adventure.Player.Key
-    '        Dim locChar As clsCharacterLocation = Adventure.htblCharacters(sCharKey).Location
-    '        Select Case locChar.ExistWhere
-    '            Case clsCharacterLocation.ExistsWhereEnum.Hidden
-    '                Return False
-    '            Case clsCharacterLocation.ExistsWhereEnum.AtLocation
-    '                Return IsVisibleAtLocation(locChar.Key)
-    '            Case clsCharacterLocation.ExistsWhereEnum.InObject
-    '                ' If the object is closed, then we can only see it if it is inside with us
-    '                If Adventure.htblObjects(locChar.Key).IsOpen Then
-    '                    For Each sLocKey As String In Adventure.htblObjects(locChar.Key).LocationRoots.Keys
-    '                        Return IsVisibleAtLocation(sLocKey)
-    '                    Next
-    '                Else
-    '                    ' We can also see objects we are inside
-    '                    Return locChar.Key = Me.Key OrElse Adventure.htblObjects(locChar.Key).Children(WhereChildrenEnum.InsideObject, True).ContainsKey(Me.Key)
-    '                End If
-    '            Case clsCharacterLocation.ExistsWhereEnum.OnCharacter
-    '                Return IsVisibleTo(Adventure.htblCharacters(locChar.Key).Key)
-    '            Case clsCharacterLocation.ExistsWhereEnum.OnObject
-    '                For Each sLocKey As String In Adventure.htblObjects(locChar.Key).LocationRoots.Keys
-    '                    Return IsVisibleAtLocation(sLocKey)
-    '                Next                    
-    '        End Select
-    '    End Get
-    'End Property
-
-
-    '' Returns the key of the location of the object, if visible
-    'Public ReadOnly Property IsVisibleAtLocation(ByVal sLocationKey As String) As Boolean
-    '    Get
-    '        With Me.Location
-    '            If Me.IsStatic Then
-    '                Select Case .StaticExistWhere
-    '                    Case clsObjectLocation.StaticExistsWhereEnum.AllRooms
-    '                        Return True
-    '                    Case clsObjectLocation.StaticExistsWhereEnum.NoRooms
-    '                        Return False
-    '                    Case clsObjectLocation.StaticExistsWhereEnum.PartOfCharacter
-    '                        If .Key <> "" Then Return sLocationKey = Adventure.htblCharacters(.Key).Location.LocationKey ' StaticKey
-    '                    Case clsObjectLocation.StaticExistsWhereEnum.PartOfObject
-    '                        If .Key <> "" Then Return Adventure.htblObjects(.Key).IsVisibleAtLocation(sLocationKey) 'To(sCharKey) ' StaticKey
-    '                    Case clsObjectLocation.StaticExistsWhereEnum.LocationGroup
-    '                        If .Key <> "" Then Return Adventure.htblGroups(.Key).arlMembers.Contains(sLocationKey) ' StaticKey
-    '                    Case clsObjectLocation.StaticExistsWhereEnum.SingleLocation
-    '                        Return sLocationKey = .Key ' StaticKey
-    '                End Select
-    '            Else
-    '                Select Case .DynamicExistWhere
-    '                    Case clsObjectLocation.DynamicExistsWhereEnum.HeldByCharacter
-    '                        If .Key <> "" Then Return Adventure.htblCharacters(.Key).IsVisibleAtLocation(sLocationKey)
-    '                        'If .Key <> "" Then Return sLocationKey = Adventure.htblCharacters(.Key).Location.Key AndAlso Adventure.htblCharacters(.Key).Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.AtLocation
-    '                    Case clsObjectLocation.DynamicExistsWhereEnum.InLocation
-    '                        Return sLocationKey = .Key
-    '                    Case clsObjectLocation.DynamicExistsWhereEnum.Hidden
-    '                        Return False
-    '                    Case clsObjectLocation.DynamicExistsWhereEnum.InObject
-    '                        If .Key <> "" AndAlso .Key <> Key Then
-    '                            Dim parent As clsObject = Adventure.htblObjects(.Key)
-    '                            If parent.IsVisibleAtLocation(sLocationKey) Then ' parent.IsVisibleTo(sCharKey) Then
-    '                                If Not parent.Openable OrElse parent.IsOpen Then
-    '                                    Return True
-    '                                End If
-    '                            End If
-    '                        End If
-    '                    Case clsObjectLocation.DynamicExistsWhereEnum.OnObject
-    '                        If .Key <> "" AndAlso .Key <> Key Then Return Adventure.htblObjects(.Key).IsVisibleAtLocation(sLocationKey)
-    '                    Case clsObjectLocation.DynamicExistsWhereEnum.WornByCharacter
-    '                        If .Key <> "" Then Return Adventure.htblCharacters(.Key).IsVisibleAtLocation(sLocationKey)
-    '                        'If .Key <> "" Then Return sLocationKey = Adventure.htblCharacters(.Key).Location.Key AndAlso Adventure.htblCharacters(.Key).Location.ExistWhere = clsCharacterLocation.ExistsWhereEnum.AtLocation
-    '                End Select
-    '            End If
-    '        End With
-
-    '        'return adventure.htblCharacters(scharkey).
-    '        Return False ' for now
-    '    End Get
-    'End Property
-#End If
-
-
     Public Sub Move(ByVal ToWhere As clsObjectLocation)
 
         ' If we're moving into or onto an object, make sure we're not going recursive
@@ -1279,42 +873,6 @@ Public Class clsObject
         sPrevParent = Parent
         Me.Location = ToWhere
 
-        'If Me.IsStatic Then
-        '    Dim sNewKey As String = Location.Key ' As this gets wiped when we add the new properties...
-        '    Select Case Me.Location.StaticExistWhere
-        '        Case clsObjectLocation.StaticExistsWhereEnum.AllRooms, clsObjectLocation.StaticExistsWhereEnum.NoRooms
-        '            ' Do nothing
-        '        Case clsObjectLocation.StaticExistsWhereEnum.LocationGroup
-        '            'If Not HasProperty("AtLocationGroup") Then
-        '            '    p = Adventure.htblAllProperties("AtLocationGroup").Copy
-        '            '    htblActualProperties.Add(p)
-        '            'End If                    
-        '            SetPropertyValue("AtLocationGroup", sNewKey)
-        '        Case clsObjectLocation.StaticExistsWhereEnum.PartOfCharacter
-        '            'If Not HasProperty("PartOfWho") Then
-        '            '    p = Adventure.htblAllProperties("PartOfWho").Copy
-        '            '    htblActualProperties.Add(p)
-        '            'End If
-        '            SetPropertyValue("PartOfWho", sNewKey)
-        '        Case clsObjectLocation.StaticExistsWhereEnum.PartOfObject
-        '            'If Not HasProperty("PartOfWhat") Then
-        '            '    p = Adventure.htblAllProperties("PartOfWhat").Copy
-        '            '    htblActualProperties.Add(p)
-        '            'End If
-        '            SetPropertyValue("PartOfWhat", sNewKey)
-        '        Case clsObjectLocation.StaticExistsWhereEnum.SingleLocation
-        '            'If Not HasProperty("AtLocation") Then
-        '            '    p = Adventure.htblAllProperties("AtLocation").Copy
-        '            '    htblActualProperties.Add(p)
-        '            'End If
-        '            SetPropertyValue("AtLocation", sNewKey)
-        '    End Select
-        'Else
-
-        'End If
-
-
-#If Runner Then
         ' Update any 'seen' things  
         If Me.Key IsNot Nothing Then
             For Each Loc As clsLocation In LocationRoots.Values
@@ -1325,18 +883,6 @@ Public Class clsObject
                 End If
             Next
         End If
-#End If
-
-        ' Do any specifics...
-        'Select Case ToWhere.DynamicExistWhere
-        '    Case clsObjectLocation.DynamicExistsWhereEnum.InLocation
-        '    Case clsObjectLocation.DynamicExistsWhereEnum.InObject
-        '    Case clsObjectLocation.DynamicExistsWhereEnum.OnObject
-        '    Case clsObjectLocation.DynamicExistsWhereEnum.HeldByCharacter
-        '        Me.Location = ToWhere
-        '    Case clsObjectLocation.DynamicExistsWhereEnum.WornByCharacter
-
-        'End Select
     End Sub
 
 
@@ -1363,7 +909,6 @@ Public Class clsObject
                     Case WhereChildrenEnum.OnObject
                         bCheckSubObject = ob.Location.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.OnObject
                 End Select
-                '                If (WhereChildren <> WhereChildrenEnum.OnObject AndAlso ob.Location.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.InObject) OrElse (WhereChildren <> WhereChildrenEnum.InsideObject AndAlso ob.Location.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.OnObject) orelse (WhereChildren=WhereChildrenEnum.Everything andals Then
                 If bCheckSubObject Then
                     If ob.Location.Key = Me.Key Then
                         htblChildren.Add(ob, ob.Key)
@@ -1375,7 +920,6 @@ Public Class clsObject
                     End If
                 End If
             Next
-            '#If Runner Then
             If bRecursive Then
                 ' Also got to check all characters inside the object to include anything held/worn by them
                 For Each ch As clsCharacter In Adventure.htblCharacters.Values
@@ -1388,8 +932,7 @@ Public Class clsObject
                     End If
                 Next
             End If
-            '#End If
-                Return htblChildren
+            Return htblChildren
         End Get
     End Property
 
@@ -1409,7 +952,6 @@ Public Class clsObject
             Return htblChildren
         End Get
     End Property
-
 
     Public Sub New()
         oDescription = New Description
@@ -1445,20 +987,13 @@ Public Class clsObject
 
     Friend Overrides Function FindStringLocal(sSearchString As String, Optional sReplace As String = Nothing, Optional bFindAll As Boolean = True, Optional ByRef iReplacements As Integer = 0) As Object
         Dim iCount As Integer = iReplacements
-        iReplacements += MyBase.FindStringInStringProperty(Me.sArticle, sSearchString, sReplace, bFindAll)        
+        iReplacements += MyBase.FindStringInStringProperty(Me.sArticle, sSearchString, sReplace, bFindAll)
         iReplacements += MyBase.FindStringInStringProperty(Me.sPrefix, sSearchString, sReplace, bFindAll)
         For i As Integer = arlNames.Count - 1 To 0 Step -1
             iReplacements += MyBase.FindStringInStringProperty(Me.arlNames(i), sSearchString, sReplace, bFindAll)
         Next
         Return iReplacements - iCount
     End Function
-
-
-    Public Overrides Sub EditItem()
-#If Generator Then
-        Dim fObject As New frmObject(Me, True)
-#End If
-    End Sub
 
     Protected Overrides ReadOnly Property PropertyGroupType() As clsGroup.GroupTypeEnum
         Get
@@ -1484,18 +1019,9 @@ Public Class clsObject
         For Each d As Description In AllDescriptions
             d.DeleteKey(sKey)
         Next
-        'If Location.Key = sKey Then
-        '    Location.Key = ""
-        '    Location.StaticExistWhere = clsObjectLocation.StaticExistsWhereEnum.NoRooms
-        '    Location.DynamicExistWhere = clsObjectLocation.DynamicExistsWhereEnum.Hidden
-        '    'Move(
-        'End If       
         If Not htblActualProperties.DeleteKey(sKey) Then Return False
-
         ' TODO - Need to do something clever here.  E.g. if we have properties Where=InLocation then Location = theroom, we need to set Where=Hidden and remove Location property
-
         Return True
-
     End Function
 
 End Class

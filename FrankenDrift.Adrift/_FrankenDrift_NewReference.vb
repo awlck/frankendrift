@@ -1,9 +1,4 @@
 ﻿
-#If Adravalon Then
-
-Imports System
-Imports System.Linq
-
 Friend Class clsSingleItem
     Public Sub New()
         Me.MatchingPossibilities = New StringArrayList
@@ -25,24 +20,7 @@ Friend Class ItemArrayList
         MyBase.Add(itm)
     End Sub
 
-    'Shadows Sub Remove(ByVal itm As clsSingleItem)
-    '    MyBase.Remove(itm)
-    'End Sub
-
-    'Default Shadows Property Item(ByVal idx As Integer) As clsSingleItem
-    '    Get
-    '        Return CType(MyBase.Item(idx), clsSingleItem)
-    '    End Get
-    '    Set(ByVal Value As clsSingleItem)
-    '        MyBase.Item(idx) = Value
-    '    End Set
-    'End Property
-
     Shadows Function ContainsKey(ByVal sKey As String) As Boolean
-        'For iSR As Integer = 0 To MyBase.Count - 1
-        'If CType(MyBase.Item(iSR), clsSingleItem).MatchingPossibilities.Contains(sKey) Then Return True
-        'Next
-        'Return False
         Return MyBase.Any(Function(i) i.MatchingPossibilities.Contains(sKey))
     End Function
 
@@ -73,5 +51,3 @@ Friend Class clsNewReference
         Return Me.MemberwiseClone
     End Function
 End Class
-
-#End If

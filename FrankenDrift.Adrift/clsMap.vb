@@ -1,6 +1,4 @@
-﻿#If Adravalon Then
-Imports Eto.Drawing
-#End If
+﻿Imports Eto.Drawing
 
 Public Class Point3D
     Public X As Integer
@@ -35,27 +33,14 @@ Public Class MapNode
     Public Width As Integer = 6
     Public Page As Integer
     Public Pinned As Boolean = False
-    'Public NodeImage As Bitmap
-#If Adravalon Then
     Public Anchors As New Dictionary(Of DirectionsEnum, Anchor)
     Public Links As New Generic.Dictionary(Of DirectionsEnum, MapLink)
-#Else
-    Friend Anchors As New Generic.Dictionary(Of DirectionsEnum, Anchor)
-    Friend Links As New Generic.Dictionary(Of DirectionsEnum, MapLink)
-#End If
     Private bOverlapping As Boolean = False
     Private bSeen As Boolean = False
-#If Not Adravalon Then
-    Friend eInEdge, eOutEdge As DirectionsEnum
-    Friend ptIn, ptOut As Point
-    Friend bHasUp, bHasDown, bHasIn, bHasOut As Boolean
-    Friend bDrawIn, bDrawOut As Boolean
-#Else
     Public eInEdge, eOutEdge As DirectionsEnum
     Public ptIn, ptOut As Eto.Drawing.Point
     Public bHasUp, bHasDown, bHasIn, bHasOut As Boolean
     Public bDrawIn, bDrawOut As Boolean
-#End If
 
     Public Property Overlapping() As Boolean
         Get
@@ -82,11 +67,7 @@ Public Class MapNode
 
     Public Property Seen() As Boolean
         Get
-#If Generator Then
-            Return True
-#Else
             Return bSeen
-#End If
         End Get
         Set(ByVal value As Boolean)
             If value <> bSeen Then
@@ -120,7 +101,6 @@ Public Class MapNode
     End Function
 
     Public Sub New(Optional ByVal bCreateAnchors As Boolean = True)
-
         If bCreateAnchors Then
             For Each d As DirectionsEnum In New DirectionsEnum() {DirectionsEnum.NorthWest, DirectionsEnum.North, DirectionsEnum.NorthEast, DirectionsEnum.East, DirectionsEnum.SouthEast, DirectionsEnum.South, DirectionsEnum.SouthWest, DirectionsEnum.West}
                 Dim anchor As New Anchor
@@ -129,7 +109,6 @@ Public Class MapNode
                 Anchors.Add(d, anchor)
             Next
         End If
-
     End Sub
 
 End Class
@@ -137,24 +116,12 @@ End Class
 
 
 Public Class MapLink
-#If Adravalon Then
     Public Style As DashStyle
-#Else
-    Public Style As Drawing2D.DashStyle
-#End If
     Public Duplex As Boolean
     Public sSource As String
-#If Adravalon Then
     Public eSourceLinkPoint As DirectionsEnum
-#Else
-    Friend eSourceLinkPoint As DirectionsEnum
-#End If
     Public sDestination As String
-#If Adravalon Then
     Public eDestinationLinkPoint As DirectionsEnum
-#Else
-    Friend eDestinationLinkPoint As DirectionsEnum
-#End If
     Public OrigMidPoints() As Point3D = {} ' In case user wishes to enhance link
     Public Points() As Point
     Public ptStartB As Point
@@ -165,7 +132,6 @@ End Class
 
 Public Class Anchor
     Public Points() As Point = {New Point(0, 0), New Point(0, 0), New Point(0, 0), New Point(0, 0)}
-    'Public MouseCursor As Cursor
     Friend Direction As DirectionsEnum
     Public Parent As Object
     Public bVisible As Boolean
@@ -229,16 +195,6 @@ Public Class MapPage
         Set(ByVal value As Boolean)
             If value <> bSeen Then
                 bSeen = value
-                Try
-#If Runner Then
-#If Mono Then
-                If UserSession.Map.tabsMap.TabPages.ContainsKey(iKey.ToString) Then UserSession.Map.tabsMap.TabPages(iKey.ToString).Visible = bSeen
-#ElseIf Not www AndAlso Not Adravalon Then
-                    If UserSession.Map.tabsMap.Tabs.Exists(iKey.ToString) Then UserSession.Map.tabsMap.Tabs(iKey.ToString).Visible = bSeen
-#End If
-#End If
-                Catch
-                End Try
             End If
         End Set
     End Property
@@ -272,13 +228,9 @@ Public Class MapPage
         Next
         Return Nothing
     End Function
-
-
     Public Sub AddNode(ByVal node As MapNode)
         Nodes.Add(node)
     End Sub
-
-
     Public Sub RemoveNode(ByVal node As MapNode)
         Nodes.Remove(node)
     End Sub
@@ -338,23 +290,11 @@ Public Class clsMap
         End Get
         Set(ByVal value As Integer)
             If iFirstOverlapPage <> value Then
-#If Generator Then
-                iFirstOverlapPage = value
-                With fGenerator.UTMMain.Tools("MapWarning")
-                    If iFirstOverlapPage = -1 Then
-                        .SharedProps.Visible = False
-                    Else
-                        .SharedProps.Visible = True
-                        .Tag = iFirstOverlapPage
-                    End If
-                End With
-#End If
             End If
         End Set
     End Property
 
     Public Sub RecalculateLayout()
-
         Pages.Clear()
 
         For Each sLocKey As String In Adventure.htblLocations.Keys
@@ -366,39 +306,26 @@ Public Class clsMap
         Next
 
         CheckForOverlaps()
-
         If Pages.Count = 0 Then Pages.Add(0, New MapPage(0))
-#If Generator Then
-        fGenerator.Map1.Map = Me
-#End If
-
     End Sub
 
 
     Public Sub CheckForOverlaps()
-
         For Each page As MapPage In Pages.Values
             page.CheckForOverlaps()
         Next
-
     End Sub
 
 
     Public Sub DeleteNode(ByVal sKey As String)
-
         Dim node As MapNode = FindNode(sKey)
         If node IsNot Nothing Then
             Pages(node.Page).RemoveNode(node)
         End If
-#If Generator Then
-        fGenerator.Map1.imgMap.Refresh()
-#End If
-
     End Sub
 
 
     Public Sub RefreshNode(ByVal sKey As String)
-
         If Not Adventure.htblLocations.ContainsKey(sKey) Then Exit Sub
 
         Dim loc As clsLocation = Adventure.htblLocations(sKey)
@@ -421,46 +348,21 @@ Public Class clsMap
                 End Select
             End If
         Next
-
     End Sub
 
 
     Public Sub UpdateMap(ByVal loc As clsLocation)
-
         Dim node As MapNode = FindNode(loc.Key)
 
         If node Is Nothing Then
             node = AddNode(loc.Key)
-#If Generator Then
-            With fGenerator.Map1
-                .RecalculateNode(node)
-                .imgMap.Refresh()
-                .tabsMap.Tabs.Clear()
-                For Each iPage As Integer In Pages.Keys
-                    .tabsMap.Tabs.Add(iPage.ToString, Pages(iPage).Label) ' User can rename the pages
-                    'If .Page Is Nothing Then .Page = Pages(iPage)
-                Next
-
-            End With
-#End If
-            '            For Each d As DirectionsEnum In [Enum].GetValues(GetType(DirectionsEnum))
-            '                If loc.arlDirections(d).LocationKey <> "" Then
-            '                    node = AddNode(loc.Key, FindNode(loc.arlDirections(d).LocationKey), d)
-            '#If Generator Then
-            '                    fGenerator.Map1.RecalculateNode(node)
-            '                    fGenerator.Map1.imgMap.Refresh()
-            '#End If
-            '                    Exit For
-            '                End If
-            '            Next           
         Else
-            node.Text = loc.ShortDescriptionSafe ' StripCarats(loc.ShortDescription.ToString)
+            node.Text = loc.ShortDescriptionSafe
             For Each d As DirectionsEnum In [Enum].GetValues(GetType(DirectionsEnum))
                 If loc.arlDirections(d).LocationKey <> "" Then
                     Dim nodDest As MapNode = FindNode(loc.arlDirections(d).LocationKey)
                     If nodDest IsNot Nothing Then
                         If node.Page <> nodDest.Page AndAlso d <> DirectionsEnum.In AndAlso d <> DirectionsEnum.Out Then
-                            'MergePages(node, nodDest)
                             ' Display arrows, since the location is on a different page
                             If Not node.Links.ContainsKey(d) Then
                                 Dim l As New MapLink
@@ -468,7 +370,7 @@ Public Class clsMap
                             End If
                             With node.Links(d)
                                 .sSource = node.Key
-                                .sDestination = node.Key ' loc.arlDirections(d).LocationKey
+                                .sDestination = node.Key
                                 .eSourceLinkPoint = d
                                 .eDestinationLinkPoint = OppositeDirection(d)
                                 .Duplex = False
@@ -569,19 +471,10 @@ Public Class clsMap
                 End If
             Next
         End If
-
-#If Generator Then
-        With fGenerator.Map1
-            .RecalculateNode(node)
-            .imgMap.Refresh()
-        End With
-#End If
-
     End Sub
 
 
     Private Function GetNewLocation(ByVal node As MapNode, ByVal nodeFrom As MapNode, ByVal dirFrom As DirectionsEnum) As Point3D
-
         Dim ptLocation As New Point3D
         ptLocation.X = nodeFrom.Location.X
         ptLocation.Y = nodeFrom.Location.Y
@@ -612,19 +505,13 @@ Public Class clsMap
                 ptLocation.Z += 6
             Case DirectionsEnum.Down
                 ptLocation.Z -= 6
-                'Case DirectionsEnum.In
-                '    node.Page = GetNewPage()
-                'Case DirectionsEnum.Out
-                '    node.Page = GetNewPage()
         End Select
 
         Return ptLocation
-
     End Function
 
 
     Private Function AddNode(ByVal sLocKey As String, Optional ByVal nodeFrom As MapNode = Nothing, Optional ByVal dirFrom As DirectionsEnum = Nothing) As MapNode
-
         Dim loc As clsLocation = Adventure.htblLocations(sLocKey)
         Dim node As MapNode = FindNode(loc.Key)
 
@@ -632,7 +519,7 @@ Public Class clsMap
             node = New MapNode
 
             node.Key = sLocKey
-            node.Text = loc.ShortDescriptionSafe ' StripCarats(ReplaceALRs(loc.ShortDescription.ToString))
+            node.Text = loc.ShortDescriptionSafe
             If nodeFrom Is Nothing Then
                 node.Page = GetNewPage()
                 node.Location.X = 0
@@ -687,45 +574,34 @@ Public Class clsMap
                     If link Is Nothing Then
                         AddLink(node, loc.arlDirections(d).LocationKey, d, OppositeDirection(d))
                     Else
-                        'link.OrigPoints(link.OrigPoints.Length - 1) = ptSource
                         link.sDestination = sLocKey
                         link.eDestinationLinkPoint = d
                         If DottedLink(loc.arlDirections(d)) Then
-#If Not Adravalon Then
-                            link.Style = Drawing2D.DashStyle.Dot
-#Else
                             link.Style = DashStyles.Dot
-#End If
                         End If
                         link.Duplex = True
                         If Pages(node.Page).GetNode(sLocKey).Anchors.ContainsKey(d) Then Pages(node.Page).GetNode(sLocKey).Anchors(d).HasLink = True
                     End If
                 End If
             Next
-
         Else
             ' Check to see if we need to merge pages
             If nodeFrom IsNot Nothing AndAlso node.Page <> nodeFrom.Page Then
                 If dirFrom <> DirectionsEnum.In AndAlso dirFrom <> DirectionsEnum.Out Then
-                    MergePages(node, nodeFrom) ', GetNewLocation(node, nodeFrom, dirFrom))
+                    MergePages(node, nodeFrom)
                 End If
             End If
-
         End If
-
         Return node
-
     End Function
 
 
     Friend Function DottedLink(dir As clsDirection) As Boolean
-
         If dir.Restrictions.Count > 0 Then
-            Return True ' dir.bEverBeenBlocked
+            Return True
         Else
             Return False
         End If
-
     End Function
 
 
@@ -736,19 +612,11 @@ Public Class clsMap
         link.sSource = nodeSource.Key
         link.sDestination = sDest
         link.Duplex = False
-#If Not Adravalon Then
-        If DottedLink(loc.arlDirections(eSourcePoint)) Then
-            link.Style = Drawing2D.DashStyle.Dot
-        Else
-            link.Style = Drawing2D.DashStyle.Solid
-        End If
-#Else
         If DottedLink(loc.arlDirections(eSourcePoint)) Then
             link.Style = DashStyles.Dot
         Else
             link.Style = DashStyles.Solid
         End If
-#End If
         link.eSourceLinkPoint = eSourcePoint
         ' Make assumption that end point is opposite of this one
         link.sDestination = sDest
@@ -758,8 +626,7 @@ Public Class clsMap
     End Sub
 
 
-    Public Sub MergePages(ByVal node1 As MapNode, ByVal node2 As MapNode) ', ByVal ptNewLocation As Point3D)
-
+    Public Sub MergePages(ByVal node1 As MapNode, ByVal node2 As MapNode)
         Dim pageFrom As MapPage
         Dim pageTo As MapPage
         Dim nodeMoving As MapNode
@@ -788,9 +655,6 @@ Public Class clsMap
             End If
         Next
 
-
-        'AddLink(nodeStaying, nodeMoving.Key, OppositeDirection(dirMove), dirMove)
-
         Dim ptNewLocation As Point3D = GetNewLocation(nodeMoving, nodeStaying, dirMove)
         Dim iXOffset As Integer = nodeMoving.Location.X - ptNewLocation.X
         Dim iYOffset As Integer = nodeMoving.Location.Y - ptNewLocation.Y
@@ -805,29 +669,9 @@ Public Class clsMap
         Next
         pageFrom.Nodes.Clear()
         Pages.Remove(pageFrom.iKey)
-
     End Sub
 
-
-    Public Sub MoveNodeToPage(ByVal node As MapNode, ByVal iPage As Integer)
-
-        Dim page As MapPage = Pages(iPage)
-        Dim pageOld As MapPage = Pages(node.Page)
-        pageOld.Nodes.Remove(node)
-        page.AddNode(node)
-        node.Page = iPage
-        If pageOld.Nodes.Count = 0 Then Pages.Remove(pageOld.iKey)
-
-        ' Sort out any links
-
-    End Sub
-
-
-#If Not Adravalon Then
-    Friend Function FindNode(ByVal sLocKey As String) As MapNode
-#Else
     Public Function FindNode(ByVal sLocKey As String) As MapNode
-#End If
         For Each page As MapPage In Pages.Values
             For Each node As MapNode In page.Nodes
                 If node.Key = sLocKey Then Return node
@@ -836,7 +680,6 @@ Public Class clsMap
         Return Nothing
     End Function
 
-
     Public Function GetNewPage(Optional ByVal bAllowEmptyPages As Boolean = False) As Integer
         Dim iPage As Integer = 0
         While Pages.ContainsKey(iPage) AndAlso (bAllowEmptyPages OrElse Pages(iPage).Nodes.Count > 0)
@@ -844,7 +687,6 @@ Public Class clsMap
         End While
         Return iPage
     End Function
-
 
     Public Sub New()
         Pages.Add(0, New MapPage(0))
