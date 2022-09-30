@@ -731,6 +731,9 @@ namespace FrankenDrift.Runner
 		private readonly AdriftMap theMap;
 		private bool dragging = false;
 		private PointF dragPrevious;
+		private float zoom = 1.0f;
+		private const float ZOOM_PER_STEP = 1.25f;
+
 		internal MapContent(AdriftMap theMap)
 		{
 			this.theMap = theMap;
@@ -738,6 +741,28 @@ namespace FrankenDrift.Runner
 			MouseDown += MapContentOnMouseDown;
 			MouseMove += MapContentOnMouseMove;
 			MouseUp += MapContentOnMouseUp;
+			MouseWheel += MapContentOnScroll;
+		}
+
+		private void MapContentOnScroll(object sender, MouseEventArgs e)
+		{
+			var oldzoom = zoom;
+			var center = theMap.CurrentCenter;
+			if (e.Delta.Height > 0)
+				zoom *= e.Delta.Height * ZOOM_PER_STEP;
+			else
+				zoom /= (-e.Delta.Height) * ZOOM_PER_STEP;
+
+			var pixelDifferenceW = (Width / oldzoom) - (Width / zoom);
+			var sideRatioX = (e.Location.X - Width / 2) / Width;
+			center.X += (int)(pixelDifferenceW * sideRatioX);
+			var pixelDifferenceH = (Height / oldzoom) - (Height / zoom);
+			var sideRatioY = (e.Location.Y - Height / 2) / Height;
+			center.Y += (int)(pixelDifferenceH * sideRatioY);
+			System.Diagnostics.Debug.WriteLine("New map center is: " + center.ToString());
+			theMap.CurrentCenter = center;
+
+			Invalidate();
 		}
 
 		private void MapContentOnMouseUp(object sender, MouseEventArgs e)
@@ -770,6 +795,7 @@ namespace FrankenDrift.Runner
 			var gfx = e.Graphics;
 			gfx.TranslateTransform(-theMap.CurrentCenter);
 			gfx.TranslateTransform(Width / 2, Height / 2);
+			gfx.ScaleTransform(zoom);
 			// clear the screen before redraw
 			gfx.Clear(new SolidBrush(theMap._mapBackground));
             foreach (var node in theMap.Page.Nodes)
