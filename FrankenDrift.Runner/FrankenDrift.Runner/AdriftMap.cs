@@ -141,7 +141,7 @@ namespace FrankenDrift.Runner
 		private Color _linkColor = Color.FromArgb(70, 0, 0);
 
 		private MapContent _imgMap;
-		internal Point CurrentCenter { get; private set; }
+		internal Point CurrentCenter { get; set; }
 
 		public AdriftMap()
 		{
@@ -733,16 +733,39 @@ namespace FrankenDrift.Runner
 	internal class MapContent : Drawable
 	{
 		private readonly AdriftMap theMap;
+		private bool dragging = false;
+		private PointF dragPrevious;
 		internal MapContent(AdriftMap theMap)
 		{
 			this.theMap = theMap;
 			Paint += MapContentOnPaint;
-			MouseDown += MapContent_MouseDown;
+			MouseDown += MapContentOnMouseDown;
+			MouseMove += MapContentOnMouseMove;
+			MouseUp += MapContentOnMouseUp;
 		}
 
-		private void MapContent_MouseDown(object sender, MouseEventArgs e)
+		private void MapContentOnMouseUp(object sender, MouseEventArgs e)
 		{
-			System.Diagnostics.Debug.WriteLine($"Screen Space: {e.Location}, Control Space: ${PointFromScreen(e.Location)}");
+			dragging = false;
+		}
+
+		private void MapContentOnMouseMove(object sender, MouseEventArgs e)
+		{
+			if (!dragging) return;
+			float x = dragPrevious.X - e.Location.X;
+			float y = dragPrevious.Y - e.Location.Y;
+			var center = theMap.CurrentCenter;
+			center.X += (int)x;
+			center.Y += (int)y;
+			theMap.CurrentCenter = center;
+			dragPrevious = e.Location;
+			Invalidate();
+		}
+
+		private void MapContentOnMouseDown(object sender, MouseEventArgs e)
+		{
+			dragging = true;
+			dragPrevious = e.Location;
 		}
 
 		private void MapContentOnPaint(object sender, PaintEventArgs e)
