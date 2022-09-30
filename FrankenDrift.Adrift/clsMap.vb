@@ -1,5 +1,5 @@
 ﻿#If Adravalon Then
-Imports System.Drawing
+Imports Eto.Drawing
 #End If
 
 Public Class Point3D
@@ -36,14 +36,26 @@ Public Class MapNode
     Public Page As Integer
     Public Pinned As Boolean = False
     'Public NodeImage As Bitmap
+#If Adravalon Then
+    Public Anchors As New Dictionary(Of DirectionsEnum, Anchor)
+    Public Links As New Generic.Dictionary(Of DirectionsEnum, MapLink)
+#Else
     Friend Anchors As New Generic.Dictionary(Of DirectionsEnum, Anchor)
     Friend Links As New Generic.Dictionary(Of DirectionsEnum, MapLink)
+#End If
     Private bOverlapping As Boolean = False
     Private bSeen As Boolean = False
+#If Not Adravalon Then
     Friend eInEdge, eOutEdge As DirectionsEnum
     Friend ptIn, ptOut As Point
     Friend bHasUp, bHasDown, bHasIn, bHasOut As Boolean
     Friend bDrawIn, bDrawOut As Boolean
+#Else
+    Public eInEdge, eOutEdge As DirectionsEnum
+    Public ptIn, ptOut As Eto.Drawing.Point
+    Public bHasUp, bHasDown, bHasIn, bHasOut As Boolean
+    Public bDrawIn, bDrawOut As Boolean
+#End If
 
     Public Property Overlapping() As Boolean
         Get
@@ -125,12 +137,24 @@ End Class
 
 
 Public Class MapLink
+#If Adravalon Then
+    Public Style As DashStyle
+#Else
     Public Style As Drawing2D.DashStyle
+#End If
     Public Duplex As Boolean
     Public sSource As String
+#If Adravalon Then
+    Public eSourceLinkPoint As DirectionsEnum
+#Else
     Friend eSourceLinkPoint As DirectionsEnum
+#End If
     Public sDestination As String
+#If Adravalon Then
+    Public eDestinationLinkPoint As DirectionsEnum
+#Else
     Friend eDestinationLinkPoint As DirectionsEnum
+#End If
     Public OrigMidPoints() As Point3D = {} ' In case user wishes to enhance link
     Public Points() As Point
     Public ptStartB As Point
@@ -667,7 +691,11 @@ Public Class clsMap
                         link.sDestination = sLocKey
                         link.eDestinationLinkPoint = d
                         If DottedLink(loc.arlDirections(d)) Then
+#If Not Adravalon Then
                             link.Style = Drawing2D.DashStyle.Dot
+#Else
+                            link.Style = DashStyles.Dot
+#End If
                         End If
                         link.Duplex = True
                         If Pages(node.Page).GetNode(sLocKey).Anchors.ContainsKey(d) Then Pages(node.Page).GetNode(sLocKey).Anchors(d).HasLink = True
@@ -708,11 +736,19 @@ Public Class clsMap
         link.sSource = nodeSource.Key
         link.sDestination = sDest
         link.Duplex = False
+#If Not Adravalon Then
         If DottedLink(loc.arlDirections(eSourcePoint)) Then
             link.Style = Drawing2D.DashStyle.Dot
         Else
             link.Style = Drawing2D.DashStyle.Solid
         End If
+#Else
+        If DottedLink(loc.arlDirections(eSourcePoint)) Then
+            link.Style = DashStyles.Dot
+        Else
+            link.Style = DashStyles.Solid
+        End If
+#End If
         link.eSourceLinkPoint = eSourcePoint
         ' Make assumption that end point is opposite of this one
         link.sDestination = sDest
@@ -787,8 +823,11 @@ Public Class clsMap
     End Sub
 
 
-
+#If Not Adravalon Then
     Friend Function FindNode(ByVal sLocKey As String) As MapNode
+#Else
+    Public Function FindNode(ByVal sLocKey As String) As MapNode
+#End If
         For Each page As MapPage In Pages.Values
             For Each node As MapNode In page.Nodes
                 If node.Key = sLocKey Then Return node

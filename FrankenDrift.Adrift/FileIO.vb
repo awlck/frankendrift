@@ -3,13 +3,14 @@ Imports System.Text.Encoding
 Imports System.Xml
 
 #If Adravalon Then
-Imports System.Drawing
+Imports Eto.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 Imports ICSharpCode.SharpZipLib
 Imports ICSharpCode.SharpZipLib.Zip.Compression.Streams
 #Else
 Imports ComponentAce.Compression.Libs.zlib
+Imports System.Drawing
 #End If
 
 Module FileIO
@@ -2886,10 +2887,10 @@ NextTask:
                     a.DeveloperDefaultOutputColour = Nothing
                     a.DeveloperDefaultLinkColour = Nothing
 #End If
-                    If .Item("BackgroundColour") IsNot Nothing Then a.DeveloperDefaultBackgroundColour = ColorTranslator.FromOle(CInt(.Item("BackgroundColour").InnerText))
-                    If .Item("InputColour") IsNot Nothing Then a.DeveloperDefaultInputColour = ColorTranslator.FromOle(CInt(.Item("InputColour").InnerText))
-                    If .Item("OutputColour") IsNot Nothing Then a.DeveloperDefaultOutputColour = ColorTranslator.FromOle(CInt(.Item("OutputColour").InnerText))
-                    If .Item("LinkColour") IsNot Nothing Then a.DeveloperDefaultLinkColour = ColorTranslator.FromOle(CInt(.Item("LinkColour").InnerText))
+                    If .Item("BackgroundColour") IsNot Nothing Then a.DeveloperDefaultBackgroundColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("BackgroundColour").InnerText))
+                    If .Item("InputColour") IsNot Nothing Then a.DeveloperDefaultInputColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("InputColour").InnerText))
+                    If .Item("OutputColour") IsNot Nothing Then a.DeveloperDefaultOutputColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("OutputColour").InnerText))
+                    If .Item("LinkColour") IsNot Nothing Then a.DeveloperDefaultLinkColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("LinkColour").InnerText))
                     If .Item("ShowFirstLocation") IsNot Nothing Then a.ShowFirstRoom = GetBool(.Item("ShowFirstLocation").InnerText)
                     If .Item("UserStatus") IsNot Nothing Then a.sUserStatus = .Item("UserStatus").InnerText
                     'If Not .Item("V4Compatibility") Is Nothing Then a.bV4Compatibility = CBool(.Item("V4Compatibility").InnerText)
@@ -4111,11 +4112,19 @@ NextUDF:
                                                             link.sSource = node.Key
                                                             If .Item("SourceAnchor") IsNot Nothing Then link.eSourceLinkPoint = CType([Enum].Parse(GetType(DirectionsEnum), .Item("SourceAnchor").InnerText), DirectionsEnum)
                                                             link.sDestination = loc.arlDirections(link.eSourceLinkPoint).LocationKey
+#If Not Adravalon Then
                                                             If Adventure.Map.DottedLink(loc.arlDirections(link.eSourceLinkPoint)) Then
                                                                 link.Style = Drawing2D.DashStyle.Dot
                                                             Else
                                                                 link.Style = Drawing2D.DashStyle.Solid
                                                             End If
+#Else
+                                                            If Adventure.Map.DottedLink(loc.arlDirections(link.eSourceLinkPoint)) Then
+                                                                link.Style = DashStyles.Dot
+                                                            Else
+                                                                link.Style = DashStyles.Solid
+                                                            End If
+#End If
                                                             If .Item("DestinationAnchor") IsNot Nothing Then link.eDestinationLinkPoint = CType([Enum].Parse(GetType(DirectionsEnum), .Item("DestinationAnchor").InnerText), DirectionsEnum)
                                                             Dim sDest As String = loc.arlDirections(link.eSourceLinkPoint).LocationKey
                                                             If sDest IsNot Nothing AndAlso Adventure.htblLocations.ContainsKey(sDest) Then
@@ -4123,7 +4132,11 @@ NextUDF:
                                                                 If locDest IsNot Nothing Then
                                                                     If locDest.arlDirections(link.eDestinationLinkPoint).LocationKey = loc.Key Then
                                                                         link.Duplex = True
+#If Not Adravalon Then
                                                                         If Adventure.Map.DottedLink(locDest.arlDirections(link.eDestinationLinkPoint)) Then link.Style = Drawing2D.DashStyle.Dot
+#Else
+                                                                        If Adventure.Map.DottedLink(locDest.arlDirections(link.eDestinationLinkPoint)) Then link.Style = DashStyles.Dot
+#End If
                                                                     End If
                                                                 End If
                                                             End If
@@ -10109,7 +10122,7 @@ NextLoc:
 
     End Function
 
-
+#If Not Adravalon Then
     Public Function Getv4Image(ByVal sFilename As String) As Drawing.Image
 
         If Adventure.dictv4Media.ContainsKey(sFilename) Then
@@ -10156,7 +10169,7 @@ NextLoc:
         Return False
 
     End Function
-
+#End If
 
     Private Sub ConvertPrefix(ByRef sArticle As String, ByRef sPrefix As String)
         Select Case sPrefix.ToLower

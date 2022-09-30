@@ -74,6 +74,9 @@ namespace FrankenDrift.Runner
             input.KeyDown += InputOnKeyDown;
             output.KeyDown += OutputOnKeyDown;
 
+            if (!SettingsManager.Settings.SuppressMap)
+                map.Show();
+
             Adrift.SharedModule.Glue = this;
             Adrift.SharedModule.fRunner = this;
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession {Map = map};
@@ -116,6 +119,7 @@ namespace FrankenDrift.Runner
                 ProgramName = "FrankenDrift",
                 ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
                                      "with a cross-platform UI layer (Eto.Forms) glued on top.",
+                License = Licenses.LicenseText,
                 Version = _myVersion
             }.ShowDialog(this);
 
@@ -218,6 +222,9 @@ namespace FrankenDrift.Runner
             }
 
             Adrift.SharedModule.UserSession.Process(cmd);
+            // just to be extra sure, redraw the map each time a command
+            // is done processing.
+            map.Invalidate();
         }
 
         internal string QueryLoadPath()

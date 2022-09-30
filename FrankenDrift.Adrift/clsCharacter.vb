@@ -836,7 +836,11 @@ Public Class clsCharacter
 #If Runner Then
     Friend dictHasRouteCache As New Generic.Dictionary(Of String, Boolean)
     Friend dictRouteErrors As New Generic.Dictionary(Of String, String)
+#If Not Adravalon Then
     Friend Function HasRouteInDirection(ByVal drn As DirectionsEnum, ByVal bIgnoreRestrictions As Boolean, Optional ByVal sFromLocation As String = "", Optional ByRef sErrorMessage As String = "") As Boolean
+#Else
+    Public Function HasRouteInDirection(ByVal drn As DirectionsEnum, ByVal bIgnoreRestrictions As Boolean, Optional ByVal sFromLocation As String = "", Optional ByRef sErrorMessage As String = "") As Boolean
+#End If
 
         If sFromLocation = "" Then sFromLocation = Location.LocationKey
         If Not Adventure.htblLocations.ContainsKey(sFromLocation) Then Return False
