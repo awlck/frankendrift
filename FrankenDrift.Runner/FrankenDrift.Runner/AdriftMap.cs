@@ -101,40 +101,13 @@ namespace FrankenDrift.Runner
 		internal static int _boundX = 0;
 		internal static int _boundY = 0;
 
-		private MapNode _hotTrackedNode;
-		private MapLink _hotTrackedLink;
 		private MapNode _activeNode;
-		private Anchor _hotTrackedAnchor;
-		private MapLink _newLink;
-		private MapLink _selectedLink;
 		private bool _dragged = false;
-		private Size _sizeImage;
-		private List<MapNode> _selectedNodes = new();
+		private readonly List<MapNode> _selectedNodes = new();
 
 		internal MapPage Page { get; set; }
 		internal MapPlanes Planes = new();
 
-		private MapLink SelectedLink
-		{
-			get => _selectedLink;
-			set
-			{
-				if (value == _selectedLink) return;
-				if (_selectedLink != null)
-				{
-					MapNode nodeSource = Page.GetNode(_selectedLink.sSource);
-					if (nodeSource is not null && nodeSource != ActiveNode)
-						nodeSource.Anchors[_selectedLink.eSourceLinkPoint].Visible = false;
-					MapNode nodeDest = Page.GetNode(_selectedLink.sDestination);
-					if (nodeDest is not null && nodeDest != ActiveNode &&
-					    nodeDest.Anchors.ContainsKey(_selectedLink.eDestinationLinkPoint))
-						nodeDest.Anchors[_selectedLink.eDestinationLinkPoint].Visible = false;
-				}
-				_selectedLink = value;
-				if (value is not null) ActiveNode = null;
-				_imgMap.Invalidate();
-			}
-		}
 		private MapNode ActiveNode
 		{
 			get => _activeNode;
@@ -148,21 +121,10 @@ namespace FrankenDrift.Runner
 					{
 						anchorsValue.Visible = false;
 					}
-					if (value is not null) SelectedLink = null;
 				}
 				if (value is not null && _selectedNodes.AddIfNotExists(value))
 					_imgMap.Invalidate();
 			}
-		}
-		private MapNode HotTrackedNode
-		{
-			get => _hotTrackedNode;
-			set { _hotTrackedNode = value; _imgMap.Invalidate(); }
-		}
-		internal Anchor HotTrackedAnchor
-		{
-			get => _hotTrackedAnchor;
-			set { _hotTrackedAnchor = value; _imgMap.Invalidate(); }
 		}
 		
 		// TODO: Make these changeable
@@ -177,7 +139,6 @@ namespace FrankenDrift.Runner
 		private Color _nodeBorder = Color.FromArgb(100, 150, 200);
 		private Color _nodeText = Color.FromArgb(0, 0, 0);
 		private Color _linkColor = Color.FromArgb(70, 0, 0);
-		private Color _linkSelected = Color.FromArgb(200, 150, 0);
 
 		private MapContent _imgMap;
 		internal Point CurrentCenter { get; private set; }
@@ -444,14 +405,6 @@ namespace FrankenDrift.Runner
 			if (_selectedNodes.Contains(node))
 			{
 				nodeBackgroundBrush = new SolidBrush(new Color(_nodeSelected, 200));
-				nodeTextBrush = new SolidBrush(_nodeText);
-				nodeBorderPen = new Pen(_nodeBorder, 1);
-				if (node == HotTrackedNode)
-					nodeBackgroundBrush = new SolidBrush(HotTrackColor(_nodeSelected));
-			}
-			else if (node == HotTrackedNode)
-			{
-				nodeBackgroundBrush = new SolidBrush(HotTrackColor(_nodeBackground, 200));
 				nodeTextBrush = new SolidBrush(_nodeText);
 				nodeBorderPen = new Pen(_nodeBorder, 1);
 			}
