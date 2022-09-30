@@ -12,6 +12,7 @@ namespace FrankenDrift.Runner
         private CheckBox _banComicSans;
         private CheckBox _anyKeyPrompt;
         private CheckBox _suppressLocation;
+        private CheckBox _showMapByDefault;
         private Label _fontPickerLabel;
         private ComboBox _fontPicker;
         private Label _fontSizeLabel;
@@ -68,6 +69,13 @@ namespace FrankenDrift.Runner
                 ToolTip = "Whether to display the names of locations as you enter them."
             };
 
+            _showMapByDefault = new CheckBox
+            {
+                Text = "Show map window on launch",
+                Checked = !SettingsManager.Settings.SuppressMap,
+                ToolTip = "Whether to open the map window by default when starting FrankenDrift."
+            };
+
             _fontSizeLabel = new Label {Text = SettingsManager.Settings.EnableDevFont ? "Alter default size by:" : "Use this font size:" };
 
             _fontSize = new NumericStepper {
@@ -91,6 +99,7 @@ namespace FrankenDrift.Runner
                     _banComicSans,
                     _anyKeyPrompt,
                     _suppressLocation,
+                    _showMapByDefault,
                     new TableRow { Cells = { _okButton, _cancelButton } }
                 }
             };
@@ -131,6 +140,7 @@ namespace FrankenDrift.Runner
             SettingsManager.Settings.SuppressLocationName = _suppressLocation.Checked ?? false;
             if (Adrift.SharedModule.UserSession is not null)
                 Adrift.SharedModule.UserSession.bShowShortLocations = !SettingsManager.Settings.SuppressLocationName;
+            SettingsManager.Settings.SuppressMap = !_showMapByDefault.Checked ?? false;
             SettingsManager.Instance.Save();
             Close();
         }

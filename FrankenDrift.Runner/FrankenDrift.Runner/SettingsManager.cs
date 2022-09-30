@@ -41,7 +41,8 @@ namespace FrankenDrift.Runner
                     AlterFontSize = 1,
                     BanComicSans = false,
                     EnablePressAnyKey = false,
-                    SuppressLocationName = false
+                    SuppressLocationName = false,
+                    SuppressMap = false
                 };
             }
         }
@@ -71,5 +72,6 @@ namespace FrankenDrift.Runner
         public bool BanComicSans { get; set; }
         public bool EnablePressAnyKey { get; set; }
         public bool SuppressLocationName { get; set; }
+        public bool SuppressMap { get; set; }
     }
 }

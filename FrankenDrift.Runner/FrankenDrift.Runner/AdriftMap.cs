@@ -53,6 +53,7 @@ namespace FrankenDrift.Runner
 
 	public static class GraphicsExtensions
 	{
+		// System.Drawing has these built in, but Eto.Drawing doesn't...
 		public static void DrawBezier(this Graphics gfx, Pen pen, params Point[] pts)
 		{
 			var start = pts[0];
@@ -183,7 +184,7 @@ namespace FrankenDrift.Runner
 
 		public AdriftMap()
 		{
-			MinimumSize = new Size(200, 400);
+			MinimumSize = new Size(640, 480);
 			_imgMap = new MapContent(this);
 			Content = (Panel)_imgMap;
 			Title = "Map -- FrankenDrift";

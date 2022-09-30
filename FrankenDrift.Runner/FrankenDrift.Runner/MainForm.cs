@@ -74,7 +74,8 @@ namespace FrankenDrift.Runner
             input.KeyDown += InputOnKeyDown;
             output.KeyDown += OutputOnKeyDown;
 
-            map.Show();
+            if (!SettingsManager.Settings.SuppressMap)
+                map.Show();
 
             Adrift.SharedModule.Glue = this;
             Adrift.SharedModule.fRunner = this;
