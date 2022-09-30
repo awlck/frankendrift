@@ -102,7 +102,6 @@ namespace FrankenDrift.Runner
 		internal static int _boundY = 0;
 
 		private MapNode _activeNode;
-		private bool _dragged = false;
 		private readonly List<MapNode> _selectedNodes = new();
 
 		internal MapPage Page { get; set; }
@@ -481,7 +480,6 @@ namespace FrankenDrift.Runner
 			if (dir == SharedModule.DirectionsEnum.In && !node.bHasIn) return;
 			if (dir == SharedModule.DirectionsEnum.Out && !node.bHasOut) return;
 
-            //int circleWidth = _scale / 2;
             int circleWidth = _scale;
 
             foreach (var n in new MapNode[] {node, dest})
@@ -673,9 +671,7 @@ namespace FrankenDrift.Runner
 			double skewAngle = rotationPlusSkewAngle - rotationAngle;
 			double yy = Math.Sqrt(s1 ^ 2 + s2 ^ 2);
 			double xx = Math.Sqrt((_pt2.X - _pt1.X) ^ 2 + (_pt2.Y - _pt1.Y) ^ 2);
-			// double skewLength = Math.Sin(skewAngle) * yy;
 			double preSkewHeight = Math.Cos(skewAngle) * yy;
-			// float xShear = (float)(-skewLength / preSkewHeight);
 			_matrix.Rotate((float)(rotationAngle * (180 / Math.PI)));
 
 			float xScale = (float)(xx / _size / AdriftMap._scale);
