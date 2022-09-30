@@ -23,6 +23,7 @@ namespace FrankenDrift.Runner
         private Command restartGameCommand;
         private Command transcriptCommand;
         private Command replayCommand;
+        private Command showMapCommand;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
 
@@ -68,6 +69,7 @@ namespace FrankenDrift.Runner
             restartGameCommand.Executed += RestartGameCommandOnExecuted;
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
             replayCommand.Executed += ReplayCommandOnExecuted;
+            showMapCommand.Executed += ShowMapCommandOnExecuted;
             _timer.Elapsed += TimerOnElapsed;
             KeyDown += MainFormOnKeyDown;
 
@@ -85,6 +87,10 @@ namespace FrankenDrift.Runner
             output.AppendHtml($"FrankenDrift {_myVersion}");
         }
 
+        private void ShowMapCommandOnExecuted(object sender, EventArgs e)
+        {
+            map.Show();
+        }
 
         void InitializeComponent()
         {
@@ -108,6 +114,7 @@ namespace FrankenDrift.Runner
             restartGameCommand = new Command { MenuText = "Restart Game", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.Shift | Keys.R };
             transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.T };
             replayCommand = new Command { MenuText = "Replay Commands", Enabled = false, Shortcut = Application.Instance.CommonModifier | Application.Instance.AlternateModifier | Keys.R };
+            showMapCommand = new Command { MenuText = "Open Map Window", Enabled = true, Shortcut = Application.Instance.CommonModifier | Keys.M };
 
             var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -133,7 +140,7 @@ namespace FrankenDrift.Runner
                 {
 					// File submenu
 					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
-                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand }}
+                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand, showMapCommand }}
                 },
                 ApplicationItems =
                 {

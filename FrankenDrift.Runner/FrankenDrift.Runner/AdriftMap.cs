@@ -148,9 +148,16 @@ namespace FrankenDrift.Runner
 			_imgMap = new MapContent(this);
 			Content = (Panel)_imgMap;
 			Title = "Map -- FrankenDrift";
+			Closing += AdriftMapOnClosing;
 		}
 
-        public void RecalculateNode(object node_)
+		private void AdriftMapOnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			Visible = false;
+			e.Cancel = true;
+		}
+
+		public void RecalculateNode(object node_)
         {
 			if (node_ == null) return;
 			// Might want to check cast here in the future, but the original definition has a MapNode argument
