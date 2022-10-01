@@ -473,7 +473,7 @@ namespace FrankenDrift.Runner
                     output._defaultBackground = Color.FromArgb(adventure.DeveloperDefaultBackgroundColour.ToArgb());
                 if (!adventure.DeveloperDefaultOutputColour.IsEmpty && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
                     output._defaultColor = Color.FromArgb(adventure.DeveloperDefaultOutputColour.ToArgb());
-                if (!adventure.DeveloperDefaultInputColour.IsEmpty && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
+                if (!adventure.DeveloperDefaultInputColour.IsEmpty && adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
                     output._defaultInput = Color.FromArgb(adventure.DeveloperDefaultInputColour.ToArgb());
             }
             if (SettingsManager.Settings.EnableDevFont && !string.IsNullOrWhiteSpace(adventure.DefaultFontName)
