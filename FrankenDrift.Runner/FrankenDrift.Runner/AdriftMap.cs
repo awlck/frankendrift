@@ -9,10 +9,10 @@ using FrankenDrift.Glue;
 
 namespace FrankenDrift.Runner
 {
-    // a more or less straightforward port of the code in Adrift's Map.vb
-    // see: https://github.com/jcwild/ADRIFT-5/blob/master/ADRIFT/Map.vb
+	// a more or less straightforward port of the code in Adrift's Map.vb
+	// see: https://github.com/jcwild/ADRIFT-5/blob/master/ADRIFT/Map.vb
 
-    public static class PointExtensions
+	public static class PointExtensions
 	{
 		public static Point Convert3DtoScreen(int x, int y, int z)
 		{
@@ -67,7 +67,7 @@ namespace FrankenDrift.Runner
 
 		public static Point GetSingleBezierPoint(float t, Point[] pts)
 		{
-            List<Point> connPts = new();
+			List<Point> connPts = new();
 			for (int i = 0; i < pts.Length - 1; i++)
 			{
 				var len = pts[i].Distance(pts[i + 1]);
@@ -76,7 +76,7 @@ namespace FrankenDrift.Runner
 			if (connPts.Count == 1)
 				return connPts[0];
 			return GetSingleBezierPoint(t, connPts.ToArray());
-        }
+		}
 
 		// it gets worse!
 		public static void DrawCurve(this Graphics gfx, Pen pen, Point[] pts)
@@ -158,7 +158,7 @@ namespace FrankenDrift.Runner
 		}
 
 		public void RecalculateNode(object node_)
-        {
+		{
 			if (node_ == null) return;
 			// Might want to check cast here in the future, but the original definition has a MapNode argument
 			// so surely it must be an error if anything else gets passed here, so might as well save some time
@@ -190,12 +190,12 @@ namespace FrankenDrift.Runner
 				var dest = Page.GetNode(node.Links[SharedModule.DirectionsEnum.In].sDestination);
 				if (dest is not null) RecalculateLinks(dest);
 			}
-            if (node.Links.ContainsKey(SharedModule.DirectionsEnum.Out))
-            {
-                var dest = Page.GetNode(node.Links[SharedModule.DirectionsEnum.Out].sDestination);
-                if (dest is not null) RecalculateLinks(dest);
-            }
-        }
+			if (node.Links.ContainsKey(SharedModule.DirectionsEnum.Out))
+			{
+				var dest = Page.GetNode(node.Links[SharedModule.DirectionsEnum.Out].sDestination);
+				if (dest is not null) RecalculateLinks(dest);
+			}
+		}
 
 		internal void RecalculateLinks(MapNode node)
 		{
@@ -267,41 +267,41 @@ namespace FrankenDrift.Runner
 				else if (link.eSourceLinkPoint == SharedModule.DirectionsEnum.Out && link.sDestination != "")
 				{
 					dest ??= theMap.FindNode(link.sDestination);
-                    if (dest is not null && link.Duplex)
-                        dest.bDrawIn = true;
-                }
+					if (dest is not null && link.Duplex)
+						dest.bDrawIn = true;
+				}
 			}
 
 			if (node.bHasOut)
 			{
 				node.ptOut = node.eOutEdge switch
 				{
-                    SharedModule.DirectionsEnum.North => new Point(3 * node.Width * _scale / 4, 0),
-                    SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, 3 * node.Height * _scale / 4),
+					SharedModule.DirectionsEnum.North => new Point(3 * node.Width * _scale / 4, 0),
+					SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, 3 * node.Height * _scale / 4),
 					SharedModule.DirectionsEnum.South => new Point(node.Width * _scale/4, node.Height*_scale),
 					SharedModule.DirectionsEnum.West => new Point(0, node.Height*_scale/4),
 					_ => new Point(0, 0)
-                };
+				};
 			}
 			if (node.bHasIn)
 			{
 				node.ptIn = node.eInEdge switch
 				{
-                    SharedModule.DirectionsEnum.North => new Point(node.Width * _scale / 4, 0),
-                    SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, node.Height * _scale / 4),
-                    SharedModule.DirectionsEnum.South => new Point(3 * node.Width * _scale / 4, node.Height * _scale),
-                    SharedModule.DirectionsEnum.West => new Point(0, 3 * node.Height * _scale / 4),
-                    _ => new Point(0,0)
+					SharedModule.DirectionsEnum.North => new Point(node.Width * _scale / 4, 0),
+					SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, node.Height * _scale / 4),
+					SharedModule.DirectionsEnum.South => new Point(3 * node.Width * _scale / 4, node.Height * _scale),
+					SharedModule.DirectionsEnum.West => new Point(0, 3 * node.Height * _scale / 4),
+					_ => new Point(0,0)
 				};
 			}
 		}
 
-        public void SelectNode(string key)
-        {
+		public void SelectNode(string key)
+		{
 			var theMap = SharedModule.Adventure.Map;
 			if (theMap is null) return;
 			_selectedNodes.Clear();
-            foreach (var p in theMap.Pages.Values)
+			foreach (var p in theMap.Pages.Values)
 			{
 				if (p.GetNode(key) is null) continue;
 				var node = p.GetNode(key);
@@ -320,10 +320,10 @@ namespace FrankenDrift.Runner
 		}
 
 		internal Point? GetLinkPoint(MapNode node, SharedModule.DirectionsEnum d, MapNode dest = null)
-        {
-            switch (d)
-            {
-                case SharedModule.DirectionsEnum.North:
+		{
+			switch (d)
+			{
+				case SharedModule.DirectionsEnum.North:
 					return Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y, node.Location.Z);
 				case SharedModule.DirectionsEnum.NorthEast:
 					return node.Points[1];
@@ -348,48 +348,48 @@ namespace FrankenDrift.Runner
 					{
 						node.eInEdge = SharedModule.DirectionsEnum.East;
 						return Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y + node.Height / 4, node.Location.Z);
-                    }
+					}
 					else if (dest.Location.X + node.Width < node.Location.X)
 					{
 						node.eInEdge = SharedModule.DirectionsEnum.West;
 						return Planes.GetPoint2D(node.Location.X, node.Location.Y + (3 * node.Height / 4), node.Location.Z);
-                    }
+					}
 					else if (dest.Location.Y > node.Location.Y)
 					{
 						node.eInEdge = SharedModule.DirectionsEnum.South;
 						return Planes.GetPoint2D(node.Location.X + (3 * node.Width / 4), node.Location.Y + node.Height, node.Location.Z);
-                    }
+					}
 					else
 					{
 						node.eInEdge = SharedModule.DirectionsEnum.North;
 						return Planes.GetPoint2D(node.Location.X + node.Width / 4, node.Location.Y, node.Location.Z);
-                    }
+					}
 				case SharedModule.DirectionsEnum.Out:
-                    if (dest is null || dest.Page != node.Page) return null;
+					if (dest is null || dest.Page != node.Page) return null;
 					if (dest.Location.X > node.Location.X + node.Width)
 					{
 						node.eOutEdge = SharedModule.DirectionsEnum.East;
 						return Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y + (3 * node.Height / 4), node.Location.Z);
-                    }
+					}
 					else if (dest.Location.X + dest.Width < node.Location.X)
 					{
 						node.eOutEdge = SharedModule.DirectionsEnum.West;
 						return Planes.GetPoint2D(node.Location.X, node.Location.Y + node.Height / 4, node.Location.Z);
-                    }
+					}
 					else if (dest.Location.Y > node.Location.Y)
 					{
 						node.eOutEdge = SharedModule.DirectionsEnum.South;
 						return Planes.GetPoint2D(node.Location.X + node.Width / 4, node.Location.Y + node.Height, node.Location.Z);
-                    }
+					}
 					else
 					{
 						node.eOutEdge = SharedModule.DirectionsEnum.North;
 						return Planes.GetPoint2D(node.Location.X + (3 * node.Width / 4), node.Location.Y, node.Location.Z);
-                    }
+					}
 				default:
 					return null;
-            }
-        }
+			}
+		}
 
 		internal void DrawNode(Graphics gfx, MapNode node)
 		{
@@ -418,8 +418,8 @@ namespace FrankenDrift.Runner
 			{  // node on same level as hot-tracked one
 				nodeBackgroundBrush = new SolidBrush(new Color(_nodeBackground, 200));
 				nodeTextBrush = new SolidBrush(_nodeText);
-                nodeBorderPen = new Pen(_nodeBorder, 1);
-            }
+				nodeBorderPen = new Pen(_nodeBorder, 1);
+			}
 			else
 			{  // node on different level
 				nodeBackgroundBrush = new SolidBrush(new Color(_nodeBackground, 50));
@@ -431,9 +431,9 @@ namespace FrankenDrift.Runner
 
 			var theDirs = (SharedModule.DirectionsEnum[])Enum.GetValues(typeof(SharedModule.DirectionsEnum));
 
-            foreach (var dir in theDirs)
-            {
-                if (!node.Links.ContainsKey(dir)) continue;
+			foreach (var dir in theDirs)
+			{
+				if (!node.Links.ContainsKey(dir)) continue;
 				MapNode dest = theMap.FindNode(node.Links[dir].sDestination);
 				if (dest is null) continue;
 				int cmp = dest.CompareTo(node);
@@ -477,9 +477,9 @@ namespace FrankenDrift.Runner
 
 				if (((node.bDrawOut && node.bHasOut) || node.Links.ContainsKey(SharedModule.DirectionsEnum.Out)) && SharedModule.Adventure.Player.HasRouteInDirection(SharedModule.DirectionsEnum.Out, false, node.Key, ref _))
 					DrawInOutIcon(gfx, node, SharedModule.DirectionsEnum.Out, alpha);
-                if (((node.bDrawIn && node.bHasIn) || node.Links.ContainsKey(SharedModule.DirectionsEnum.In)) && SharedModule.Adventure.Player.HasRouteInDirection(SharedModule.DirectionsEnum.In, false, node.Key, ref _))
-                    DrawInOutIcon(gfx, node, SharedModule.DirectionsEnum.In, alpha);
-            }
+				if (((node.bDrawIn && node.bHasIn) || node.Links.ContainsKey(SharedModule.DirectionsEnum.In)) && SharedModule.Adventure.Player.HasRouteInDirection(SharedModule.DirectionsEnum.In, false, node.Key, ref _))
+					DrawInOutIcon(gfx, node, SharedModule.DirectionsEnum.In, alpha);
+			}
 		}
 
 		private void DrawInOutIcon(Graphics gfx, MapNode node, SharedModule.DirectionsEnum dir, byte alpha, MapNode dest = null)
@@ -487,9 +487,9 @@ namespace FrankenDrift.Runner
 			if (dir == SharedModule.DirectionsEnum.In && !node.bHasIn) return;
 			if (dir == SharedModule.DirectionsEnum.Out && !node.bHasOut) return;
 
-            int circleWidth = _scale;
+			int circleWidth = _scale;
 
-            foreach (var n in new MapNode[] {node, dest})
+			foreach (var n in new MapNode[] {node, dest})
 			{
 				if (n is null) continue;
 				var inOut = n == node ? dir : SharedModule.OppositeDirection(dir);
@@ -531,7 +531,7 @@ namespace FrankenDrift.Runner
 					linkPen = new Pen(new Color(_linkColor, 30), _scale / 5);
 				linkPen.DashStyle = DashStyles.Solid;
 				linkPen.LineCap = PenLineCap.Round;
-            }
+			}
 			var start = GetLinkPoint(node, dir);
 			if (start is null) return;
 			var end = GetBezierAssister(node, dir, 10 * _scale);
@@ -556,23 +556,23 @@ namespace FrankenDrift.Runner
 				case SharedModule.DirectionsEnum.North:
 					return GetRelativePoint(node, 50, -offsetY);
 				case SharedModule.DirectionsEnum.East:
-                    return GetRelativePoint(node, 100 + offsetX, 50);
-                case SharedModule.DirectionsEnum.South:
+					return GetRelativePoint(node, 100 + offsetX, 50);
+				case SharedModule.DirectionsEnum.South:
 					return GetRelativePoint(node, 50, 100 + offsetY);
 				case SharedModule.DirectionsEnum.West:
 					return GetRelativePoint(node, -offsetX, 50);
 				case SharedModule.DirectionsEnum.NorthEast:
-                    return GetRelativePoint(node, 100 + (3 * offsetX / 4), -(offsetY / 2)); ;
+					return GetRelativePoint(node, 100 + (3 * offsetX / 4), -(offsetY / 2)); ;
 				case SharedModule.DirectionsEnum.SouthEast:
 					return GetRelativePoint(node, 100 + (3 * offsetX / 4), 100 + (offsetY / 2));
 				case SharedModule.DirectionsEnum.SouthWest:
 					return GetRelativePoint(node, -(3 * offsetX / 4), 100 + (offsetY / 2));
 				case SharedModule.DirectionsEnum.NorthWest:
 					return GetRelativePoint(node, -(3 * offsetX / 4), -(offsetY / 2));
-                case SharedModule.DirectionsEnum.Up:
-                case SharedModule.DirectionsEnum.Down:
-                    return new Point();
-                case SharedModule.DirectionsEnum.In:
+				case SharedModule.DirectionsEnum.Up:
+				case SharedModule.DirectionsEnum.Down:
+					return new Point();
+				case SharedModule.DirectionsEnum.In:
 					return node.eInEdge switch
 					{
 						SharedModule.DirectionsEnum.North => GetRelativePoint(node, 25, -offsetY),
@@ -585,12 +585,12 @@ namespace FrankenDrift.Runner
 					return node.eOutEdge switch
 					{
 						SharedModule.DirectionsEnum.North => GetRelativePoint(node, 75, -offsetY),
-                        SharedModule.DirectionsEnum.South => GetRelativePoint(node, 25, 100 + offsetY),
-                        SharedModule.DirectionsEnum.East => GetRelativePoint(node, 100 + offsetX, 75),
-                        SharedModule.DirectionsEnum.West => GetRelativePoint(node, -offsetX, 25),
-                        _ => new Point()
+						SharedModule.DirectionsEnum.South => GetRelativePoint(node, 25, 100 + offsetY),
+						SharedModule.DirectionsEnum.East => GetRelativePoint(node, 100 + offsetX, 75),
+						SharedModule.DirectionsEnum.West => GetRelativePoint(node, -offsetX, 25),
+						_ => new Point()
 					};
-            }
+			}
 			return new Point();
 		}
 
@@ -614,7 +614,7 @@ namespace FrankenDrift.Runner
 				// node is on same level as selected node
 				linkPen = new Pen(new Color(_linkColor, 100), _scale / 5);
 			else
-                linkPen = new Pen(new Color(_linkColor, 30), _scale / 5);
+				linkPen = new Pen(new Color(_linkColor, 30), _scale / 5);
 
 			linkPen.DashStyle = link.Style;
 			linkPen.LineCap = PenLineCap.Square;
@@ -646,7 +646,7 @@ namespace FrankenDrift.Runner
 					alpha = 50;
 				DrawInOutIcon(gfx, node, SharedModule.OppositeDirection(dir), alpha);
 			}
-        }
+		}
 
 		private Color HotTrackColor(Color c, byte alpha = 0)
 		{
@@ -779,7 +779,7 @@ namespace FrankenDrift.Runner
 			gfx.TranslateTransform(Width / 2, Height / 2);
 			// clear the screen before redraw
 			gfx.Clear(new SolidBrush(theMap._mapBackground));
-            foreach (var node in theMap.Page.Nodes)
+			foreach (var node in theMap.Page.Nodes)
 				theMap.DrawNode(gfx, node);
 		}
 	}
