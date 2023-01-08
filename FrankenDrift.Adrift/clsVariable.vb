@@ -782,6 +782,7 @@ Public Class clsVariable
                                                         oToken = Token(oNext.Right)
                                                     Else
                                                         ' Not what we were expecting
+                                                        Exit While
                                                     End If
                                                 Case Else
                                                     ' Ok, not what we were expecting
