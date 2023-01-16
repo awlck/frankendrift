@@ -1,0 +1,23 @@
+﻿body {
+    min-height: 100vh;
+}
+
+.gameport {
+    display: flex;
+    flex-direction: column;
+    min-height: 99vh;
+}
+
+.gamewindow {
+    display: flex;
+    align-items: stretch;
+    overflow-y: scroll;
+}
+
+.spacer {
+    flex: 1;
+}
+
+#gameinput {
+
+}
