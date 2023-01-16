@@ -2638,7 +2638,7 @@ NextMessage:
 
     Public Sub ShowUserSplash()
         If clsBlorb.Frontispiece > -1 Then
-            Dim imgSplash As Image = Blorb.GetImage(clsBlorb.Frontispiece)
+            Dim imgSplash As Byte() = Blorb.GetImage(clsBlorb.Frontispiece)
             If imgSplash IsNot Nothing Then
                 Glue.ShowCoverArt(imgSplash)
             End If

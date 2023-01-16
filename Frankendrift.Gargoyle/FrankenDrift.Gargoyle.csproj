@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <OutputType>WinExe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>FrankenDrift.Gargoyle.GarGlkRunner</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FrankenDrift.Adrift\FrankenDrift.Adrift.vbproj" />
+    <ProjectReference Include="..\FrankenDrift.Glue\FrankenDrift.Glue.csproj" />
+  </ItemGroup>
+
+</Project>

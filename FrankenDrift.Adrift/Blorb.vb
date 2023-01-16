@@ -1,6 +1,5 @@
 ﻿Imports System.Text.Encoding
 Imports System.Xml
-Imports Eto.Drawing
 
 
 Public Class clsBlorb
@@ -12,7 +11,7 @@ Public Class clsBlorb
     Friend Shared ExecResource As Byte()
     Friend Shared bObfuscated As Boolean = True
     Friend Shared ExecType As String = Nothing
-    Friend Shared ImageResources As New Dictionary(Of Integer, Image)       ' - These are just a local cache for Runner
+    'Friend Shared ImageResources As New Dictionary(Of Integer, Image)       ' - These are just a local cache for Runner
     Friend Shared SoundResources As New Dictionary(Of Integer, SoundFile)   ' /
     Friend Shared MetaData As System.Xml.XmlDocument
     Friend Shared Frontispiece As Integer = -1
@@ -24,11 +23,11 @@ Public Class clsBlorb
 
     Private Shared cnkFORM As FormChunk
 
+#If Not Adravalon Then
     Public Function GetImage(ByVal iResourceNumber As Integer, Optional ByVal bStore As Boolean = False, Optional ByRef sExtn As String = Nothing) As Image
         Dim bStreamOpen As Boolean = stmBlorb.CanRead
 
         Try
-
             If Not ImageResources.ContainsKey(iResourceNumber) Then
                 If ResourceIndex.ContainsKey("Pict" & iResourceNumber) Then
                     Dim iOffset As UInt32 = ResourceIndex("Pict" & iResourceNumber)
@@ -54,7 +53,29 @@ Public Class clsBlorb
         Return Nothing
 
     End Function
+#Else
+    Public Function GetImage(ByVal iResourceNumber As Integer, Optional ByVal bStore As Boolean = False, Optional ByRef sExtn As String = Nothing) As Byte()
+        Dim bStreamOpen As Boolean = stmBlorb.CanRead
+        Try
+            If ResourceIndex.ContainsKey("Pict" & iResourceNumber) Then
+                Dim iOffset As UInt32 = ResourceIndex("Pict" & iResourceNumber)
+                Dim cnkImage As New PictResourceChunk
 
+                If Not bStreamOpen Then stmBlorb = New IO.FileStream(sFilename, IO.FileMode.Open, IO.FileAccess.Read)
+                stmBlorb.Position = iOffset + BlorbOffset
+
+                If cnkImage.LoadChunk Then
+                    Return cnkImage.img.bytImage
+                End If
+            End If
+        Catch ex As Exception
+            ErrMsg("GetImage error", ex)
+        Finally
+            If Not bStreamOpen Then stmBlorb.Close()
+        End Try
+        Return Nothing
+    End Function
+#End If
 
     Friend Function GetSound(ByVal iResourceNumber As Integer, Optional ByVal bStore As Boolean = False, Optional ByRef sExtn As String = Nothing) As SoundFile
 
@@ -103,12 +124,14 @@ Public Class clsBlorb
         Public bytImage As Byte() = {}
         Public sExtn As String
 
+#If Not Adravalon Then
         Public ReadOnly Property Image As Image
             Get
                 Dim msImage As New IO.MemoryStream(bytImage)
                 Return New Bitmap(msImage)
             End Get
         End Property
+#End If
     End Class
 
     Private MustInherit Class Chunk
@@ -827,7 +850,7 @@ Public Class clsBlorb
     Private Sub ClearBlorb()
         ExecType = Nothing
         ExecResource = Nothing
-        ImageResources.Clear()
+        'ImageResources.Clear()
         SoundResources.Clear()
         ResourceIndex.Clear()
         MetaData = Nothing
