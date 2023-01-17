@@ -129,7 +129,7 @@ namespace FrankenDrift.Gargoyle.Glk
     enum StyleHint : uint
     {
         Indentation = 0,
-        ParaIndetation = 1,
+        ParaIndentation = 1,
         Justification = 2,
         Size = 3,
         Weight = 4,
@@ -192,6 +192,8 @@ namespace FrankenDrift.Gargoyle.Glk
         internal static extern void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
         [DllImport("libgarglk.dll")]
         internal static extern void glk_set_style(Style s);
+        [DllImport("libgarglk.dll")]
+        internal static extern uint glk_style_measure(IntPtr winid, Style styl, StyleHint hint, ref uint result);
     }
 
     internal struct Event

@@ -3,6 +3,7 @@ using FrankenDrift.Gargoyle.Glk;
 using FrankenDrift.Glue;
 using FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars;
 using System.ComponentModel;
+using System.Drawing.Imaging;
 using System.Text;
 
 namespace FrankenDrift.Gargoyle
@@ -157,6 +158,9 @@ namespace FrankenDrift.Gargoyle
                 Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, Style.Input, StyleHint.TextColor, colorToBe);
             }
 
+            // Repurpose blockquote style for centered text (seems the most appropriate out of the bunch)
+            Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, Style.BlockQuote, StyleHint.Justification, (int)Justification.Centered);
+
             // It is perhaps bad form / unexpected to do this here, but we can't
             // open any windows until after the style hints have been adjusted.
             _output = new GlkHtmlWin();
@@ -184,6 +188,11 @@ namespace FrankenDrift.Gargoyle
 
         public void SubmitCommand(string cmd)
         {
+            if (cmd == "!dumpstyles")
+            {
+                _output.DumpCurrentStyleInfo();
+                return;
+            }
             Adrift.SharedModule.UserSession.Process(cmd);
         }
 

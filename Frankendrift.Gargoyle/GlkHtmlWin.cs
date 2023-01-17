@@ -17,6 +17,17 @@ namespace FrankenDrift.Gargoyle
         public ConcurrentEventException(string msg) : base(msg) { }
     }
 
+    // Making the best out of the limited set of Glk styles...
+    enum TextStyle : uint
+    {
+        Normal    = 0b00000,
+        Bold      = 0b00001,
+        Italic    = 0b00010,
+        Monospace = 0b00100,
+        Centered  = 0b01000,
+        Input     = 0b10000
+    }
+
     internal class GlkHtmlWin : Glue.RichTextBox, IDisposable
     {
         internal static GlkHtmlWin? MainWin = null;
@@ -88,7 +99,7 @@ namespace FrankenDrift.Gargoyle
                         count = (int) ev.val1;
                         break;
                     }
-                    else MainSession.Instance.ProcessEvent(ev);
+                    else MainSession.Instance!.ProcessEvent(ev);
                 }
             }
             IsWaiting = false;
@@ -112,7 +123,7 @@ namespace FrankenDrift.Gargoyle
                     result = ev.val1;
                     break;
                 }
-                else MainSession.Instance.ProcessEvent(ev);
+                else MainSession.Instance!.ProcessEvent(ev);
             }
             IsWaiting = false;
             return result;
@@ -132,6 +143,7 @@ namespace FrankenDrift.Gargoyle
                 return;
             }
             Garglk_Pinvoke.glk_set_window(glkwin_handle);
+            Garglk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
 
             var consumed = 0;
             var inToken = false;
@@ -139,6 +151,7 @@ namespace FrankenDrift.Gargoyle
             var currentToken = "";
             var previousToken = "";
             var skip = 0;
+            var currentTextStyle = TextStyle.Normal;
 
             foreach (var c in src)
             {
@@ -168,7 +181,7 @@ namespace FrankenDrift.Gargoyle
                         // TODO: ask for a garglk extension akin to garglk_unput_string
                         // that only needs the number of characters to delete.
                     }
-                    GarGlk.OutputString(current.ToString());
+                    OutputStyled(current.ToString(), currentTextStyle);
                     current.Clear();
                     switch (currentToken)
                     {
@@ -176,17 +189,35 @@ namespace FrankenDrift.Gargoyle
                             GarGlk.OutputString("\n");
                             break;
                         case "c":
-                            Garglk_Pinvoke.glk_set_style(Style.Input);
+                            currentTextStyle |= TextStyle.Input;
+                            break;
+                        case "b":
+                            currentTextStyle |= TextStyle.Bold;
+                            break;
+                        case "i":
+                            currentTextStyle |= TextStyle.Italic;
+                            break;
+                        case "center":
+                            currentTextStyle |= TextStyle.Centered;
                             break;
                         case "/c":
-                            Garglk_Pinvoke.glk_set_style(Style.Normal);
+                            currentTextStyle &= (~TextStyle.Input);
+                            break;
+                        case "/b":
+                            currentTextStyle &= (~TextStyle.Bold);
+                            break;
+                        case "/i":
+                            currentTextStyle &= (~TextStyle.Italic);
+                            break;
+                        case "/center":
+                            currentTextStyle &= (~TextStyle.Centered);
                             break;
                     }
                 }
                 else current.Append(c);
             }
 
-            GarGlk.OutputString(current.ToString());
+            OutputStyled(current.ToString(), currentTextStyle);
 
             if (!IsWaiting && !string.IsNullOrEmpty(_pendingText))
             {
@@ -194,6 +225,35 @@ namespace FrankenDrift.Gargoyle
                 _pendingText = "";
                 AppendHTML(tmpText);
             }
+        }
+
+        private void OutputStyled(string txt, TextStyle style)
+        {
+            if ((style & TextStyle.Centered) != 0)
+            {
+                Garglk_Pinvoke.glk_set_style(Style.BlockQuote);
+            }
+            else if ((style & TextStyle.Monospace) != 0)
+            {
+                Garglk_Pinvoke.glk_set_style(Style.Preformatted);
+            }
+            else if ((style & (TextStyle.Italic | TextStyle.Bold)) != 0)
+            {
+                Garglk_Pinvoke.glk_set_style(Style.Alert);
+            }
+            else if ((style & TextStyle.Italic) != 0)
+            {
+                Garglk_Pinvoke.glk_set_style(Style.Emphasized);
+            }
+            else if ((style & TextStyle.Bold) != 0)
+            {
+                Garglk_Pinvoke.glk_set_style(Style.Subheader);
+            }
+            else
+            {
+                Garglk_Pinvoke.glk_set_style(Style.Normal);
+            }
+            GarGlk.OutputString(txt);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -223,6 +283,43 @@ namespace FrankenDrift.Gargoyle
             // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in der Methode "Dispose(bool disposing)" ein.
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        internal void DumpCurrentStyleInfo()
+        {
+            foreach (Style s in (Style[])Enum.GetValues(typeof(Style)))
+            {
+                uint result = 0;
+                AppendHTML($"Style status for style: {s}\n");
+                AppendHTML("  Indentation: ");
+                var success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Indentation, ref result);
+                if (success == 1) AppendHTML($"{result}\n");
+                else AppendHTML("n/a\n");
+                AppendHTML("  Paragraph Indentation: ");
+                success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.ParaIndentation, ref result);
+                if (success == 1) AppendHTML($"{result}\n");
+                else AppendHTML("n/a\n");
+                AppendHTML("  Justification: ");
+                success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Justification, ref result);
+                if (success == 1) AppendHTML($"{(Justification)result}\n");
+                else AppendHTML("n/a\n");
+                AppendHTML("  Font Size: ");
+                success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Size, ref result);
+                if (success == 1) AppendHTML($"{result}\n");
+                else AppendHTML("n/a\n");
+                AppendHTML("  Font Weight: ");
+                success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Weight, ref result);
+                if (success == 1) AppendHTML($"{(int)result}\n");
+                else AppendHTML("n/a\n");
+                AppendHTML("  Italics: ");
+                success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Oblique, ref result);
+                if (success == 1) AppendHTML(result == 1 ? "yes\n" : "no\n");
+                else AppendHTML("n/a\n");
+                AppendHTML("  Font Type: ");
+                success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Proportional, ref result);
+                if (success == 1) AppendHTML(result == 1 ? "proportional\n" : "fixed-width\n");
+                else AppendHTML("n/a\n");
+            }
         }
     }
 }
