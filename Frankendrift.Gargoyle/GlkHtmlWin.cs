@@ -16,7 +16,7 @@ namespace FrankenDrift.Gargoyle
 
         private IntPtr glkwin_handle;
 
-        public int TextLength => throw new NotImplementedException();
+        public int TextLength => -1;
 
         public string Text { get => ""; set { } }
         public string SelectedText { get => ""; set { } }
@@ -24,7 +24,7 @@ namespace FrankenDrift.Gargoyle
         public int SelectionLength { get => -1; set { } }
         public bool IsDisposed => glkwin_handle == IntPtr.Zero;
 
-        internal IntPtr Stream => Glk.Garglk_Pinvoke.glk_window_get_stream(glkwin_handle);
+        internal IntPtr Stream => Garglk_Pinvoke.glk_window_get_stream(glkwin_handle);
 
         internal GlkHtmlWin()
         {
@@ -32,22 +32,22 @@ namespace FrankenDrift.Gargoyle
             {
                 MainWin = this;
                 NumberOfWindows += 1;
-                glkwin_handle = Glk.Garglk_Pinvoke.glk_window_open(System.IntPtr.Zero, 0, 0, Glk.WinType.TextBuffer, NumberOfWindows);
+                glkwin_handle = Garglk_Pinvoke.glk_window_open(IntPtr.Zero, 0, 0, WinType.TextBuffer, NumberOfWindows);
             }
             else
             {
-                glkwin_handle = _doWindowOpen(MainWin, Glk.WinMethod.Right | Glk.WinMethod.Proportional, 30);
+                glkwin_handle = _doWindowOpen(MainWin, WinMethod.Right | WinMethod.Proportional, 30);
             }
         }
 
-        GlkHtmlWin(GlkHtmlWin splitFrom, Glk.WinMethod splitMethod, uint splitSize)
+        GlkHtmlWin(GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
         {
             glkwin_handle = _doWindowOpen(splitFrom, splitMethod, splitSize);
         }
 
-        private IntPtr _doWindowOpen(GlkHtmlWin splitFrom, Glk.WinMethod splitMethod, uint splitSize)
+        private IntPtr _doWindowOpen(GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
         {
-            var result = Glk.Garglk_Pinvoke.glk_window_open(splitFrom.glkwin_handle, splitMethod, splitSize, Glk.WinType.TextBuffer, NumberOfWindows);
+            var result = Garglk_Pinvoke.glk_window_open(splitFrom.glkwin_handle, splitMethod, splitSize, WinType.TextBuffer, NumberOfWindows);
             if (result == IntPtr.Zero)
                 throw new GlkError("Failed to open window.");
             return result;
@@ -62,24 +62,29 @@ namespace FrankenDrift.Gargoyle
         {
             const uint capacity = 256;
             byte[] cmdToBe = new byte[capacity];
-            Event ev = new() { type = EventType.None };
+            var count = 0;
             fixed (byte* buf = cmdToBe)
             {
                 Garglk_Pinvoke.glk_request_line_event(glkwin_handle, buf, capacity-1, 0);
                 while (true)
                 {
+                    Event ev = new() { type = EventType.None };
                     Garglk_Pinvoke.glk_select(ref ev);
-                    if (ev.type == EventType.LineInput) break;
+                    if (ev.type == EventType.LineInput)
+                    {
+                        count = (int) ev.val1;
+                        break;
+                    }
                     else MainSession.Instance.ProcessEvent(ev);
                 }
             }
             var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
-            return dec.GetString(cmdToBe);
+            return dec.GetString(cmdToBe, 0, count);
         }
 
         public void AppendHTML(string source)
         {
-            Glk.Garglk_Pinvoke.glk_set_window(glkwin_handle);
+            Garglk_Pinvoke.glk_set_window(glkwin_handle);
             GarGlk.OutputString(source);
         }
 
@@ -94,7 +99,7 @@ namespace FrankenDrift.Gargoyle
 
                 // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben
                 // TODO: Große Felder auf NULL setzen
-                Glk.Garglk_Pinvoke.glk_window_close(glkwin_handle);
+                Garglk_Pinvoke.glk_window_close(glkwin_handle);
                 glkwin_handle = IntPtr.Zero;
             }
         }
