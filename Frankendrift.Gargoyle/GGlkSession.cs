@@ -203,6 +203,7 @@ namespace FrankenDrift.Gargoyle
     }
 
     // Glonk: does absolutely nothing and dies.
+    // see: https://en.wikipedia.org/wiki/Flanimals#:~:text=Glonk%3A%20A%20green%20reptilian%20humanoid,known%20that%20it%20eats%20pizza.
     class GlonkMap : Glue.Map
     {
         public void RecalculateNode(object node) { }

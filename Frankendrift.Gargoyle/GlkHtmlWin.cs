@@ -1,10 +1,12 @@
-﻿using FrankenDrift.Gargoyle.Glk;
+﻿using Eto.Drawing;
+using FrankenDrift.Gargoyle.Glk;
 using FrankenDrift.Glue;
 using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace FrankenDrift.Gargoyle
@@ -24,8 +26,13 @@ namespace FrankenDrift.Gargoyle
         Bold      = 0b00001,
         Italic    = 0b00010,
         Monospace = 0b00100,
-        Centered  = 0b01000,
-        Input     = 0b10000
+        Centered  = 0b01000
+    }
+    struct FontInfo
+    {
+        internal TextStyle Ts;
+        internal uint TextColor;
+        internal string TagName;
     }
 
     internal class GlkHtmlWin : Glue.RichTextBox, IDisposable
@@ -151,7 +158,8 @@ namespace FrankenDrift.Gargoyle
             var currentToken = "";
             var previousToken = "";
             var skip = 0;
-            var currentTextStyle = TextStyle.Normal;
+            var styleHistory = new Stack<FontInfo>();
+            styleHistory.Push(new FontInfo { Ts = TextStyle.Normal, TextColor = (uint)ZColor.Default, TagName = "<base>" });
 
             foreach (var c in src)
             {
@@ -170,6 +178,7 @@ namespace FrankenDrift.Gargoyle
                 }
                 else if (c == '>' && inToken)
                 {
+                    var currentTextStyle = styleHistory.Peek();
                     inToken = false;
                     if (currentToken == "del" && current.Length > 0)
                     {
@@ -188,36 +197,86 @@ namespace FrankenDrift.Gargoyle
                         case "br":
                             GarGlk.OutputString("\n");
                             break;
-                        case "c":
-                            currentTextStyle |= TextStyle.Input;
+                        case "c":  // Keep the 'input' style reserved for actual input, only mimic it with color where possible.
+                            styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts, TextColor = _getInputTextColor(), TagName = "c" });
                             break;
                         case "b":
-                            currentTextStyle |= TextStyle.Bold;
+                            styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts |= TextStyle.Bold, TextColor = currentTextStyle.TextColor, TagName = "b" });
                             break;
                         case "i":
-                            currentTextStyle |= TextStyle.Italic;
+                            styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts |= TextStyle.Italic, TextColor = currentTextStyle.TextColor, TagName = "i" });
                             break;
                         case "center":
-                            currentTextStyle |= TextStyle.Centered;
+                            styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts |= TextStyle.Centered, TextColor = currentTextStyle.TextColor, TagName = "center" });
                             break;
-                        case "/c":
-                            currentTextStyle &= (~TextStyle.Input);
+                        case "/c" when currentTextStyle.TagName == "c":
+                        case "/b" when currentTextStyle.TagName == "b":
+                        case "/i" when currentTextStyle.TagName == "i":
+                        case "/center" when currentTextStyle.TagName == "center":
+                        case "/font" when currentTextStyle.TagName == "font":
+                            styleHistory.Pop();
                             break;
-                        case "/b":
-                            currentTextStyle &= (~TextStyle.Bold);
-                            break;
-                        case "/i":
-                            currentTextStyle &= (~TextStyle.Italic);
-                            break;
-                        case "/center":
-                            currentTextStyle &= (~TextStyle.Centered);
-                            break;
+                    }
+                    if (currentToken.StartsWith("font"))
+                    {
+                        var color = currentTextStyle.TextColor;
+                        var tokenLower = currentToken.ToLower();
+                        var re = new Regex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?");
+                        var col = re.Match(tokenLower);
+                        if (col.Success)
+                        {
+                            if (uint.TryParse(col.Groups[1].Value, System.Globalization.NumberStyles.HexNumber, null, out var newColor))
+                                color = newColor;
+                        }
+                        else if (tokenLower.Contains("black"))
+                            color = 0x000000;
+                        else if (tokenLower.Contains("blue"))
+                            color = 0x0000ff;
+                        else if (tokenLower.Contains("gray"))
+                            color = 0x808080;
+                        else if (tokenLower.Contains("darkgreen"))
+                            color = 0x006400;
+                        else if (tokenLower.Contains("green"))
+                            color = 0x008000;
+                        else if (tokenLower.Contains("lime"))
+                            color = 0x00FF00;
+                        else if (tokenLower.Contains("magenta"))
+                            color = 0xFF00FF;
+                        else if (tokenLower.Contains("maroon"))
+                            color = 0x800000;
+                        else if (tokenLower.Contains("navy"))
+                            color = 0x000080;
+                        else if (tokenLower.Contains("olive"))
+                            color = 0x808000;
+                        else if (tokenLower.Contains("orange"))
+                            color = 0xffa500;
+                        else if (tokenLower.Contains("pink"))
+                            color = 0xffc0cb;
+                        else if (tokenLower.Contains("purple"))
+                            color = 0x800080;
+                        else if (tokenLower.Contains("red"))
+                            color = 0xff0000;
+                        else if (tokenLower.Contains("silver"))
+                            color = 0xc0c0c0;
+                        else if (tokenLower.Contains("teal"))
+                            color = 0x008080;
+                        else if (tokenLower.Contains("white"))
+                            color = 0xffffff;
+                        else if (tokenLower.Contains("yellow"))
+                            color = 0xffff00;
+                        else if (tokenLower.Contains("cyan"))
+                            color = 0x00ffff;
+                        else if (tokenLower.Contains("darkolive"))
+                            color = 0x556b2f;
+                        else if (tokenLower.Contains("tan"))
+                            color = 0xd2b48c;
+                        styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts, TextColor = color, TagName = "font" });
                     }
                 }
                 else current.Append(c);
             }
 
-            OutputStyled(current.ToString(), currentTextStyle);
+            OutputStyled(current.ToString(), styleHistory.Peek());
 
             if (!IsWaiting && !string.IsNullOrEmpty(_pendingText))
             {
@@ -227,25 +286,26 @@ namespace FrankenDrift.Gargoyle
             }
         }
 
-        private void OutputStyled(string txt, TextStyle style)
+        private void OutputStyled(string txt, FontInfo fi)
         {
-            if ((style & TextStyle.Centered) != 0)
+            Garglk_Pinvoke.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);
+            if ((fi.Ts & TextStyle.Centered) != 0)
             {
                 Garglk_Pinvoke.glk_set_style(Style.BlockQuote);
             }
-            else if ((style & TextStyle.Monospace) != 0)
+            else if ((fi.Ts & TextStyle.Monospace) != 0)
             {
                 Garglk_Pinvoke.glk_set_style(Style.Preformatted);
             }
-            else if ((style & (TextStyle.Italic | TextStyle.Bold)) != 0)
+            else if ((fi.Ts & (TextStyle.Italic | TextStyle.Bold)) != 0)
             {
                 Garglk_Pinvoke.glk_set_style(Style.Alert);
             }
-            else if ((style & TextStyle.Italic) != 0)
+            else if ((fi.Ts & TextStyle.Italic) != 0)
             {
                 Garglk_Pinvoke.glk_set_style(Style.Emphasized);
             }
-            else if ((style & TextStyle.Bold) != 0)
+            else if ((fi.Ts & TextStyle.Bold) != 0)
             {
                 Garglk_Pinvoke.glk_set_style(Style.Subheader);
             }
@@ -254,6 +314,15 @@ namespace FrankenDrift.Gargoyle
                 Garglk_Pinvoke.glk_set_style(Style.Normal);
             }
             GarGlk.OutputString(txt);
+        }
+
+        private uint _getInputTextColor()
+        {
+            uint result = 0;
+            var success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, Style.Input, StyleHint.Indentation, ref result);
+            if (success == 0)
+                return (uint)ZColor.Default;
+            return result;
         }
 
         protected virtual void Dispose(bool disposing)
