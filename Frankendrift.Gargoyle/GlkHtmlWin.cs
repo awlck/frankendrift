@@ -9,6 +9,14 @@ using System.Threading.Tasks;
 
 namespace FrankenDrift.Gargoyle
 {
+    /// <summary>
+    /// Exception indicating concurrent Glk input requests
+    /// </summary>
+    internal class ConcurrentEventException : Exception
+    {
+        public ConcurrentEventException(string msg) : base(msg) { }
+    }
+
     internal class GlkHtmlWin : Glue.RichTextBox, IDisposable
     {
         internal static GlkHtmlWin? MainWin = null;
@@ -23,6 +31,8 @@ namespace FrankenDrift.Gargoyle
         public int SelectionStart { get => -1; set { } }
         public int SelectionLength { get => -1; set { } }
         public bool IsDisposed => glkwin_handle == IntPtr.Zero;
+        internal bool IsWaiting = false;
+        private string _pendingText = "";
 
         internal IntPtr Stream => Garglk_Pinvoke.glk_window_get_stream(glkwin_handle);
 
@@ -55,11 +65,14 @@ namespace FrankenDrift.Gargoyle
 
         public void Clear()
         {
-            Glk.Garglk_Pinvoke.glk_window_clear(glkwin_handle);
+            Garglk_Pinvoke.glk_window_clear(glkwin_handle);
         }
 
-        public unsafe string GetLineInput()
+        internal unsafe string GetLineInput()
         {
+            if (IsWaiting)
+                throw new ConcurrentEventException("Too many input events requested");
+            IsWaiting = true;
             const uint capacity = 256;
             byte[] cmdToBe = new byte[capacity];
             var count = 0;
@@ -70,7 +83,7 @@ namespace FrankenDrift.Gargoyle
                 {
                     Event ev = new() { type = EventType.None };
                     Garglk_Pinvoke.glk_select(ref ev);
-                    if (ev.type == EventType.LineInput)
+                    if (ev.type == EventType.LineInput && ev.win_handle == glkwin_handle)
                     {
                         count = (int) ev.val1;
                         break;
@@ -78,14 +91,109 @@ namespace FrankenDrift.Gargoyle
                     else MainSession.Instance.ProcessEvent(ev);
                 }
             }
+            IsWaiting = false;
             var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
             return dec.GetString(cmdToBe, 0, count);
         }
 
-        public void AppendHTML(string source)
+        internal uint GetCharInput()
         {
+            if (IsWaiting)
+                throw new ConcurrentEventException("Too many input events requested");
+            IsWaiting = true;
+            uint result;
+            Garglk_Pinvoke.glk_request_char_event(glkwin_handle);
+            while (true)
+            {
+                Event ev = new() { type = EventType.None };
+                Garglk_Pinvoke.glk_select(ref ev);
+                if (ev.type == EventType.CharInput && ev.win_handle == glkwin_handle)
+                {
+                    result = ev.val1;
+                    break;
+                }
+                else MainSession.Instance.ProcessEvent(ev);
+            }
+            IsWaiting = false;
+            return result;
+        }
+
+        // Janky-ass HTML parser, 2nd edition.
+        public void AppendHTML(string src)
+        {
+            // don't echo back the command, the Glk library already takes care of that
+            if (src.StartsWith("<c><font face=\"Wingdings\" size=14>") && src.EndsWith("</c>\r\n"))
+                return;
+            // strip redundant carriage-return characters
+            src = src.Replace("\r\n", "\n");
+            if (IsWaiting)
+            {
+                _pendingText += src;
+                return;
+            }
             Garglk_Pinvoke.glk_set_window(glkwin_handle);
-            GarGlk.OutputString(source);
+
+            var consumed = 0;
+            var inToken = false;
+            var current = new StringBuilder();
+            var currentToken = "";
+            var previousToken = "";
+            var skip = 0;
+
+            foreach (var c in src)
+            {
+                consumed++;
+                if (skip-- > 0) continue;
+
+                if (c == '<' && !inToken)
+                {
+                    inToken = true;
+                    previousToken = currentToken;
+                    currentToken = "";
+                }
+                else if (c != '>' && inToken)
+                {
+                    currentToken += c;
+                }
+                else if (c == '>' && inToken)
+                {
+                    inToken = false;
+                    if (currentToken == "del" && current.Length > 0)
+                    {
+                        // As long as we haven't committed to displaying anything,
+                        // we can remove the last character.
+                        current.Remove(current.Length - 1, 1);
+                        continue;
+
+                        // TODO: ask for a garglk extension akin to garglk_unput_string
+                        // that only needs the number of characters to delete.
+                    }
+                    GarGlk.OutputString(current.ToString());
+                    current.Clear();
+                    switch (currentToken)
+                    {
+                        case "br":
+                            GarGlk.OutputString("\n");
+                            break;
+                        case "c":
+                            Garglk_Pinvoke.glk_set_style(Style.Input);
+                            break;
+                        case "/c":
+                            Garglk_Pinvoke.glk_set_style(Style.Normal);
+                            break;
+                    }
+                }
+                else current.Append(c);
+            }
+
+            GarGlk.OutputString(current.ToString());
+
+            if (!IsWaiting && !string.IsNullOrEmpty(_pendingText))
+            {
+                var tmpText = _pendingText;
+                _pendingText = "";
+                AppendHTML(tmpText);
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -99,7 +207,7 @@ namespace FrankenDrift.Gargoyle
 
                 // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben
                 // TODO: Große Felder auf NULL setzen
-                Garglk_Pinvoke.glk_window_close(glkwin_handle);
+                Garglk_Pinvoke.glk_window_close(glkwin_handle, IntPtr.Zero);
                 glkwin_handle = IntPtr.Zero;
             }
         }

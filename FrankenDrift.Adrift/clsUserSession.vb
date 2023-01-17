@@ -172,7 +172,11 @@ Public Class RunnerSession
 
         States.Clear()
         salCommands.Clear()
+#If Not Adravalon Then
         salCommands.Add(fRunner.txtInput.Text)
+#Else
+        salCommands.Add("")
+#End If
         iPreviousOffset = 0
         Dim eFileType As FileIO.FileTypeEnum = FileTypeEnum.TextAdventure_TAF
         If sFilename.ToLower.EndsWith(".blorb") Then eFileType = FileTypeEnum.Blorb

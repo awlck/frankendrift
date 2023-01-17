@@ -160,14 +160,12 @@ namespace FrankenDrift.Gargoyle.Glk
     {
         [DllImport("libgarglk.dll")]
         internal static extern void gli_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
-
         [DllImport("libgarglk.dll")]
         internal static extern IntPtr glk_window_open(IntPtr split, WinMethod method, uint size, WinType wintype, uint rock);
-
         [DllImport("libgarglk.dll")]
         internal static extern IntPtr glk_window_get_stream(IntPtr winId);
         [DllImport("libgarglk.dll")]
-        internal static extern void glk_window_close(IntPtr winId);
+        internal static extern void glk_window_close(IntPtr winId, IntPtr streamResult);
         [DllImport("libgarglk.dll")]
         internal static extern void glk_window_clear(IntPtr winId);
         [DllImport("libgarglk.dll")]
@@ -185,9 +183,15 @@ namespace FrankenDrift.Gargoyle.Glk
         [DllImport("libgarglk.dll")]
         internal static extern void garglk_set_story_name([MarshalAs(UnmanagedType.LPStr)] string name);
         [DllImport("libgarglk.dll")]
+        internal static extern void glk_request_char_event(IntPtr winId);
+        [DllImport("libgarglk.dll")]
         internal static extern unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maylen, uint initlen);
         [DllImport("libgarglk.dll")]
         internal static extern void garglk_set_zcolors(uint fg, uint bg);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_set_style(Style s);
     }
 
     internal struct Event

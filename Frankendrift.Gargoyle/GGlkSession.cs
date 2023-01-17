@@ -1,4 +1,5 @@
-﻿using FrankenDrift.Gargoyle.Glk;
+﻿using FrankenDrift.Adrift;
+using FrankenDrift.Gargoyle.Glk;
 using FrankenDrift.Glue;
 using FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars;
 using System.ComponentModel;
@@ -27,7 +28,7 @@ namespace FrankenDrift.Gargoyle
             if (Instance is not null)
                 throw new ApplicationException("Dual MainSessions?");
             Instance = this;
-            _output = new GlkHtmlWin();
+            //_output = new GlkHtmlWin();
             Adrift.SharedModule.Glue = this;
             Adrift.SharedModule.fRunner = this;
             Glue.Application.SetFrontend(this);
@@ -103,7 +104,11 @@ namespace FrankenDrift.Gargoyle
 
         public bool IsTranscriptActive() => false;
 
-        public void MakeNote(string msg) => _output.AppendHTML($"ADRIFT Note: {msg}");
+        public void MakeNote(string msg)
+        {
+            if (_output is not null)
+                _output.AppendHTML($"ADRIFT Note: {msg}");
+        }
 
         public void OutputHTML(string source) => _output.AppendHTML(source);
 
@@ -130,7 +135,31 @@ namespace FrankenDrift.Gargoyle
 
         public void SetBackgroundColour()
         {
-            // TODO
+            var adventure = Adrift.SharedModule.Adventure;
+            if (!adventure.DeveloperDefaultBackgroundColour.IsEmpty)
+            {
+                int colorToBe = adventure.DeveloperDefaultBackgroundColour.ToArgb() & 0x00FFFFFF;
+                foreach (Style s in (Style[]) Enum.GetValues(typeof(Style)))
+                    Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, s, StyleHint.BackColor, colorToBe);
+            }
+            if (!adventure.DeveloperDefaultOutputColour.IsEmpty && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
+            {
+                int colorToBe = adventure.DeveloperDefaultOutputColour.ToArgb() & 0x00FFFFFF;
+                foreach (Style s in (Style[]) Enum.GetValues(typeof(Style)))
+                {
+                    if (s == Style.Input) continue;
+                    Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, s, StyleHint.TextColor, colorToBe);
+                }
+            }
+            if (!adventure.DeveloperDefaultInputColour.IsEmpty && adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
+            {
+                int colorToBe = adventure.DeveloperDefaultInputColour.ToArgb() & 0x00FFFFFF;
+                Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, Style.Input, StyleHint.TextColor, colorToBe);
+            }
+
+            // It is perhaps bad form / unexpected to do this here, but we can't
+            // open any windows until after the style hints have been adjusted.
+            _output = new GlkHtmlWin();
         }
 
         public void SetGameName(string name)
