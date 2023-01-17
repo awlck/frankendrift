@@ -1,5 +1,6 @@
 ﻿using FrankenDrift.Gargoyle.Glk;
 using FrankenDrift.Glue;
+using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,9 +58,23 @@ namespace FrankenDrift.Gargoyle
             Glk.Garglk_Pinvoke.glk_window_clear(glkwin_handle);
         }
 
-        public void RequestInput(ref StringBuilder target)
+        public unsafe string GetLineInput()
         {
-            Glk.Garglk_Pinvoke.glk_request_line_event(glkwin_handle, target, (uint) target.Capacity, 0);
+            const uint capacity = 256;
+            byte[] cmdToBe = new byte[capacity];
+            Event ev = new() { type = EventType.None };
+            fixed (byte* buf = cmdToBe)
+            {
+                Garglk_Pinvoke.glk_request_line_event(glkwin_handle, buf, capacity-1, 0);
+                while (true)
+                {
+                    Garglk_Pinvoke.glk_select(ref ev);
+                    if (ev.type == EventType.LineInput) break;
+                    else MainSession.Instance.ProcessEvent(ev);
+                }
+            }
+            var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+            return dec.GetString(cmdToBe);
         }
 
         public void AppendHTML(string source)

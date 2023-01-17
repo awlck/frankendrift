@@ -15,7 +15,7 @@
 
             var sess = new MainSession(args[args.Length - 1]);
 
-            Glk.GarGlk.Run();
+            sess.Run();
 
             return 0;
         }

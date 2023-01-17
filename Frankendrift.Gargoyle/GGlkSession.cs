@@ -1,4 +1,5 @@
-﻿using FrankenDrift.Glue;
+﻿using FrankenDrift.Gargoyle.Glk;
+using FrankenDrift.Glue;
 using FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars;
 using System.ComponentModel;
 using System.Text;
@@ -10,7 +11,6 @@ namespace FrankenDrift.Gargoyle
         internal static MainSession? Instance = null;
 
         private GlkHtmlWin _output;
-        private StringBuilder _commandToBe;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
 
@@ -33,8 +33,27 @@ namespace FrankenDrift.Gargoyle
             Glue.Application.SetFrontend(this);
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession { Map = new GlonkMap(), bShowShortLocations = true };
             Adrift.SharedModule.UserSession.OpenAdventure(gameFile);
-            _commandToBe = new StringBuilder(256);
-            _output.RequestInput(ref _commandToBe);
+        }
+
+        internal void Run()
+        {
+            while (true)
+            {
+                var cmd = _output.GetLineInput();
+                SubmitCommand(cmd);
+            }
+        }
+
+        internal void ProcessEvent(Event ev)
+        {
+            switch (ev.type)
+            {
+                case EventType.LineInput:
+                    SubmitCommand();
+                    break;
+                default:
+                    break;
+            }
         }
 
         public bool AskYesNoQuestion(string question, string title = null)
@@ -47,7 +66,10 @@ namespace FrankenDrift.Gargoyle
             throw new NotImplementedException();
         }
 
-        public void DoEvents() { }
+        public void DoEvents()
+        {
+            Garglk_Pinvoke.glk_tick();
+        }
 
         public void EnableButtons() { }
 
@@ -128,7 +150,12 @@ namespace FrankenDrift.Gargoyle
 
         public void SubmitCommand()
         {
-            
+            // not sure what should go here
+        }
+
+        public void SubmitCommand(string cmd)
+        {
+            Adrift.SharedModule.UserSession.Process(cmd);
         }
 
         public void UpdateStatusBar(string desc, string score, string user)

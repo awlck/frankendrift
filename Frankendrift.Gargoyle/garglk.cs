@@ -177,13 +177,15 @@ namespace FrankenDrift.Gargoyle.Glk
         [DllImport("libgarglk.dll")]
         internal static extern void glk_select(ref Event ev);
         [DllImport("libgarglk.dll")]
+        internal static extern void glk_tick();
+        [DllImport("libgarglk.dll")]
         internal static extern void glk_exit();
         [DllImport("libgarglk.dll")]
         internal static extern void garglk_set_program_name([MarshalAs(UnmanagedType.LPStr)] string name);
         [DllImport("libgarglk.dll")]
         internal static extern void garglk_set_story_name([MarshalAs(UnmanagedType.LPStr)] string name);
         [DllImport("libgarglk.dll")]
-        internal static extern void glk_request_line_event(IntPtr win, StringBuilder buf, uint maylen, uint initlen);
+        internal static extern unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maylen, uint initlen);
         [DllImport("libgarglk.dll")]
         internal static extern void garglk_set_zcolors(uint fg, uint bg);
     }
@@ -215,23 +217,6 @@ namespace FrankenDrift.Gargoyle.Glk
             var encoder = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
             var bytes = encoder.GetBytes(msg);
             Garglk_Pinvoke.glk_put_buffer(bytes, (uint) bytes.Length);
-        }
-
-        internal static void Run()
-        {
-            Event ev = new();
-            while (true)
-            {
-                Garglk_Pinvoke.glk_select(ref ev);
-                switch (ev.type)
-                {
-                    case EventType.LineInput:
-                        MainSession.Instance.SubmitCommand();
-                        break;
-                    default:
-                        break;
-                }
-            }
         }
     }
 }
