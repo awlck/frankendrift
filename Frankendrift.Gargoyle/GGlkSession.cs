@@ -190,12 +190,14 @@ namespace FrankenDrift.Gargoyle
 
         public void SetGameName(string name)
         {
-            Glk.Garglk_Pinvoke.garglk_set_story_name(name);
+            Garglk_Pinvoke.garglk_set_story_name(name);
         }
 
         public void ShowCoverArt(byte[] img)
         {
-            throw new NotImplementedException();
+            // we don't need the image data that the interpreter has provided us,
+            // we just need to ask Glk to display image no. 1
+            _output.DrawImageImmediately(1);
         }
 
         public void ShowInfo(string info, string title = null)

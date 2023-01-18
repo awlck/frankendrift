@@ -288,6 +288,17 @@ namespace FrankenDrift.Gargoyle
             }
         }
 
+        internal bool DrawImageImmediately(uint imgId)
+        {
+            var result = Garglk_Pinvoke.glk_image_draw(glkwin_handle, imgId, (int)ImageAlign.MarginLeft, 0);
+            if (result != 0)
+            {
+                Garglk_Pinvoke.glk_window_flow_break(glkwin_handle);
+                return true;
+            }
+            return false;
+        }
+
         private void OutputStyled(string txt, FontInfo fi)
         {
             Garglk_Pinvoke.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);

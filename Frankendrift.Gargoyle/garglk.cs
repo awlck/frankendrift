@@ -156,7 +156,7 @@ namespace FrankenDrift.Gargoyle.Glk
         Default = 0xffffffff
     }
 
-    enum ImageAlign : uint
+    enum ImageAlign : int
     {
         InlineUp = 1,
         InlineDown = 2,
