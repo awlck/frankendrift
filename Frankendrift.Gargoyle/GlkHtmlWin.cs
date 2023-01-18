@@ -328,7 +328,7 @@ namespace FrankenDrift.Gargoyle
         private uint GetInputTextColor()
         {
             uint result = 0;
-            var success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, Style.Input, StyleHint.Indentation, ref result);
+            var success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, Style.Input, StyleHint.TextColor, ref result);
             if (success == 0)
                 return (uint)ZColor.Default;
             return result;
@@ -396,6 +396,10 @@ namespace FrankenDrift.Gargoyle
                 AppendHTML("  Font Type: ");
                 success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Proportional, ref result);
                 if (success == 1) AppendHTML(result == 1 ? "proportional\n" : "fixed-width\n");
+                else AppendHTML("n/a\n");
+                AppendHTML("  Text color: ");
+                success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.TextColor, ref result);
+                if (success == 1) AppendHTML($"0x{result:X}\n");
                 else AppendHTML("n/a\n");
             }
         }
