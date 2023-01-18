@@ -83,6 +83,7 @@ namespace FrankenDrift.Gargoyle
 
         public void Clear()
         {
+            Garglk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
             Garglk_Pinvoke.glk_window_clear(glkwin_handle);
         }
 
@@ -198,7 +199,7 @@ namespace FrankenDrift.Gargoyle
                             GarGlk.OutputString("\n");
                             break;
                         case "c":  // Keep the 'input' style reserved for actual input, only mimic it with color where possible.
-                            styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts, TextColor = _getInputTextColor(), TagName = "c" });
+                            styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts, TextColor = GetInputTextColor(), TagName = "c" });
                             break;
                         case "b":
                             styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts |= TextStyle.Bold, TextColor = currentTextStyle.TextColor, TagName = "b" });
@@ -215,6 +216,14 @@ namespace FrankenDrift.Gargoyle
                         case "/center" when currentTextStyle.TagName == "center":
                         case "/font" when currentTextStyle.TagName == "font":
                             styleHistory.Pop();
+                            break;
+                        case "cls":
+                            styleHistory.Clear();
+                            styleHistory.Push(new FontInfo { Ts = TextStyle.Normal, TextColor = (uint)ZColor.Default, TagName = "<base>" });
+                            Clear();
+                            break;
+                        case "waitkey":
+                            GetCharInput();
                             break;
                     }
                     if (currentToken.StartsWith("font"))
@@ -316,7 +325,7 @@ namespace FrankenDrift.Gargoyle
             GarGlk.OutputString(txt);
         }
 
-        private uint _getInputTextColor()
+        private uint GetInputTextColor()
         {
             uint result = 0;
             var success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, Style.Input, StyleHint.Indentation, ref result);
