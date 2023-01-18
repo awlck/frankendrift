@@ -1,17 +1,19 @@
 ﻿using FrankenDrift.Gargoyle.Glk;
 using FrankenDrift.Glue;
 using FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars;
+using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace FrankenDrift.Gargoyle
 {
-    internal class MainSession : Glue.UIGlue, frmRunner
+    internal class MainSession : Glue.UIGlue, frmRunner, IDisposable
     {
         internal static MainSession? Instance = null;
         private GlkHtmlWin _output;
         private byte[]? _blorb;
         private GCHandle? _blorbHandle;
+        private bool disposedValue;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
         public RichTextBox txtOutput => _output;
@@ -211,6 +213,40 @@ namespace FrankenDrift.Gargoyle
         public void UpdateStatusBar(string desc, string score, string user)
         {
             // TODO
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: Verwalteten Zustand (verwaltete Objekte) bereinigen
+                }
+
+                // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben
+                // TODO: Große Felder auf NULL setzen
+                if (_blorb is not null && _blorbHandle is not null)
+                {
+                    _blorbHandle.Value.Free();
+                    _blorb = null;
+                }
+                disposedValue = true;
+            }
+        }
+
+        // TODO: Finalizer nur überschreiben, wenn "Dispose(bool disposing)" Code für die Freigabe nicht verwalteter Ressourcen enthält
+        ~MainSession()
+        {
+            // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in der Methode "Dispose(bool disposing)" ein.
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in der Methode "Dispose(bool disposing)" ein.
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 
