@@ -1,13 +1,6 @@
-﻿using Eto.Drawing;
-using FrankenDrift.Gargoyle.Glk;
-using FrankenDrift.Glue;
-using ICSharpCode.SharpZipLib.Zip;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using FrankenDrift.Gargoyle.Glk;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace FrankenDrift.Gargoyle
 {

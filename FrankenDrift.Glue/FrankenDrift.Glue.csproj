@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <RootNamespace>FrankenDrift.Glue</RootNamespace>
 	<VersionPrefix>0.7.0</VersionPrefix>
   </PropertyGroup>
-
+	
 </Project>

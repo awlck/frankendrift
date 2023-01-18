@@ -439,10 +439,13 @@ namespace FrankenDrift.Runner
 
         public void InitInput() => input.Focus();
 
-        public void ShowCoverArt(Image img)
+        public void ShowCoverArt(byte[] img)
         {
             if (SettingsManager.Settings.EnableGraphics)
-                Graphics.DisplayImage(img);
+            {
+                var theImage = new Bitmap(img);
+                Graphics.DisplayImage(theImage);
+            }
         }
 
         public void DoEvents() => Application.Instance.RunIteration();
