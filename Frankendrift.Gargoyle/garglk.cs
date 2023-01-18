@@ -156,6 +156,26 @@ namespace FrankenDrift.Gargoyle.Glk
         Default = 0xffffffff
     }
 
+    enum ImageAlign : uint
+    {
+        InlineUp = 1,
+        InlineDown = 2,
+        InlineCenter = 3,
+        MarginLeft = 4,
+        MarginRight = 5
+    }
+
+    enum BlorbError : uint
+    {
+        None = 0,
+        CompileTime = 1,
+        Alloc = 2,
+        Read = 3,
+        NotAMap = 4,
+        Format = 5,
+        NotFound = 6
+    }
+
     static class Garglk_Pinvoke
     {
         [DllImport("libgarglk.dll")]
@@ -194,6 +214,40 @@ namespace FrankenDrift.Gargoyle.Glk
         internal static extern void glk_set_style(Style s);
         [DllImport("libgarglk.dll")]
         internal static extern uint glk_style_measure(IntPtr winid, Style styl, StyleHint hint, ref uint result);
+        [DllImport("libgarglk.dll")]
+        internal static extern uint glk_image_draw(IntPtr winid, uint imageId, int val1, int val2);
+        [DllImport("libgarglk.dll")]
+        internal static extern uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_window_flow_break(IntPtr winId);
+        [DllImport("libgarglk.dll")]
+        internal static extern IntPtr glk_schannel_create(uint rock);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_schannel_destroy(IntPtr chan);
+        [DllImport("libgarglk.dll")]
+        internal static extern uint glk_schannel_play(IntPtr chan, uint sndId);
+        [DllImport("libgarglk.dll")]
+        internal static extern uint glk_schannel_play_ext(IntPtr chan, uint sndId, uint repeats, uint notify);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_schannel_stop(IntPtr chan);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_schannel_set_volume(IntPtr chan, uint vol);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_schannel_pause(IntPtr chan);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_schannel_unpause(IntPtr chan);
+        [DllImport("libgarglk.dll")]
+        internal static extern IntPtr glk_fileref_create_by_prompt(FileUsage usage, FileMode fmode, uint rock);
+        [DllImport("libgarglk.dll")]
+        internal static extern IntPtr glk_fileref_create_by_name(FileUsage usage, FileMode fmode, uint rock);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_fileref_destroy(IntPtr fref);
+        [DllImport("libgarglk.dll")]
+        internal static extern IntPtr glk_stream_open_file(IntPtr fileref, FileMode fmode, uint rock);
+        [DllImport("libgarglk.dll")]
+        internal static extern IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
+        [DllImport("libgarglk.dll")]
+        internal static extern BlorbError giblorb_set_resource_map(IntPtr fileStream);
     }
 
     internal struct Event

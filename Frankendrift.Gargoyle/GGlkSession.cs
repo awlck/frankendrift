@@ -1,9 +1,7 @@
-﻿using FrankenDrift.Adrift;
-using FrankenDrift.Gargoyle.Glk;
+﻿using FrankenDrift.Gargoyle.Glk;
 using FrankenDrift.Glue;
 using FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars;
-using System.ComponentModel;
-using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace FrankenDrift.Gargoyle
@@ -11,15 +9,13 @@ namespace FrankenDrift.Gargoyle
     internal class MainSession : Glue.UIGlue, frmRunner
     {
         internal static MainSession? Instance = null;
-
         private GlkHtmlWin _output;
+        private byte[]? _blorb;
+        private GCHandle? _blorbHandle;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
-
         public RichTextBox txtOutput => _output;
-
         public RichTextBox txtInput => _output;  // huh?
-
         public bool Locked => false;
 
         public void Close() => Glk.Garglk_Pinvoke.glk_exit();
@@ -29,7 +25,23 @@ namespace FrankenDrift.Gargoyle
             if (Instance is not null)
                 throw new ApplicationException("Dual MainSessions?");
             Instance = this;
-            //_output = new GlkHtmlWin();
+
+            // If playing a blorb file, open it with the Glk library as well
+            if (gameFile.EndsWith(".blorb"))
+            {
+                // this is horrible and I hate that things apparently have to be this way.
+                _blorb = File.ReadAllBytes(gameFile);
+                var handle = GCHandle.Alloc(_blorb, GCHandleType.Pinned);
+                _blorbHandle = handle;
+                var memStrm = Garglk_Pinvoke.glk_stream_open_memory(handle.AddrOfPinnedObject(), (uint)_blorb.Length, Glk.FileMode.Read, 0);
+                Garglk_Pinvoke.giblorb_set_resource_map(memStrm);
+            }
+            else
+            { 
+                _blorb = null;
+                _blorbHandle = null;
+            }
+
             Adrift.SharedModule.Glue = this;
             Adrift.SharedModule.fRunner = this;
             Glue.Application.SetFrontend(this);
