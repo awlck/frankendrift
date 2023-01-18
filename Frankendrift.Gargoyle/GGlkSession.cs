@@ -129,7 +129,11 @@ namespace FrankenDrift.Gargoyle
 
         public string QueryRestorePath()
         {
-            throw new NotImplementedException();
+            var fileref = Garglk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
+            if (fileref == IntPtr.Zero) return "";
+            var result = Garglk_Pinvoke.garglk_fileref_get_name(fileref);
+            Garglk_Pinvoke.glk_fileref_destroy(fileref);
+            return result;
         }
 
         public QueryResult QuerySaveBeforeQuit()
@@ -139,7 +143,11 @@ namespace FrankenDrift.Gargoyle
 
         public string QuerySavePath()
         {
-            throw new NotImplementedException();
+            var fileref = Garglk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Write, 0);
+            if (fileref == IntPtr.Zero) return "";
+            var result = Garglk_Pinvoke.garglk_fileref_get_name(fileref);
+            Garglk_Pinvoke.glk_fileref_destroy(fileref);
+            return result;
         }
 
         public void ReloadMacros() { }

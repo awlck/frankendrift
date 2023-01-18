@@ -242,6 +242,8 @@ namespace FrankenDrift.Gargoyle.Glk
         internal static extern IntPtr glk_fileref_create_by_name(FileUsage usage, FileMode fmode, uint rock);
         [DllImport("libgarglk.dll")]
         internal static extern void glk_fileref_destroy(IntPtr fref);
+        [DllImport("libgarglk.dll", CharSet = CharSet.Ansi)]
+        internal static extern string garglk_fileref_get_name(IntPtr fileref);
         [DllImport("libgarglk.dll")]
         internal static extern IntPtr glk_stream_open_file(IntPtr fileref, FileMode fmode, uint rock);
         [DllImport("libgarglk.dll")]
