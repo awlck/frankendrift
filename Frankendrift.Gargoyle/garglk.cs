@@ -193,6 +193,8 @@ namespace FrankenDrift.Gargoyle.Glk
         [DllImport("libgarglk.dll")]
         internal static extern void glk_put_buffer([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
         [DllImport("libgarglk.dll")]
+        internal static extern void glk_put_buffer_stream(IntPtr streamId, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
+        [DllImport("libgarglk.dll")]
         internal static extern void glk_select(ref Event ev);
         [DllImport("libgarglk.dll")]
         internal static extern void glk_tick();
@@ -237,6 +239,8 @@ namespace FrankenDrift.Gargoyle.Glk
         [DllImport("libgarglk.dll")]
         internal static extern void glk_schannel_unpause(IntPtr chan);
         [DllImport("libgarglk.dll")]
+        internal static extern IntPtr glk_fileref_create_temp(FileUsage usage, uint rock);
+        [DllImport("libgarglk.dll")]
         internal static extern IntPtr glk_fileref_create_by_prompt(FileUsage usage, FileMode fmode, uint rock);
         [DllImport("libgarglk.dll")]
         internal static extern IntPtr glk_fileref_create_by_name(FileUsage usage, FileMode fmode, uint rock);
@@ -248,6 +252,8 @@ namespace FrankenDrift.Gargoyle.Glk
         internal static extern IntPtr glk_stream_open_file(IntPtr fileref, FileMode fmode, uint rock);
         [DllImport("libgarglk.dll")]
         internal static extern IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_stream_set_position(IntPtr stream, int pos, SeekMode seekMode);
         [DllImport("libgarglk.dll")]
         internal static extern BlorbError giblorb_set_resource_map(IntPtr fileStream);
     }

@@ -7,12 +7,10 @@ using System.Text;
 
 namespace FrankenDrift.Gargoyle
 {
-    internal class MainSession : Glue.UIGlue, frmRunner, IDisposable
+    internal class MainSession : Glue.UIGlue, frmRunner
     {
         internal static MainSession? Instance = null;
         private GlkHtmlWin _output;
-        private byte[]? _blorb;
-        private GCHandle? _blorbHandle;
         private bool disposedValue;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
@@ -31,17 +29,21 @@ namespace FrankenDrift.Gargoyle
             // If playing a blorb file, open it with the Glk library as well
             if (gameFile.EndsWith(".blorb"))
             {
-                // this is horrible and I hate that things apparently have to be this way.
-                _blorb = File.ReadAllBytes(gameFile);
-                var handle = GCHandle.Alloc(_blorb, GCHandleType.Pinned);
-                _blorbHandle = handle;
-                var memStrm = Garglk_Pinvoke.glk_stream_open_memory(handle.AddrOfPinnedObject(), (uint)_blorb.Length, Glk.FileMode.Read, 0);
-                Garglk_Pinvoke.giblorb_set_resource_map(memStrm);
-            }
-            else
-            { 
-                _blorb = null;
-                _blorbHandle = null;
+                var blorb = File.ReadAllBytes(gameFile);
+                // Blorb files produced by ADRIFT have the wrong file length in the header
+                // for some reason, so passing it to Glk will not work unless we do this terribleness:
+                var length = blorb.Length - 8;
+                var lengthBytes = BitConverter.GetBytes(length);
+                if (BitConverter.IsLittleEndian)
+                    Array.Reverse(lengthBytes);
+                for (int i = 0; i < 4; i++)
+                    blorb[i + 4] = lengthBytes[i];
+                var tmpFileRef = Garglk_Pinvoke.glk_fileref_create_temp(FileUsage.Data | FileUsage.BinaryMode, 0);
+                var tmpFileStream = Garglk_Pinvoke.glk_stream_open_file(tmpFileRef, Glk.FileMode.ReadWrite, 0);
+                Garglk_Pinvoke.glk_put_buffer_stream(tmpFileStream, blorb, (uint)blorb.Length);
+                Garglk_Pinvoke.glk_fileref_destroy(tmpFileRef);
+                Garglk_Pinvoke.glk_stream_set_position(tmpFileStream, 0, SeekMode.Start);
+                Garglk_Pinvoke.giblorb_set_resource_map(tmpFileStream);
             }
 
             Adrift.SharedModule.Glue = this;
@@ -223,40 +225,6 @@ namespace FrankenDrift.Gargoyle
         public void UpdateStatusBar(string desc, string score, string user)
         {
             // TODO
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: Verwalteten Zustand (verwaltete Objekte) bereinigen
-                }
-
-                // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben
-                // TODO: Große Felder auf NULL setzen
-                if (_blorb is not null && _blorbHandle is not null)
-                {
-                    _blorbHandle.Value.Free();
-                    _blorb = null;
-                }
-                disposedValue = true;
-            }
-        }
-
-        // TODO: Finalizer nur überschreiben, wenn "Dispose(bool disposing)" Code für die Freigabe nicht verwalteter Ressourcen enthält
-        ~MainSession()
-        {
-            // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in der Methode "Dispose(bool disposing)" ein.
-            Dispose(disposing: false);
-        }
-
-        public void Dispose()
-        {
-            // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in der Methode "Dispose(bool disposing)" ein.
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 

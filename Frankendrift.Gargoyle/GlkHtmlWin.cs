@@ -1,4 +1,5 @@
 ﻿using FrankenDrift.Gargoyle.Glk;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -273,6 +274,17 @@ namespace FrankenDrift.Gargoyle
                         else if (tokenLower.Contains("tan"))
                             color = 0xd2b48c;
                         styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts, TextColor = color, TagName = "font" });
+                    }
+                    else if (currentToken.StartsWith("img"))
+                    {
+                        var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
+                        if (imgPath.Success && Adrift.SharedModule.Adventure.BlorbMappings is { Count: > 0 }
+                                && Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(imgPath.Groups[1].Value))
+                        {
+                            var res = Adrift.SharedModule.Adventure.BlorbMappings[imgPath.Groups[1].Value];
+                            // DrawImageImmediately((uint)res);
+                            var success = Garglk_Pinvoke.glk_image_draw(glkwin_handle, (uint)res+1, (int)ImageAlign.InlineCenter, 0);
+                        }
                     }
                 }
                 else current.Append(c);
