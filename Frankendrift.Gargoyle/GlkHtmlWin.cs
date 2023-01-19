@@ -46,6 +46,17 @@ namespace FrankenDrift.Gargoyle
         internal bool IsWaiting = false;
         private string _pendingText = "";
 
+        static readonly string[] Monospaces = {
+            "Andale Mono", "Cascadia Code", "Century Schoolbook Monospace", "Consolas", "Courier", "Courier New",
+            "Liberation Mono", "Ubuntu Mono", "DejaVu Sans Mono",
+            "Droid Sans Mono", "Lucida Console", "Menlo", "OCR-A", "OCR-A extended", "Overpass Mono", "Oxygen Mono",
+            "Roboto Mono", "Source Code Pro", "Everson Mono", "Fira Mono", "Fixed", "Fixedsys", "FreeMono", "Go Mono",
+            "HyperFont", "IBM MDA", "IBM Plex Mono", "Inconsolata", "Iosevka", "Letter Gothic", "Monaco", "Monofur",
+            "Monospace", "Monospace (Unicode)", "Nimbus Mono L", "Noto Mono", "NK57 Monospace", "OCR-B", "PragmataPro",
+            "Prestige Elite", "ProFont", "PT Mono", "Spleen", "Terminus", "Tex Gyre Cursor", "American Typewriter",
+            "TADS-monospace"
+        };
+
         internal IntPtr Stream => Garglk_Pinvoke.glk_window_get_stream(glkwin_handle);
 
         internal GlkHtmlWin()
@@ -204,10 +215,14 @@ namespace FrankenDrift.Gargoyle
                         case "center":
                             styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts |= TextStyle.Centered, TextColor = currentTextStyle.TextColor, TagName = "center" });
                             break;
+                        case "tt":
+                            styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts |= TextStyle.Monospace, TextColor = currentTextStyle.TextColor, TagName = "tt" });
+                            break;
                         case "/c" when currentTextStyle.TagName == "c":
                         case "/b" when currentTextStyle.TagName == "b":
                         case "/i" when currentTextStyle.TagName == "i":
                         case "/center" when currentTextStyle.TagName == "center":
+                        case "/tt" when currentTextStyle.TagName == "tt":
                         case "/font" when currentTextStyle.TagName == "font":
                             styleHistory.Pop();
                             break;
@@ -273,7 +288,18 @@ namespace FrankenDrift.Gargoyle
                             color = 0x556b2f;
                         else if (tokenLower.Contains("tan"))
                             color = 0xd2b48c;
-                        styleHistory.Push(new FontInfo { Ts = currentTextStyle.Ts, TextColor = color, TagName = "font" });
+
+                        var currstyle = currentTextStyle.Ts;
+                        re = new Regex("face ?= ?\"(.*?)\"");
+                        var face = re.Match(tokenLower);
+                        if (face.Success)
+                        {
+                            var f = face.Groups[1].Value;
+                            if (Monospaces.Any(msf => msf.ToLowerInvariant() == f))
+                                currstyle |= TextStyle.Monospace;
+                        }
+
+                        styleHistory.Push(new FontInfo { Ts = currstyle, TextColor = color, TagName = "font" });
                     }
                     else if (currentToken.StartsWith("img"))
                     {
@@ -282,8 +308,7 @@ namespace FrankenDrift.Gargoyle
                                 && Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(imgPath.Groups[1].Value))
                         {
                             var res = Adrift.SharedModule.Adventure.BlorbMappings[imgPath.Groups[1].Value];
-                            // DrawImageImmediately((uint)res);
-                            var success = Garglk_Pinvoke.glk_image_draw(glkwin_handle, (uint)res+1, (int)ImageAlign.InlineCenter, 0);
+                            DrawImageImmediately((uint)res);
                         }
                     }
                 }
@@ -314,13 +339,13 @@ namespace FrankenDrift.Gargoyle
         private void OutputStyled(string txt, FontInfo fi)
         {
             Garglk_Pinvoke.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);
-            if ((fi.Ts & TextStyle.Centered) != 0)
-            {
-                Garglk_Pinvoke.glk_set_style(Style.BlockQuote);
-            }
-            else if ((fi.Ts & TextStyle.Monospace) != 0)
+            if ((fi.Ts & TextStyle.Monospace) != 0)
             {
                 Garglk_Pinvoke.glk_set_style(Style.Preformatted);
+            }
+            else if ((fi.Ts & TextStyle.Centered) != 0)
+            {
+                Garglk_Pinvoke.glk_set_style(Style.BlockQuote);
             }
             else if ((fi.Ts & (TextStyle.Italic | TextStyle.Bold)) != 0)
             {
