@@ -207,7 +207,15 @@ namespace FrankenDrift.Gargoyle.Glk
         [DllImport("libgarglk.dll")]
         internal static extern void glk_request_char_event(IntPtr winId);
         [DllImport("libgarglk.dll")]
+        internal static extern void glk_request_hyperlink_event(IntPtr winId);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_cancel_hyperlink_event(IntPtr winId);
+        [DllImport("libgarglk.dll")]
         internal static extern unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maylen, uint initlen);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_cancel_line_event(IntPtr winId, ref Event ev);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_set_hyperlink(uint linkval);
         [DllImport("libgarglk.dll")]
         internal static extern void garglk_set_zcolors(uint fg, uint bg);
         [DllImport("libgarglk.dll")]

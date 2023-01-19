@@ -1,7 +1,10 @@
 ﻿using FrankenDrift.Gargoyle.Glk;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+
+using LinkRef = System.Tuple<System.Range, string>;
 
 namespace FrankenDrift.Gargoyle
 {
@@ -37,14 +40,17 @@ namespace FrankenDrift.Gargoyle
         private IntPtr glkwin_handle;
 
         public int TextLength => -1;
-
         public string Text { get => ""; set { } }
         public string SelectedText { get => ""; set { } }
         public int SelectionStart { get => -1; set { } }
         public int SelectionLength { get => -1; set { } }
         public bool IsDisposed => glkwin_handle == IntPtr.Zero;
+
         internal bool IsWaiting = false;
         private string _pendingText = "";
+        private readonly Dictionary<uint, string> _hyperlinks = new();
+        private uint _hyperlinksSoFar = 1;
+        internal bool DoSbAutoHyperlinks => Adrift.SharedModule.Adventure.Title == "Skybreak";
 
         static readonly string[] Monospaces = {
             "Andale Mono", "Cascadia Code", "Century Schoolbook Monospace", "Consolas", "Courier", "Courier New",
@@ -99,25 +105,40 @@ namespace FrankenDrift.Gargoyle
             IsWaiting = true;
             const uint capacity = 256;
             byte[] cmdToBe = new byte[capacity];
-            var count = 0;
             fixed (byte* buf = cmdToBe)
             {
                 Garglk_Pinvoke.glk_request_line_event(glkwin_handle, buf, capacity-1, 0);
+                if (_hyperlinks.Count > 0)
+                    Garglk_Pinvoke.glk_request_hyperlink_event(glkwin_handle);
                 while (true)
                 {
                     Event ev = new() { type = EventType.None };
                     Garglk_Pinvoke.glk_select(ref ev);
                     if (ev.type == EventType.LineInput && ev.win_handle == glkwin_handle)
                     {
-                        count = (int) ev.val1;
-                        break;
+                        var count = (int) ev.val1;
+                        Garglk_Pinvoke.glk_cancel_hyperlink_event(glkwin_handle);
+                        IsWaiting = false;
+                        var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                        return dec.GetString(cmdToBe, 0, count);
+                    }
+                    else if (ev.type == EventType.Hyperlink && ev.win_handle == glkwin_handle)
+                    {
+                        var linkId = ev.val1;
+                        Event ev2 = new();
+                        if (_hyperlinks.ContainsKey(linkId))
+                        {
+                            Garglk_Pinvoke.glk_cancel_line_event(glkwin_handle, ref ev2);
+                            IsWaiting = false;
+                            var result = _hyperlinks[linkId];
+                            _hyperlinks.Clear();
+                            FakeInput(result);
+                            return result;
+                        }
                     }
                     else MainSession.Instance!.ProcessEvent(ev);
                 }
             }
-            IsWaiting = false;
-            var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
-            return dec.GetString(cmdToBe, 0, count);
         }
 
         internal uint GetCharInput()
@@ -140,6 +161,16 @@ namespace FrankenDrift.Gargoyle
             }
             IsWaiting = false;
             return result;
+        }
+
+        private void FakeInput(string cmd)
+        {
+            Garglk_Pinvoke.glk_set_window(glkwin_handle);
+            Garglk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            Garglk_Pinvoke.glk_set_style(Style.Input);
+            GarGlk.OutputString(cmd);
+            Garglk_Pinvoke.glk_set_style(Style.Normal);
+            GarGlk.OutputString("\n");
         }
 
         // Janky-ass HTML parser, 2nd edition.
@@ -166,6 +197,28 @@ namespace FrankenDrift.Gargoyle
             var skip = 0;
             var styleHistory = new Stack<FontInfo>();
             styleHistory.Push(new FontInfo { Ts = TextStyle.Normal, TextColor = (uint)ZColor.Default, TagName = "<base>" });
+
+            var linksToBe = new Queue<LinkRef>();
+            if (DoSbAutoHyperlinks)
+            {
+                Garglk_Pinvoke.glk_set_hyperlink(0);
+                var linkTargetSearcher = new Regex("^([0-9a-zA-Z]+?)\\) .+$", RegexOptions.Multiline);
+                var linkTargets = linkTargetSearcher.Matches(src);
+                if (linkTargets is null || linkTargets.Count == 0)
+                    goto NoSuitableLinkTargetsFound;
+                for (var i = 0; i < linkTargets.Count; i++)
+                {
+                    var choice = linkTargets[i]!;
+                    if (!(choice is { Success: true })) continue;
+                    linksToBe.Enqueue(new LinkRef(new Range(choice.Index, choice.Index + choice.Length), choice.Groups[1].Value));
+                }
+            }
+
+            NoSuitableLinkTargetsFound:
+
+            LinkRef? nextLinkRef = null;
+            if (linksToBe.Count > 0)
+                nextLinkRef = linksToBe.Dequeue();
 
             foreach (var c in src)
             {
@@ -311,6 +364,23 @@ namespace FrankenDrift.Gargoyle
                             DrawImageImmediately((uint)res);
                         }
                     }
+                }
+                else if (nextLinkRef is not null && nextLinkRef.Item1.Start.Value == consumed)
+                {
+                    OutputStyled(current.ToString(), styleHistory.Peek());
+                    current.Clear();
+                    _hyperlinks[_hyperlinksSoFar] = nextLinkRef.Item2;
+                    Garglk_Pinvoke.glk_set_hyperlink(_hyperlinksSoFar++);
+                    current.Append(c);
+                }
+                else if (nextLinkRef is not null && nextLinkRef.Item1.End.Value == consumed)
+                {
+                    current.Append(c);
+                    OutputStyled(current.ToString(), styleHistory.Peek());
+                    current.Clear();
+                    Garglk_Pinvoke.glk_set_hyperlink(0);
+                    if (linksToBe.Count > 0)
+                        nextLinkRef = linksToBe.Dequeue();
                 }
                 else current.Append(c);
             }

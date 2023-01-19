@@ -17,8 +17,7 @@ namespace FrankenDrift.Gargoyle
         public RichTextBox txtOutput => _output;
         public RichTextBox txtInput => _output;  // huh?
         public bool Locked => false;
-
-        public void Close() => Glk.Garglk_Pinvoke.glk_exit();
+        public void Close() => Garglk_Pinvoke.glk_exit();
 
         internal MainSession(string gameFile)
         {
