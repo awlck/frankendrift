@@ -366,6 +366,44 @@ namespace FrankenDrift.Gargoyle
                             var result = Garglk_Pinvoke.glk_image_draw(glkwin_handle, (uint)res, (int)ImageAlign.MarginRight, 0);
                         }
                     }
+                    else if (currentToken.StartsWith("audio play"))
+                    {
+                        var sndPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
+                        if (!sndPath.Success) continue;
+                        var channel = 1;
+                        var chanMatch = new Regex("channel=(\\d)").Match(currentToken);
+                        if (chanMatch.Success)
+                        {
+                            channel = int.Parse(chanMatch.Groups[1].Value);
+                            if (channel > 8 || channel < 1) continue;
+                        }
+                        var loop = currentToken.Contains("loop=Y");
+                        MainSession.Instance!.PlaySound(sndPath.Groups[1].Value, channel, loop);
+                    }
+                    else if (currentToken.StartsWith("audio pause"))
+                    {
+                        var re = new Regex("channel=(\\d)");
+                        var m = re.Match(currentToken);
+                        if (m.Success)
+                        {
+                            var ch = int.Parse(m.Groups[1].Value);
+                            if (ch > 8 || ch < 1) continue;
+                            MainSession.Instance!.PauseSound(ch);
+                        }
+                        else MainSession.Instance!.PauseSound(1);
+                    }
+                    else if (currentToken.StartsWith("audio stop"))
+                    {
+                        var re = new Regex("channel=(\\d)");
+                        var m = re.Match(currentToken);
+                        if (m.Success)
+                        {
+                            var ch = int.Parse(m.Groups[1].Value);
+                            if (ch > 8 || ch < 1) continue;
+                            MainSession.Instance!.StopSound(ch);
+                        }
+                        else MainSession.Instance!.StopSound(1);
+                    }
                 }
                 else if (nextLinkRef is not null && nextLinkRef.Item1.Start.Value == consumed)
                 {

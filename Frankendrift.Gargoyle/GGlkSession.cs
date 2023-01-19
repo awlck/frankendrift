@@ -19,6 +19,8 @@ namespace FrankenDrift.Gargoyle
         public bool Locked => false;
         public void Close() => Garglk_Pinvoke.glk_exit();
 
+        private Dictionary<int, IntPtr> _sndChannels = new();
+
         internal MainSession(string gameFile)
         {
             if (Instance is not null)
@@ -49,6 +51,8 @@ namespace FrankenDrift.Gargoyle
             Adrift.SharedModule.fRunner = this;
             Glue.Application.SetFrontend(this);
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession { Map = new GlonkMap(), bShowShortLocations = true };
+            for (int i = 1; i <= 8; i++)
+                _sndChannels[i] = Garglk_Pinvoke.glk_schannel_create((uint)i);
             Adrift.SharedModule.UserSession.OpenAdventure(gameFile);
         }
 
@@ -224,6 +228,25 @@ namespace FrankenDrift.Gargoyle
         public void UpdateStatusBar(string desc, string score, string user)
         {
             // TODO
+        }
+
+        internal void PlaySound(string snd, int channel, bool loop)
+        {
+            if (!(Adrift.SharedModule.Adventure.BlorbMappings is { Count: > 0 })
+                    || !Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(snd))
+                return;
+            var theSound = Adrift.SharedModule.Adventure.BlorbMappings[snd];
+            Garglk_Pinvoke.glk_schannel_play_ext(_sndChannels[channel], (uint)theSound, loop ? 0xFFFFFFFF : 1, 0);
+        }
+
+        internal void PauseSound(int channel)
+        {
+            Garglk_Pinvoke.glk_schannel_pause(_sndChannels[channel]);
+        }
+
+        internal void StopSound(int channel)
+        {
+            Garglk_Pinvoke.glk_schannel_stop(_sndChannels[channel]);
         }
     }
 
