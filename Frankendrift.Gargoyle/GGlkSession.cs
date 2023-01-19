@@ -19,7 +19,8 @@ namespace FrankenDrift.Gargoyle
         public bool Locked => false;
         public void Close() => Garglk_Pinvoke.glk_exit();
 
-        private Dictionary<int, IntPtr> _sndChannels = new();
+        private readonly Dictionary<int, IntPtr> _sndChannels = new();
+        private readonly Dictionary<int, string> _recentlyPlayedSounds = new();
 
         internal MainSession(string gameFile)
         {
@@ -232,11 +233,22 @@ namespace FrankenDrift.Gargoyle
 
         internal void PlaySound(string snd, int channel, bool loop)
         {
+            if (_recentlyPlayedSounds.ContainsKey(channel) && _recentlyPlayedSounds[channel] == snd)
+            {
+                UnpauseSound(channel);
+                return;
+            }
             if (!(Adrift.SharedModule.Adventure.BlorbMappings is { Count: > 0 })
                     || !Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(snd))
                 return;
             var theSound = Adrift.SharedModule.Adventure.BlorbMappings[snd];
+            _recentlyPlayedSounds[channel] = snd;
             Garglk_Pinvoke.glk_schannel_play_ext(_sndChannels[channel], (uint)theSound, loop ? 0xFFFFFFFF : 1, 0);
+        }
+
+        private void UnpauseSound(int channel)
+        {
+            Garglk_Pinvoke.glk_schannel_unpause(_sndChannels[channel]);
         }
 
         internal void PauseSound(int channel)
@@ -247,6 +259,8 @@ namespace FrankenDrift.Gargoyle
         internal void StopSound(int channel)
         {
             Garglk_Pinvoke.glk_schannel_stop(_sndChannels[channel]);
+            if (_recentlyPlayedSounds.ContainsKey(channel))
+                _recentlyPlayedSounds.Remove(channel);
         }
     }
 
