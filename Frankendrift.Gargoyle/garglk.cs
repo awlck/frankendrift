@@ -191,6 +191,10 @@ namespace FrankenDrift.Gargoyle.Glk
         [DllImport("libgarglk.dll")]
         internal static extern void glk_set_window(IntPtr winId);
         [DllImport("libgarglk.dll")]
+        internal static extern void glk_window_move_cursor(IntPtr winId, uint xpos, uint ypos);
+        [DllImport("libgarglk.dll")]
+        internal static extern void glk_window_get_size(IntPtr winId, out uint width, out uint height);
+        [DllImport("libgarglk.dll")]
         internal static extern void glk_put_buffer([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
         [DllImport("libgarglk.dll")]
         internal static extern void glk_put_buffer_stream(IntPtr streamId, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);

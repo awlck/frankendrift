@@ -11,7 +11,7 @@ namespace FrankenDrift.Gargoyle
     {
         internal static MainSession? Instance = null;
         private GlkHtmlWin _output;
-        private bool disposedValue;
+        private GlkGridWin _status;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
         public RichTextBox txtOutput => _output;
@@ -192,6 +192,7 @@ namespace FrankenDrift.Gargoyle
             // It is perhaps bad form / unexpected to do this here, but we can't
             // open any windows until after the style hints have been adjusted.
             _output = new GlkHtmlWin();
+            _status = _output.CreateStatusBar();
         }
 
         public void SetGameName(string name)
@@ -224,11 +225,31 @@ namespace FrankenDrift.Gargoyle
                 return;
             }
             Adrift.SharedModule.UserSession.Process(cmd);
+            Adrift.SharedModule.Adventure.Turns += 1;
         }
 
         public void UpdateStatusBar(string desc, string score, string user)
         {
-            // TODO
+            if (_status is null) return;
+            if (string.IsNullOrEmpty(user))
+            {
+                desc = Adrift.SharedModule.ReplaceALRs(desc);
+                score = Adrift.SharedModule.ReplaceALRs(score);
+                var winWidth = _status.Width;
+                var spaces = winWidth - desc.Length - score.Length - 1;
+                if (spaces < 2) spaces = 2;
+                _status.RewriteStatus(desc + new string(' ', spaces) + score);
+            }
+            else
+            {
+                desc = Adrift.SharedModule.ReplaceALRs(desc);
+                score = Adrift.SharedModule.ReplaceALRs(score);
+                user = Adrift.SharedModule.ReplaceALRs(user);
+                var winWidth = _status.Width;
+                var spaces = (winWidth - desc.Length - score.Length - 1) / 2;
+                if (spaces < 2) spaces = 2;
+                _status.RewriteStatus(desc + new string(' ', spaces) + score + new string(' ', spaces) + user);
+            }
         }
 
         internal void PlaySound(string snd, int channel, bool loop)

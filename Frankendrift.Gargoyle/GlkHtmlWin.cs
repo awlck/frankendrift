@@ -70,26 +70,30 @@ namespace FrankenDrift.Gargoyle
             if (MainWin is null)
             {
                 MainWin = this;
-                NumberOfWindows += 1;
                 glkwin_handle = Garglk_Pinvoke.glk_window_open(IntPtr.Zero, 0, 0, WinType.TextBuffer, NumberOfWindows);
             }
             else
             {
-                glkwin_handle = _doWindowOpen(MainWin, WinMethod.Right | WinMethod.Proportional, 30);
+                glkwin_handle = _doWindowOpen(MainWin, WinType.TextBuffer, WinMethod.Right | WinMethod.Proportional, 30);
             }
         }
 
         GlkHtmlWin(GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
         {
-            glkwin_handle = _doWindowOpen(splitFrom, splitMethod, splitSize);
+            glkwin_handle = _doWindowOpen(splitFrom, WinType.TextBuffer, splitMethod, splitSize);
         }
 
-        private IntPtr _doWindowOpen(GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
+        private static IntPtr _doWindowOpen(GlkHtmlWin splitFrom, WinType type, WinMethod splitMethod, uint splitSize)
         {
-            var result = Garglk_Pinvoke.glk_window_open(splitFrom.glkwin_handle, splitMethod, splitSize, WinType.TextBuffer, NumberOfWindows);
+            var result = Garglk_Pinvoke.glk_window_open(splitFrom.glkwin_handle, splitMethod, splitSize, type, ++NumberOfWindows);
             if (result == IntPtr.Zero)
                 throw new GlkError("Failed to open window.");
             return result;
+        }
+
+        internal GlkGridWin CreateStatusBar()
+        {
+            return new GlkGridWin(_doWindowOpen(this, WinType.TextGrid, WinMethod.Above | WinMethod.Fixed, 1));
         }
 
         public void Clear()
