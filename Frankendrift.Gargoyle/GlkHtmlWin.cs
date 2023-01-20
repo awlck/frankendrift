@@ -432,6 +432,7 @@ namespace FrankenDrift.Gargoyle
             OutputStyled(current.ToString(), styleHistory.Peek());
             Garglk_Pinvoke.glk_set_hyperlink(0);
             Garglk_Pinvoke.glk_window_flow_break(glkwin_handle);
+            Garglk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
 
             if (!IsWaiting && !string.IsNullOrEmpty(_pendingText))
             {
