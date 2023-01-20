@@ -109,10 +109,10 @@ namespace FrankenDrift.Gargoyle
                 throw new ConcurrentEventException("Too many input events requested");
             IsWaiting = true;
             const uint capacity = 256;
-            var cmdToBe = new byte[capacity];
-            fixed (byte* buf = cmdToBe)
+            var cmdToBe = new uint[capacity];
+            fixed (uint* buf = cmdToBe)
             {
-                Garglk_Pinvoke.glk_request_line_event(glkwin_handle, buf, capacity-1, 0);
+                Garglk_Pinvoke.glk_request_line_event_uni(glkwin_handle, buf, capacity-1, 0);
                 if (_hyperlinks.Count > 0)
                     Garglk_Pinvoke.glk_request_hyperlink_event(glkwin_handle);
                 while (true)
@@ -124,8 +124,12 @@ namespace FrankenDrift.Gargoyle
                         var count = (int) ev.val1;
                         Garglk_Pinvoke.glk_cancel_hyperlink_event(glkwin_handle);
                         IsWaiting = false;
-                        var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
-                        return dec.GetString(cmdToBe, 0, count);
+                        //var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                        //return dec.GetString(cmdToBe, 0, count);
+                        var result = new StringBuilder(count);
+                        for (var i = 0; i < count; i++)
+                            result.Append(new Rune(buf[i]).ToString());
+                        return result.ToString();
                     }
                     else if (ev.type == EventType.Hyperlink && ev.win_handle == glkwin_handle)
                     {

@@ -198,6 +198,9 @@ namespace FrankenDrift.Gargoyle.Glk
         internal static extern void glk_window_get_size(IntPtr winId, out uint width, out uint height);
         [DllImport("libgarglk")]
         internal static extern void glk_put_buffer([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
+
+        [DllImport("libgarglk")]
+        internal static extern void glk_put_buffer_uni([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U4)] uint[] s, uint len);
         [DllImport("libgarglk")]
         internal static extern void glk_put_buffer_stream(IntPtr streamId, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
         [DllImport("libgarglk")]
@@ -217,7 +220,9 @@ namespace FrankenDrift.Gargoyle.Glk
         [DllImport("libgarglk")]
         internal static extern void glk_cancel_hyperlink_event(IntPtr winId);
         [DllImport("libgarglk")]
-        internal static extern unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maylen, uint initlen);
+        internal static extern unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maxlen, uint initlen);
+        [DllImport("libgarglk")]
+        internal static extern unsafe void glk_request_line_event_uni(IntPtr win, uint* buf, uint maxlen, uint initlen);
         [DllImport("libgarglk")]
         internal static extern void glk_cancel_line_event(IntPtr winId, ref Event ev);
         [DllImport("libgarglk")]
@@ -294,11 +299,17 @@ namespace FrankenDrift.Gargoyle.Glk
             Garglk_Pinvoke.garglk_set_program_name("FrankenDrift for Gargoyle");
         }
 
-        internal static void OutputString(string msg)
+        internal static void OutputStringLatin1(string msg)
         {
             var encoder = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
             var bytes = encoder.GetBytes(msg);
             Garglk_Pinvoke.glk_put_buffer(bytes, (uint) bytes.Length);
+        }
+
+        internal static void OutputString(string msg)
+        {
+            var runes = msg.EnumerateRunes().Select(r => (uint)r.Value).ToArray();
+            Garglk_Pinvoke.glk_put_buffer_uni(runes, (uint)runes.Length);
         }
     }
 }
