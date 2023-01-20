@@ -10,8 +10,8 @@ namespace FrankenDrift.Gargoyle
     internal class MainSession : Glue.UIGlue, frmRunner
     {
         internal static MainSession? Instance = null;
-        private GlkHtmlWin _output;
-        private GlkGridWin _status;
+        private GlkHtmlWin? _output;
+        private GlkGridWin? _status;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
         public RichTextBox txtOutput => _output;
@@ -217,11 +217,12 @@ namespace FrankenDrift.Gargoyle
             // not sure what should go here
         }
 
-        public void SubmitCommand(string cmd)
+        internal void SubmitCommand(string cmd)
         {
+            cmd = cmd.Trim(' ');
             if (cmd == "!dumpstyles")
             {
-                _output.DumpCurrentStyleInfo();
+                _output!.DumpCurrentStyleInfo();
                 return;
             }
             Adrift.SharedModule.UserSession.Process(cmd);

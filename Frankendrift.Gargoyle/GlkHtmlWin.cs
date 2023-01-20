@@ -17,6 +17,7 @@ namespace FrankenDrift.Gargoyle
     }
 
     // Making the best out of the limited set of Glk styles...
+    [Flags]
     enum TextStyle : uint
     {
         Normal    = 0b00000,
@@ -108,7 +109,7 @@ namespace FrankenDrift.Gargoyle
                 throw new ConcurrentEventException("Too many input events requested");
             IsWaiting = true;
             const uint capacity = 256;
-            byte[] cmdToBe = new byte[capacity];
+            var cmdToBe = new byte[capacity];
             fixed (byte* buf = cmdToBe)
             {
                 Garglk_Pinvoke.glk_request_line_event(glkwin_handle, buf, capacity-1, 0);
@@ -180,10 +181,10 @@ namespace FrankenDrift.Gargoyle
         // Janky-ass HTML parser, 2nd edition.
         public void AppendHTML(string src)
         {
+            if (string.IsNullOrEmpty(src))
+                return;
             // don't echo back the command, the Glk library already takes care of that
             if (src.StartsWith("<c><font face=\"Wingdings\" size=14>") && src.EndsWith("</c>\r\n"))
-                return;
-            if (string.IsNullOrEmpty(src))
                 return;
             // strip redundant carriage-return characters
             src = src.Replace("\r\n", "\n");
@@ -199,7 +200,6 @@ namespace FrankenDrift.Gargoyle
             var inToken = false;
             var current = new StringBuilder();
             var currentToken = "";
-            var previousToken = "";
             var skip = 0;
             var styleHistory = new Stack<FontInfo>();
             styleHistory.Push(new FontInfo { Ts = TextStyle.Normal, TextColor = (uint)ZColor.Default, TagName = "<base>" });
@@ -209,12 +209,12 @@ namespace FrankenDrift.Gargoyle
             {
                 var linkTargetSearcher = new Regex("^([0-9a-zA-Z]+?)\\) .+$", RegexOptions.Multiline);
                 var linkTargets = linkTargetSearcher.Matches(src);
-                if (linkTargets is null || linkTargets.Count == 0)
+                if (linkTargets.Count == 0)
                     goto NoSuitableLinkTargetsFound;
                 for (var i = 0; i < linkTargets.Count; i++)
                 {
-                    var choice = linkTargets[i]!;
-                    if (!(choice is { Success: true })) continue;
+                    var choice = linkTargets[i];
+                    if (choice is not { Success: true }) continue;
                     linksToBe.Enqueue(new LinkRef(new Range(choice.Index, choice.Index + choice.Length), choice.Groups[1].Value));
                 }
             }
@@ -233,7 +233,6 @@ namespace FrankenDrift.Gargoyle
                 if (c == '<' && !inToken)
                 {
                     inToken = true;
-                    previousToken = currentToken;
                     currentToken = "";
                 }
                 else if (c != '>' && inToken)
@@ -251,8 +250,7 @@ namespace FrankenDrift.Gargoyle
                         current.Remove(current.Length - 1, 1);
                         continue;
 
-                        // TODO: ask for a garglk extension akin to garglk_unput_string
-                        // that only needs the number of characters to delete.
+                        // TODO: ask for a garglk extension akin to garglk_unput_string that only needs the number of characters to delete.
                     }
                     OutputStyled(current.ToString(), currentTextStyle);
                     current.Clear();
@@ -367,7 +365,7 @@ namespace FrankenDrift.Gargoyle
                         {
                             var res = Adrift.SharedModule.Adventure.BlorbMappings[imgPath.Groups[1].Value];
                             // DrawImageImmediately((uint)res);
-                            var result = Garglk_Pinvoke.glk_image_draw(glkwin_handle, (uint)res, (int)ImageAlign.MarginRight, 0);
+                            Garglk_Pinvoke.glk_image_draw(glkwin_handle, (uint)res, (int)ImageAlign.MarginRight, 0);
                         }
                     }
                     else if (currentToken.StartsWith("audio play"))
@@ -379,7 +377,7 @@ namespace FrankenDrift.Gargoyle
                         if (chanMatch.Success)
                         {
                             channel = int.Parse(chanMatch.Groups[1].Value);
-                            if (channel > 8 || channel < 1) continue;
+                            if (channel is > 8 or < 1) continue;
                         }
                         var loop = currentToken.Contains("loop=Y");
                         MainSession.Instance!.PlaySound(sndPath.Groups[1].Value, channel, loop);
@@ -391,7 +389,7 @@ namespace FrankenDrift.Gargoyle
                         if (m.Success)
                         {
                             var ch = int.Parse(m.Groups[1].Value);
-                            if (ch > 8 || ch < 1) continue;
+                            if (ch is > 8 or < 1) continue;
                             MainSession.Instance!.PauseSound(ch);
                         }
                         else MainSession.Instance!.PauseSound(1);
@@ -403,7 +401,7 @@ namespace FrankenDrift.Gargoyle
                         if (m.Success)
                         {
                             var ch = int.Parse(m.Groups[1].Value);
-                            if (ch > 8 || ch < 1) continue;
+                            if (ch is > 8 or < 1) continue;
                             MainSession.Instance!.StopSound(ch);
                         }
                         else MainSession.Instance!.StopSound(1);
@@ -445,12 +443,9 @@ namespace FrankenDrift.Gargoyle
         internal bool DrawImageImmediately(uint imgId)
         {
             var result = Garglk_Pinvoke.glk_image_draw(glkwin_handle, imgId, (int)ImageAlign.MarginLeft, 0);
-            if (result != 0)
-            {
-                Garglk_Pinvoke.glk_window_flow_break(glkwin_handle);
-                return true;
-            }
-            return false;
+            if (result == 0) return false;
+            Garglk_Pinvoke.glk_window_flow_break(glkwin_handle);
+            return true;
         }
 
         private void OutputStyled(string txt, FontInfo fi)
@@ -530,24 +525,19 @@ namespace FrankenDrift.Gargoyle
                 AppendHTML($"Style status for style: {s}\n");
                 AppendHTML("  Indentation: ");
                 var success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Indentation, ref result);
-                if (success == 1) AppendHTML($"{result}\n");
-                else AppendHTML("n/a\n");
+                AppendHTML(success == 1 ? $"{result}\n" : "n/a\n");
                 AppendHTML("  Paragraph Indentation: ");
                 success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.ParaIndentation, ref result);
-                if (success == 1) AppendHTML($"{result}\n");
-                else AppendHTML("n/a\n");
+                AppendHTML(success == 1 ? $"{result}\n" : "n/a\n");
                 AppendHTML("  Justification: ");
                 success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Justification, ref result);
-                if (success == 1) AppendHTML($"{(Justification)result}\n");
-                else AppendHTML("n/a\n");
+                AppendHTML(success == 1 ? $"{(Justification)result}\n" : "n/a\n");
                 AppendHTML("  Font Size: ");
                 success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Size, ref result);
-                if (success == 1) AppendHTML($"{result}\n");
-                else AppendHTML("n/a\n");
+                AppendHTML(success == 1 ? $"{result}\n" : "n/a\n");
                 AppendHTML("  Font Weight: ");
                 success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Weight, ref result);
-                if (success == 1) AppendHTML($"{(int)result}\n");
-                else AppendHTML("n/a\n");
+                AppendHTML(success == 1 ? $"{(int)result}\n" : "n/a\n");
                 AppendHTML("  Italics: ");
                 success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Oblique, ref result);
                 if (success == 1) AppendHTML(result == 1 ? "yes\n" : "no\n");
@@ -558,8 +548,7 @@ namespace FrankenDrift.Gargoyle
                 else AppendHTML("n/a\n");
                 AppendHTML("  Text color: ");
                 success = Garglk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.TextColor, ref result);
-                if (success == 1) AppendHTML($"0x{result:X}\n");
-                else AppendHTML("n/a\n");
+                AppendHTML(success == 1 ? $"0x{result:X}\n" : "n/a\n");
             }
         }
     }
