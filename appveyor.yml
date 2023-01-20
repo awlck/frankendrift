@@ -9,6 +9,8 @@ install:
 
 build_script:
   - ps: dotnet publish --self-contained -f net6.0-windows -r win10-x64 -p:PublishReadyToRun=true -c Release -p:VersionSuffix="$env:APPVEYOR_BUILD_VERSION-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 8))"
+  - ps: dotnet publish --self-contained -f net6.0-windows -r win10-x64 -c:Release -p:VersionSuffix="$env:APPVEYOR_BUILD_VERSION-$($env:APPVEYOR_REPO_COMMIT.Substring(0,8))"
 
 artifacts:
   - path: FrankenDrift.Runner/FrankenDrift.Runner.Win/bin/Release/net6.0-windows/win10-x64/publish
+  - path: FrankenDrift.Gargoyle/bin/Release/net6.0-windows/win10-x64/publish
