@@ -13,4 +13,4 @@ build_script:
 
 artifacts:
   - path: FrankenDrift.Runner/FrankenDrift.Runner.Win/bin/Release/net6.0-windows/win10-x64/publish
-  - path: FrankenDrift.Gargoyle/bin/Release/net6.0-windows/win10-x64/publish
+  - path: FrankenDrift.Gargoyle/bin/Release/net6.0/win10-x64/publish
