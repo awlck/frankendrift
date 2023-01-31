@@ -368,7 +368,6 @@ namespace FrankenDrift.Gargoyle
                                 && Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(imgPath.Groups[1].Value))
                         {
                             var res = Adrift.SharedModule.Adventure.BlorbMappings[imgPath.Groups[1].Value];
-                            // DrawImageImmediately((uint)res);
                             Garglk_Pinvoke.glk_image_draw(glkwin_handle, (uint)res, (int)ImageAlign.MarginRight, 0);
                         }
                     }
@@ -455,6 +454,7 @@ namespace FrankenDrift.Gargoyle
         private void OutputStyled(string txt, FontInfo fi)
         {
             if (string.IsNullOrEmpty(txt)) return;
+            txt = txt.Replace("&lt;", "<").Replace("&gt;", ">").Replace("&perc;", "%").Replace("&quot;", "\"");
             Garglk_Pinvoke.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);
             if ((fi.Ts & TextStyle.Monospace) != 0)
             {
