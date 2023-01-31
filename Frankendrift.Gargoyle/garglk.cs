@@ -265,8 +265,8 @@ namespace FrankenDrift.Gargoyle.Glk
         internal static extern IntPtr glk_fileref_create_by_name(FileUsage usage, FileMode fmode, uint rock);
         [DllImport("libgarglk")]
         internal static extern void glk_fileref_destroy(IntPtr fref);
-        [DllImport("libgarglk", CharSet = CharSet.Ansi)]
-        internal static extern string garglk_fileref_get_name(IntPtr fileref);
+        [DllImport("libgarglk")]
+        internal static extern IntPtr garglk_fileref_get_name(IntPtr fileref);
         [DllImport("libgarglk")]
         internal static extern IntPtr glk_stream_open_file(IntPtr fileref, FileMode fmode, uint rock);
         [DllImport("libgarglk")]
@@ -310,6 +310,12 @@ namespace FrankenDrift.Gargoyle.Glk
         {
             var runes = msg.EnumerateRunes().Select(r => (uint)r.Value).ToArray();
             Garglk_Pinvoke.glk_put_buffer_uni(runes, (uint)runes.Length);
+        }
+
+        internal static string FilerefGetName(IntPtr fileref)
+        {
+            var fn = Garglk_Pinvoke.garglk_fileref_get_name(fileref);
+            return Marshal.PtrToStringAnsi(fn);
         }
     }
 }

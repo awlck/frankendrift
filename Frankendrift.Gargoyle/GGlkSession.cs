@@ -137,7 +137,7 @@ namespace FrankenDrift.Gargoyle
         {
             var fileref = Garglk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
             if (fileref == IntPtr.Zero) return "";
-            var result = Garglk_Pinvoke.garglk_fileref_get_name(fileref);
+            var result = GarGlk.FilerefGetName(fileref);
             Garglk_Pinvoke.glk_fileref_destroy(fileref);
             return result;
         }
@@ -151,7 +151,7 @@ namespace FrankenDrift.Gargoyle
         {
             var fileref = Garglk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Write, 0);
             if (fileref == IntPtr.Zero) return "";
-            var result = Garglk_Pinvoke.garglk_fileref_get_name(fileref);
+            var result = GarGlk.FilerefGetName(fileref);
             Garglk_Pinvoke.glk_fileref_destroy(fileref);
             return result;
         }
