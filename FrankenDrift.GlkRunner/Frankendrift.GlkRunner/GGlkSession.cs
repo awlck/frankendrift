@@ -1,13 +1,13 @@
-﻿using FrankenDrift.Gargoyle.Glk;
+﻿using FrankenDrift.GlkRunner.Glk;
 using FrankenDrift.Glue;
 using FrankenDrift.Glue.Infragistics.Win.UltraWinToolbars;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace FrankenDrift.Gargoyle
+namespace FrankenDrift.GlkRunner
 {
-    internal class MainSession : Glue.UIGlue, frmRunner
+    public class MainSession : Glue.UIGlue, frmRunner
     {
         internal static MainSession? Instance = null;
         private GlkHtmlWin? _output;
@@ -17,12 +17,12 @@ namespace FrankenDrift.Gargoyle
         public RichTextBox txtOutput => _output;
         public RichTextBox txtInput => _output;  // huh?
         public bool Locked => false;
-        public void Close() => Garglk_Pinvoke.glk_exit();
+        public void Close() => Glk_Pinvoke.glk_exit();
 
         private readonly Dictionary<int, IntPtr> _sndChannels = new();
         private readonly Dictionary<int, string> _recentlyPlayedSounds = new();
 
-        internal MainSession(string gameFile)
+        public MainSession(string gameFile)
         {
             if (Instance is not null)
                 throw new ApplicationException("Dual MainSessions?");
@@ -40,12 +40,12 @@ namespace FrankenDrift.Gargoyle
                     Array.Reverse(lengthBytes);
                 for (int i = 0; i < 4; i++)
                     blorb[i + 4] = lengthBytes[i];
-                var tmpFileRef = Garglk_Pinvoke.glk_fileref_create_temp(FileUsage.Data | FileUsage.BinaryMode, 0);
-                var tmpFileStream = Garglk_Pinvoke.glk_stream_open_file(tmpFileRef, Glk.FileMode.ReadWrite, 0);
-                Garglk_Pinvoke.glk_put_buffer_stream(tmpFileStream, blorb, (uint)blorb.Length);
-                Garglk_Pinvoke.glk_fileref_destroy(tmpFileRef);
-                Garglk_Pinvoke.glk_stream_set_position(tmpFileStream, 0, SeekMode.Start);
-                Garglk_Pinvoke.giblorb_set_resource_map(tmpFileStream);
+                var tmpFileRef = Glk_Pinvoke.glk_fileref_create_temp(FileUsage.Data | FileUsage.BinaryMode, 0);
+                var tmpFileStream = Glk_Pinvoke.glk_stream_open_file(tmpFileRef, Glk.FileMode.ReadWrite, 0);
+                Glk_Pinvoke.glk_put_buffer_stream(tmpFileStream, blorb, (uint)blorb.Length);
+                Glk_Pinvoke.glk_fileref_destroy(tmpFileRef);
+                Glk_Pinvoke.glk_stream_set_position(tmpFileStream, 0, SeekMode.Start);
+                Glk_Pinvoke.giblorb_set_resource_map(tmpFileStream);
             }
 
             Adrift.SharedModule.Glue = this;
@@ -53,11 +53,11 @@ namespace FrankenDrift.Gargoyle
             Glue.Application.SetFrontend(this);
             Adrift.SharedModule.UserSession = new Adrift.RunnerSession { Map = new GlonkMap(), bShowShortLocations = true };
             for (int i = 1; i <= 8; i++)
-                _sndChannels[i] = Garglk_Pinvoke.glk_schannel_create((uint)i);
+                _sndChannels[i] = Glk_Pinvoke.glk_schannel_create((uint)i);
             Adrift.SharedModule.UserSession.OpenAdventure(gameFile);
         }
 
-        internal void Run()
+        public void Run()
         {
             while (true)
             {
@@ -90,7 +90,7 @@ namespace FrankenDrift.Gargoyle
 
         public void DoEvents()
         {
-            Garglk_Pinvoke.glk_tick();
+            Glk_Pinvoke.glk_tick();
         }
 
         public void EnableButtons() { }
@@ -135,10 +135,10 @@ namespace FrankenDrift.Gargoyle
 
         public string QueryRestorePath()
         {
-            var fileref = Garglk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
+            var fileref = Glk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
             if (fileref == IntPtr.Zero) return "";
-            var result = GarGlk.FilerefGetName(fileref);
-            Garglk_Pinvoke.glk_fileref_destroy(fileref);
+            var result = GlkUtil.FilerefGetName(fileref);
+            Glk_Pinvoke.glk_fileref_destroy(fileref);
             return result;
         }
 
@@ -149,10 +149,10 @@ namespace FrankenDrift.Gargoyle
 
         public string QuerySavePath()
         {
-            var fileref = Garglk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Write, 0);
+            var fileref = Glk_Pinvoke.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Write, 0);
             if (fileref == IntPtr.Zero) return "";
-            var result = GarGlk.FilerefGetName(fileref);
-            Garglk_Pinvoke.glk_fileref_destroy(fileref);
+            var result = GlkUtil.FilerefGetName(fileref);
+            Glk_Pinvoke.glk_fileref_destroy(fileref);
             return result;
         }
 
@@ -169,7 +169,7 @@ namespace FrankenDrift.Gargoyle
             {
                 int colorToBe = adventure.DeveloperDefaultBackgroundColour.ToArgb() & 0x00FFFFFF;
                 foreach (Style s in (Style[]) Enum.GetValues(typeof(Style)))
-                    Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, s, StyleHint.BackColor, colorToBe);
+                    Glk_Pinvoke.glk_stylehint_set(WinType.AllTypes, s, StyleHint.BackColor, colorToBe);
             }
             if (!adventure.DeveloperDefaultOutputColour.IsEmpty && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
             {
@@ -177,17 +177,17 @@ namespace FrankenDrift.Gargoyle
                 foreach (Style s in (Style[]) Enum.GetValues(typeof(Style)))
                 {
                     if (s == Style.Input) continue;
-                    Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, s, StyleHint.TextColor, colorToBe);
+                    Glk_Pinvoke.glk_stylehint_set(WinType.AllTypes, s, StyleHint.TextColor, colorToBe);
                 }
             }
             if (!adventure.DeveloperDefaultInputColour.IsEmpty && adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
             {
                 int colorToBe = adventure.DeveloperDefaultInputColour.ToArgb() & 0x00FFFFFF;
-                Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, Style.Input, StyleHint.TextColor, colorToBe);
+                Glk_Pinvoke.glk_stylehint_set(WinType.AllTypes, Style.Input, StyleHint.TextColor, colorToBe);
             }
 
             // Repurpose blockquote style for centered text (seems the most appropriate out of the bunch)
-            Garglk_Pinvoke.glk_stylehint_set(WinType.AllTypes, Style.BlockQuote, StyleHint.Justification, (int)Justification.Centered);
+            Glk_Pinvoke.glk_stylehint_set(WinType.AllTypes, Style.BlockQuote, StyleHint.Justification, (int)Justification.Centered);
 
             // It is perhaps bad form / unexpected to do this here, but we can't
             // open any windows until after the style hints have been adjusted.
@@ -197,7 +197,7 @@ namespace FrankenDrift.Gargoyle
 
         public void SetGameName(string name)
         {
-            Garglk_Pinvoke.garglk_set_story_name(name);
+            GlkUtil.SetGameName(name);
         }
 
         public void ShowCoverArt(byte[] img)
@@ -265,22 +265,22 @@ namespace FrankenDrift.Gargoyle
                 return;
             var theSound = Adrift.SharedModule.Adventure.BlorbMappings[snd];
             _recentlyPlayedSounds[channel] = snd;
-            Garglk_Pinvoke.glk_schannel_play_ext(_sndChannels[channel], (uint)theSound, loop ? 0xFFFFFFFF : 1, 0);
+            Glk_Pinvoke.glk_schannel_play_ext(_sndChannels[channel], (uint)theSound, loop ? 0xFFFFFFFF : 1, 0);
         }
 
         private void UnpauseSound(int channel)
         {
-            Garglk_Pinvoke.glk_schannel_unpause(_sndChannels[channel]);
+            Glk_Pinvoke.glk_schannel_unpause(_sndChannels[channel]);
         }
 
         internal void PauseSound(int channel)
         {
-            Garglk_Pinvoke.glk_schannel_pause(_sndChannels[channel]);
+            Glk_Pinvoke.glk_schannel_pause(_sndChannels[channel]);
         }
 
         internal void StopSound(int channel)
         {
-            Garglk_Pinvoke.glk_schannel_stop(_sndChannels[channel]);
+            Glk_Pinvoke.glk_schannel_stop(_sndChannels[channel]);
             if (_recentlyPlayedSounds.ContainsKey(channel))
                 _recentlyPlayedSounds.Remove(channel);
         }

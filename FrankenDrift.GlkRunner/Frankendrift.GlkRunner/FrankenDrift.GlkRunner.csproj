@@ -2,16 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-	  <OutputType>WinExe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <StartupObject>FrankenDrift.Gargoyle.GarGlkRunner</StartupObject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FrankenDrift.Adrift\FrankenDrift.Adrift.vbproj" />
-    <ProjectReference Include="..\FrankenDrift.Glue\FrankenDrift.Glue.csproj" />
+    <ProjectReference Include="..\..\FrankenDrift.Adrift\FrankenDrift.Adrift.vbproj" />
+    <ProjectReference Include="..\..\FrankenDrift.Glue\FrankenDrift.Glue.csproj" />
   </ItemGroup>
 
 </Project>

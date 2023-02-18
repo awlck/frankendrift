@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text;
 
-namespace FrankenDrift.Gargoyle
+namespace FrankenDrift.GlkRunner
 {
     public class GlkError : Exception
     {
@@ -10,7 +10,7 @@ namespace FrankenDrift.Gargoyle
     }
 }
 
-namespace FrankenDrift.Gargoyle.Glk
+namespace FrankenDrift.GlkRunner.Glk
 {
     enum Gestalt : uint
     {
@@ -178,103 +178,112 @@ namespace FrankenDrift.Gargoyle.Glk
         NotFound = 6
     }
 
-    static class Garglk_Pinvoke
+    internal static class Glk_Pinvoke
     {
-        [DllImport("libgarglk")]
-        internal static extern void gli_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
-        [DllImport("libgarglk")]
+        internal const string DEFAULT_DLL_NAME = "@@GLK@UNSET@@";
+
+        // Universal Glk functions.
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern IntPtr glk_window_open(IntPtr split, WinMethod method, uint size, WinType wintype, uint rock);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern IntPtr glk_window_get_stream(IntPtr winId);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_window_close(IntPtr winId, IntPtr streamResult);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_window_clear(IntPtr winId);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_set_window(IntPtr winId);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_window_move_cursor(IntPtr winId, uint xpos, uint ypos);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_window_get_size(IntPtr winId, out uint width, out uint height);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_put_buffer([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
 
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_put_buffer_uni([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U4)] uint[] s, uint len);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_put_buffer_stream(IntPtr streamId, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_select(ref Event ev);
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_tick();
-        [DllImport("libgarglk")]
+        [DllImport(DEFAULT_DLL_NAME)]
         internal static extern void glk_exit();
-        [DllImport("libgarglk")]
-        internal static extern void garglk_set_program_name([MarshalAs(UnmanagedType.LPStr)] string name);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_request_char_event(IntPtr winId);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_request_hyperlink_event(IntPtr winId);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_cancel_hyperlink_event(IntPtr winId);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maxlen, uint initlen);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern unsafe void glk_request_line_event_uni(IntPtr win, uint* buf, uint maxlen, uint initlen);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_cancel_line_event(IntPtr winId, ref Event ev);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_set_hyperlink(uint linkval);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_set_style(Style s);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern uint glk_style_measure(IntPtr winid, Style styl, StyleHint hint, ref uint result);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern uint glk_image_draw(IntPtr winid, uint imageId, int val1, int val2);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_window_flow_break(IntPtr winId);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern IntPtr glk_schannel_create(uint rock);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_schannel_destroy(IntPtr chan);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern uint glk_schannel_play(IntPtr chan, uint sndId);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern uint glk_schannel_play_ext(IntPtr chan, uint sndId, uint repeats, uint notify);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_schannel_stop(IntPtr chan);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_schannel_set_volume(IntPtr chan, uint vol);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_schannel_pause(IntPtr chan);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_schannel_unpause(IntPtr chan);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern IntPtr glk_fileref_create_temp(FileUsage usage, uint rock);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern IntPtr glk_fileref_create_by_prompt(FileUsage usage, FileMode fmode, uint rock);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern IntPtr glk_fileref_create_by_name(FileUsage usage, FileMode fmode, uint rock);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_fileref_destroy(IntPtr fref);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern IntPtr glkunix_fileref_get_name(IntPtr fileref);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern IntPtr glk_stream_open_file(IntPtr fileref, FileMode fmode, uint rock);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void glk_stream_set_position(IntPtr stream, int pos, SeekMode seekMode);
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern BlorbError giblorb_set_resource_map(IntPtr fileStream);
+        // mostly-universal-by-now extension
+        [DllImport(DEFAULT_DLL_NAME)]
+        internal static extern void garglk_set_zcolors(uint fg, uint bg);
+
+
+        // Windows Glk specific functions.
+        [DllImport("Glk")]
+        internal static extern void InitGlk(uint version);
+        [DllImport("Glk")]
+        internal static extern void winglk_app_set_name([MarshalAs(UnmanagedType.LPStr)] string name);
+
+        // Garglk specific runtime functions
         [DllImport("libgarglk")]
         internal static extern void garglk_set_story_name([MarshalAs(UnmanagedType.LPStr)] string name);
-        [DllImport("libgarglk")]
-        internal static extern void glk_request_char_event(IntPtr winId);
-        [DllImport("libgarglk")]
-        internal static extern void glk_request_hyperlink_event(IntPtr winId);
-        [DllImport("libgarglk")]
-        internal static extern void glk_cancel_hyperlink_event(IntPtr winId);
-        [DllImport("libgarglk")]
-        internal static extern unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maxlen, uint initlen);
-        [DllImport("libgarglk")]
-        internal static extern unsafe void glk_request_line_event_uni(IntPtr win, uint* buf, uint maxlen, uint initlen);
-        [DllImport("libgarglk")]
-        internal static extern void glk_cancel_line_event(IntPtr winId, ref Event ev);
-        [DllImport("libgarglk")]
-        internal static extern void glk_set_hyperlink(uint linkval);
-        [DllImport("libgarglk")]
-        internal static extern void garglk_set_zcolors(uint fg, uint bg);
-        [DllImport("libgarglk")]
-        internal static extern void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
-        [DllImport("libgarglk")]
-        internal static extern void glk_set_style(Style s);
-        [DllImport("libgarglk")]
-        internal static extern uint glk_style_measure(IntPtr winid, Style styl, StyleHint hint, ref uint result);
-        [DllImport("libgarglk")]
-        internal static extern uint glk_image_draw(IntPtr winid, uint imageId, int val1, int val2);
-        [DllImport("libgarglk")]
-        internal static extern uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
-        [DllImport("libgarglk")]
-        internal static extern void glk_window_flow_break(IntPtr winId);
-        [DllImport("libgarglk")]
-        internal static extern IntPtr glk_schannel_create(uint rock);
-        [DllImport("libgarglk")]
-        internal static extern void glk_schannel_destroy(IntPtr chan);
-        [DllImport("libgarglk")]
-        internal static extern uint glk_schannel_play(IntPtr chan, uint sndId);
-        [DllImport("libgarglk")]
-        internal static extern uint glk_schannel_play_ext(IntPtr chan, uint sndId, uint repeats, uint notify);
-        [DllImport("libgarglk")]
-        internal static extern void glk_schannel_stop(IntPtr chan);
-        [DllImport("libgarglk")]
-        internal static extern void glk_schannel_set_volume(IntPtr chan, uint vol);
-        [DllImport("libgarglk")]
-        internal static extern void glk_schannel_pause(IntPtr chan);
-        [DllImport("libgarglk")]
-        internal static extern void glk_schannel_unpause(IntPtr chan);
-        [DllImport("libgarglk")]
-        internal static extern IntPtr glk_fileref_create_temp(FileUsage usage, uint rock);
-        [DllImport("libgarglk")]
-        internal static extern IntPtr glk_fileref_create_by_prompt(FileUsage usage, FileMode fmode, uint rock);
-        [DllImport("libgarglk")]
-        internal static extern IntPtr glk_fileref_create_by_name(FileUsage usage, FileMode fmode, uint rock);
-        [DllImport("libgarglk")]
-        internal static extern void glk_fileref_destroy(IntPtr fref);
-        [DllImport("libgarglk")]
-        internal static extern IntPtr garglk_fileref_get_name(IntPtr fileref);
-        [DllImport("libgarglk")]
-        internal static extern IntPtr glk_stream_open_file(IntPtr fileref, FileMode fmode, uint rock);
-        [DllImport("libgarglk")]
-        internal static extern IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
-        [DllImport("libgarglk")]
-        internal static extern void glk_stream_set_position(IntPtr stream, int pos, SeekMode seekMode);
-        [DllImport("libgarglk")]
-        internal static extern BlorbError giblorb_set_resource_map(IntPtr fileStream);
     }
 
     internal struct Event
@@ -285,37 +294,50 @@ namespace FrankenDrift.Gargoyle.Glk
         internal uint val2;
     }
 
-    internal static class GarGlk
+    public static class GlkUtil
     {
-        internal static void Startup(string[] args)
+        private static string selectedGlkLib = "";
+        public static void SelectGlkLib(string dllName)
         {
-            string[] argv = new string[args.Length + 1];
-            argv[0] = Assembly.GetEntryAssembly().Location;
-            for(int i = 1; i <= args.Length; i++)
-            {
-                argv[i] = args[i - 1];
-            }
-            Garglk_Pinvoke.gli_startup(argv.Length, argv);
-            Garglk_Pinvoke.garglk_set_program_name("FrankenDrift for Gargoyle");
+            NativeLibrary.SetDllImportResolver(typeof(Glk_Pinvoke).Assembly, (name, asm, search) => {
+                if (name == Glk_Pinvoke.DEFAULT_DLL_NAME)
+                {
+                    return NativeLibrary.Load(dllName, asm, search);
+                }
+                return IntPtr.Zero;
+            });
+            selectedGlkLib = dllName;
         }
 
         internal static void OutputStringLatin1(string msg)
         {
             var encoder = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
             var bytes = encoder.GetBytes(msg);
-            Garglk_Pinvoke.glk_put_buffer(bytes, (uint) bytes.Length);
+            Glk_Pinvoke.glk_put_buffer(bytes, (uint) bytes.Length);
         }
 
         internal static void OutputString(string msg)
         {
             var runes = msg.EnumerateRunes().Select(r => (uint)r.Value).ToArray();
-            Garglk_Pinvoke.glk_put_buffer_uni(runes, (uint)runes.Length);
+            Glk_Pinvoke.glk_put_buffer_uni(runes, (uint)runes.Length);
         }
 
         internal static string FilerefGetName(IntPtr fileref)
         {
-            var fn = Garglk_Pinvoke.garglk_fileref_get_name(fileref);
+            var fn = Glk_Pinvoke.glkunix_fileref_get_name(fileref);
             return Marshal.PtrToStringAnsi(fn);
+        }
+
+        internal static void SetGameName(string game)
+        {
+            switch (selectedGlkLib)
+            {
+                case "garglk":
+                case "libgarglk":
+                    Glk_Pinvoke.garglk_set_story_name(game); break;
+                default:
+                    return;
+            }
         }
     }
 }
