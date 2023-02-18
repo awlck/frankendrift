@@ -277,9 +277,7 @@ namespace FrankenDrift.GlkRunner.Glk
 
         // Windows Glk specific functions.
         [DllImport("Glk")]
-        internal static extern void InitGlk(uint version);
-        [DllImport("Glk")]
-        internal static extern void winglk_app_set_name([MarshalAs(UnmanagedType.LPStr)] string name);
+        internal static extern void winglk_window_set_title([MarshalAs(UnmanagedType.LPStr)] string name);
 
         // Garglk specific runtime functions
         [DllImport("libgarglk")]
@@ -335,6 +333,8 @@ namespace FrankenDrift.GlkRunner.Glk
                 case "garglk":
                 case "libgarglk":
                     Glk_Pinvoke.garglk_set_story_name(game); break;
+                case "Glk":
+                    Glk_Pinvoke.winglk_window_set_title(game); break;
                 default:
                     return;
             }
