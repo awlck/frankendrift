@@ -1,5 +1,6 @@
 ﻿using FrankenDrift.GlkRunner.Glk;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FrankenDrift.GlkRunner.Gargoyle
@@ -103,6 +104,18 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void garglk_set_story_name([MarshalAs(UnmanagedType.LPStr)] string name);
         [DllImport("libgarglk")]
         internal static extern void gli_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
+        [DllImport("libgarglk")]
+        internal static extern void garglk_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
+        [DllImport("libgarglk", EntryPoint = "_Z11gli_startupiPPc")]
+        internal static extern void gli_startup_m_(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
+    }
+
+    internal enum GarglkInitMode
+    {
+        NotDetermined = 0,
+        GliStartup = 1,
+        GliStartupMangled = 2,
+        GarglkStartup = 3
     }
 
     class GarGlk: IGlk
@@ -153,6 +166,28 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public IntPtr glkunix_fileref_get_name(IntPtr fileref) => Garglk_Pinvoke.glkunix_fileref_get_name(fileref);
 
         public void SetGameName(string game) => Garglk_Pinvoke.garglk_set_story_name(game);
+
+        internal void GarglkInit(string[] argv)
+        {
+            // Depending on the Garglk library version, the startup function could have
+            // a number of names. We need to try them all.
+            try  // First attempt.
+            {
+                Garglk_Pinvoke.garglk_startup(argv.Length, argv);
+                return;
+            } catch (EntryPointNotFoundException) { }  // do nothing
+
+            try  // Second attempt.
+            {
+                Garglk_Pinvoke.gli_startup_m_(argv.Length, argv);
+                return;
+            } catch (EntryPointNotFoundException) { }  // do nothing
+
+            // Last attempt.
+            // This must succeed, or the Garglk library would go uninitialized,
+            // so we let the program crash and burn if this one fails as well.
+            Garglk_Pinvoke.gli_startup(argv.Length, argv);
+        }
     }
 
     public class GarGlkRunner
@@ -167,7 +202,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
             }
 
             GarGlk GlkApi = new GarGlk();
-            Startup(args);
+            Startup(args, GlkApi);
 
             var sess = new MainSession(args[^1], GlkApi);
             sess.Run();
@@ -175,7 +210,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
             return 0;
         }
 
-        private static void Startup(string[] args)
+        private static void Startup(string[] args, GarGlk api)
         {
             string[] argv = new string[args.Length + 1];
             argv[0] = Assembly.GetEntryAssembly().Location;
@@ -183,7 +218,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
             {
                 argv[i] = args[i - 1];
             }
-            Garglk_Pinvoke.gli_startup(argv.Length, argv);
+            api.GarglkInit(argv);
             Garglk_Pinvoke.garglk_set_program_name("FrankenDrift for Gargoyle");
         }
     }
