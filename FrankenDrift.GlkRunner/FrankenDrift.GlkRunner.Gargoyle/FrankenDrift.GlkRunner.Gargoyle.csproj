@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
 	  <OutputType>WinExe</OutputType>
 	  <StartupObject>FrankenDrift.GlkRunner.Gargoyle.GarGlkRunner</StartupObject>
+	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

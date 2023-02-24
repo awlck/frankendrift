@@ -1,31 +1,30 @@
 ﻿using FrankenDrift.GlkRunner.Glk;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FrankenDrift.GlkRunner
 {
     internal class GlkGridWin
     {
+        private IGlk GlkApi;
+        private GlkUtil GlkUtil;
         private IntPtr glkwin_handle;
 
-        internal GlkGridWin(IntPtr handle)
+        internal GlkGridWin(IGlk glk, IntPtr handle)
         {
+            GlkApi = glk;
+            GlkUtil = new GlkUtil(GlkApi);
             glkwin_handle = handle;
         }
 
         internal void Clear()
         {
-            Glk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
-            Glk_Pinvoke.glk_window_clear(glkwin_handle);
+            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            GlkApi.glk_window_clear(glkwin_handle);
         }
 
         internal void RewriteStatus(string status)
         {
-            Glk_Pinvoke.glk_set_window(glkwin_handle);
-            Glk_Pinvoke.glk_window_move_cursor(glkwin_handle, 0, 0);
+            GlkApi.glk_set_window(glkwin_handle);
+            GlkApi.glk_window_move_cursor(glkwin_handle, 0, 0);
             GlkUtil.OutputString(status);
         }
 
@@ -33,7 +32,7 @@ namespace FrankenDrift.GlkRunner
         {
             get
             {
-                Glk_Pinvoke.glk_window_get_size(glkwin_handle, out var width, out _);
+                GlkApi.glk_window_get_size(glkwin_handle, out var width, out _);
                 return (int)width;
             }
         }
