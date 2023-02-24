@@ -36,6 +36,28 @@ namespace FrankenDrift.Runner
 		{
 			return new Point { X = pt3D.X, Y = pt3D.Y } * AdriftMap._scale;
 		}
+
+		public static Eto.Drawing.DashStyle ToDashStyle(this ConceptualDashStyle style)
+		{
+			switch (style)
+			{
+				case ConceptualDashStyle.Dot:
+					return DashStyles.Dot;
+				case ConceptualDashStyle.Solid:
+					return DashStyles.Solid;
+			}
+			return DashStyles.Solid;
+		}
+
+		public static FrankenDrift.Glue.Point2D ToGluePoint(this Eto.Drawing.Point pt)
+		{
+			return new Point2D(pt.X, pt.Y);
+		}
+
+		public static Eto.Drawing.Point ToEtoPoint(this FrankenDrift.Glue.Point2D pt)
+		{
+			return new Point(pt.X, pt.Y);
+		}
 	}
 
 	public static class CollectionExtensions
@@ -93,7 +115,7 @@ namespace FrankenDrift.Runner
 		}
 	}
 		
-	public class AdriftMap : Form, Map
+	public class AdriftMap : Form, Glue.Map
 	{
 		internal static int _scale = 10;
 		internal static int _offsetX = 200;
@@ -167,16 +189,16 @@ namespace FrankenDrift.Runner
 
 			if (node.Key is null) return;
 
-			node.Points = new Point[]
+			node.Points = new Point2D[]
 			{
-				Planes.GetPoint2D(node.Location),
-				Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y, node.Location.Z),
-				Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y + node.Height, node.Location.Z),
-				Planes.GetPoint2D(node.Location.X, node.Location.Y + node.Height, node.Location.Z)
+				Planes.GetPoint2D(node.Location).ToGluePoint(),
+				Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y, node.Location.Z).ToGluePoint(),
+				Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y + node.Height, node.Location.Z).ToGluePoint(),
+				Planes.GetPoint2D(node.Location.X, node.Location.Y + node.Height, node.Location.Z).ToGluePoint()
 			};
 
-			node.ptUp = Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y + node.Location.Y, node.Location.Z - 6);
-			node.ptDown = Planes.GetPoint2D(node.Location.X + node.Width/2, node.Location.Y + node.Location.Y, node.Location.Z + 6);
+			node.ptUp = Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y + node.Location.Y, node.Location.Z - 6).ToGluePoint();
+			node.ptDown = Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y + node.Location.Y, node.Location.Z + 6).ToGluePoint();
 
 			RecalculateLinks(node);
 			if (Page is not null)
@@ -227,35 +249,35 @@ namespace FrankenDrift.Runner
 				var midStart = 2;
 				if (dest is null)
 				{
-					link.Points = new Point[2];
+					link.Points = new Point2D[2];
 				}
 				else if (link.OrigMidPoints.Length == 0)
 				{
-					link.Points = new Point[3];
+					link.Points = new Point2D[3];
 				}
 				else
 				{
-					link.Points = new Point[link.OrigMidPoints.Length + 1];
+					link.Points = new Point2D[link.OrigMidPoints.Length + 1];
 					midStart = 1;
 				}
 
-				link.Points[0] = ptStart;
+				link.Points[0] = ptStart.ToGluePoint();
 				if (link.OrigMidPoints.Length == 0)
-					link.Points[1] = GetBezierAssister(node, link.eSourceLinkPoint, dist);
+					link.Points[1] = GetBezierAssister(node, link.eSourceLinkPoint, dist).ToGluePoint();
 				if (link.sDestination == "")
 				{
 					for (var i = 0; i < link.OrigMidPoints.Length-1; i++)
 					{
 						var ptMid = new Point(link.OrigMidPoints[i].X * _scale, link.OrigMidPoints[i].Y * _scale);
-						link.Points[midStart + i] = ptMid;
+						link.Points[midStart + i] = ptMid.ToGluePoint();
 					}
 				}
 
 				if (dest is not null)
 				{
 					if (link.Points.Length == 4 && link.OrigMidPoints.Length == 0)
-						link.Points[^2] = GetBezierAssister(dest, link.eDestinationLinkPoint, dist);
-					link.Points[^1] = ptEnd.Value;
+						link.Points[^2] = GetBezierAssister(dest, link.eDestinationLinkPoint, dist).ToGluePoint();
+					link.Points[^1] = ptEnd.Value.ToGluePoint();
 				}
 
 				if (link.eSourceLinkPoint == SharedModule.DirectionsEnum.In && link.sDestination != "")
@@ -276,22 +298,22 @@ namespace FrankenDrift.Runner
 			{
 				node.ptOut = node.eOutEdge switch
 				{
-					SharedModule.DirectionsEnum.North => new Point(3 * node.Width * _scale / 4, 0),
-					SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, 3 * node.Height * _scale / 4),
-					SharedModule.DirectionsEnum.South => new Point(node.Width * _scale/4, node.Height*_scale),
-					SharedModule.DirectionsEnum.West => new Point(0, node.Height*_scale/4),
-					_ => new Point(0, 0)
+					SharedModule.DirectionsEnum.North => new Point2D(3 * node.Width * _scale / 4, 0),
+					SharedModule.DirectionsEnum.East => new Point2D(node.Width * _scale, 3 * node.Height * _scale / 4),
+					SharedModule.DirectionsEnum.South => new Point2D(node.Width * _scale/4, node.Height*_scale),
+					SharedModule.DirectionsEnum.West => new Point2D(0, node.Height*_scale/4),
+					_ => new Point2D(0, 0)
 				};
 			}
 			if (node.bHasIn)
 			{
 				node.ptIn = node.eInEdge switch
 				{
-					SharedModule.DirectionsEnum.North => new Point(node.Width * _scale / 4, 0),
-					SharedModule.DirectionsEnum.East => new Point(node.Width * _scale, node.Height * _scale / 4),
-					SharedModule.DirectionsEnum.South => new Point(3 * node.Width * _scale / 4, node.Height * _scale),
-					SharedModule.DirectionsEnum.West => new Point(0, 3 * node.Height * _scale / 4),
-					_ => new Point(0,0)
+					SharedModule.DirectionsEnum.North => new Point2D(node.Width * _scale / 4, 0),
+					SharedModule.DirectionsEnum.East => new Point2D(node.Width * _scale, node.Height * _scale / 4),
+					SharedModule.DirectionsEnum.South => new Point2D(3 * node.Width * _scale / 4, node.Height * _scale),
+					SharedModule.DirectionsEnum.West => new Point2D(0, 3 * node.Height * _scale / 4),
+					_ => new Point2D(0,0)
 				};
 			}
 		}
@@ -326,19 +348,19 @@ namespace FrankenDrift.Runner
 				case SharedModule.DirectionsEnum.North:
 					return Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y, node.Location.Z);
 				case SharedModule.DirectionsEnum.NorthEast:
-					return node.Points[1];
+					return node.Points[1].ToEtoPoint();
 				case SharedModule.DirectionsEnum.East:
 					return Planes.GetPoint2D(node.Location.X + node.Width, node.Location.Y + node.Height / 2, node.Location.Z);
 				case SharedModule.DirectionsEnum.SouthEast:
-					return node.Points[2];
+					return node.Points[2].ToEtoPoint();
 				case SharedModule.DirectionsEnum.South:
 					return Planes.GetPoint2D(node.Location.X + node.Width/2, node.Location.Y + node.Height, node.Location.Z);
 				case SharedModule.DirectionsEnum.SouthWest:
-					return node.Points[3];
+					return node.Points[3].ToEtoPoint();
 				case SharedModule.DirectionsEnum.West:
 					return Planes.GetPoint2D(node.Location.X, node.Location.Y + (node.Height / 2), node.Location.Z);
 				case SharedModule.DirectionsEnum.NorthWest:
-					return node.Points[0];
+					return node.Points[0].ToEtoPoint();
 				case SharedModule.DirectionsEnum.Up:
 				case SharedModule.DirectionsEnum.Down:
 					return Planes.GetPoint2D(node.Location.X + node.Width / 2, node.Location.Y + node.Height / 2, node.Location.Z);
@@ -602,7 +624,7 @@ namespace FrankenDrift.Runner
 
 			var _ = "";
 			var link = node.Links[dir];
-			if (link.Style == DashStyles.Dot && !SharedModule.Adventure.Player.HasRouteInDirection(dir, false, node.Key, ref _))
+			if (link.Style == ConceptualDashStyle.Dot && !SharedModule.Adventure.Player.HasRouteInDirection(dir, false, node.Key, ref _))
 				return;
 			if (link.sDestination is null || !SharedModule.Adventure.htblLocations[link.sDestination].get_SeenBy(SharedModule.Adventure.Player.Key))
 				return;
@@ -616,7 +638,7 @@ namespace FrankenDrift.Runner
 			else
 				linkPen = new Pen(new Color(_linkColor, 30), _scale / 5);
 
-			linkPen.DashStyle = link.Style;
+			linkPen.DashStyle = link.Style.ToDashStyle();
 			linkPen.LineCap = PenLineCap.Square;
 			// todo: Account for non-bidirectional connections and draw arrow tips accordingly
 
@@ -629,14 +651,14 @@ namespace FrankenDrift.Runner
 			if (link.Points is not null && !(link.Points.Length == 3 && link.Points[2].X == 0 && link.Points[2].Y == 0))
 			{
 				if (link.Points.Length == 3 && link.sDestination == "")
-					gfx.DrawBezier(linkPen, link.Points[0], link.Points[1], link.Points[2], link.Points[2]);
+					gfx.DrawBezier(linkPen, link.Points[0].ToEtoPoint(), link.Points[1].ToEtoPoint(), link.Points[2].ToEtoPoint(), link.Points[2].ToEtoPoint());
 				else if (link.Points.Length == 4 && link.OrigMidPoints.Length == 0)
-					gfx.DrawBezier(linkPen, link.Points);
+					gfx.DrawBezier(linkPen, link.Points.Select(pt => new Point(pt.X, pt.Y)).ToArray());
 				else if (link.Points.All(pt => pt.X == link.Points[0].X) || link.Points.All(pt => pt.Y == link.Points[0].Y))
 					// if all points are on a line, simply draw that line
-					gfx.DrawLine(linkPen, link.Points[0], link.Points[^1]);
+					gfx.DrawLine(linkPen, link.Points[0].ToEtoPoint(), link.Points[^1].ToEtoPoint());
 				else
-					gfx.DrawCurve(linkPen, link.Points);
+					gfx.DrawCurve(linkPen, link.Points.Select(pt => new Point(pt.X, pt.Y)).ToArray());
 			}
 
 			if (dest is not null && (dir == SharedModule.DirectionsEnum.Out || dir == SharedModule.DirectionsEnum.In))

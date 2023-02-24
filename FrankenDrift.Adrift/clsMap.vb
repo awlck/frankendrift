@@ -1,4 +1,6 @@
-﻿Imports Eto.Drawing
+﻿Imports Point = FrankenDrift.Glue.Point2D
+Imports DashStyle = FrankenDrift.Glue.ConceptualDashStyle
+Imports DashStyles = FrankenDrift.Glue.ConceptualDashStyle
 
 Public Class Point3D
     Public X As Integer
@@ -38,7 +40,7 @@ Public Class MapNode
     Private bOverlapping As Boolean = False
     Private bSeen As Boolean = False
     Public eInEdge, eOutEdge As DirectionsEnum
-    Public ptIn, ptOut As Eto.Drawing.Point
+    Public ptIn, ptOut As Point
     Public bHasUp, bHasDown, bHasIn, bHasOut As Boolean
     Public bDrawIn, bDrawOut As Boolean
 

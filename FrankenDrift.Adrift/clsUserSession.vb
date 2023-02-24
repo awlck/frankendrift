@@ -2,15 +2,14 @@
 
 Imports System.Xml
 
-Imports Eto.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 
 Public Class RunnerSession
 
     Public sIt, sHim, sHer, sThem As String
-    Friend stackFonts As New Stack(Of Font)
-    Friend stackColours As New Stack(Of String)
+    ' Friend stackFonts As New Stack(Of Font)
+    ' Friend stackColours As New Stack(Of String)
     Public dtDebug As DateTime
     Public iDebugIndent As Integer
     Public bNoDebug As Boolean
@@ -31,7 +30,7 @@ Public Class RunnerSession
     Public sGameFolder As String
     Public bGraphics As Boolean = True
     Public WithEvents Map As FrankenDrift.Glue.Map
-    Friend DefaultFont As Font
+    ' Friend DefaultFont As Font
     Friend bUseDefaultFont As Boolean = False
     Friend sTurnOutput As String = ""
     Friend bRequiresRestoreLayout As Boolean = False

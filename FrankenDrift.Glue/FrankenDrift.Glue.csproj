@@ -4,6 +4,7 @@
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <RootNamespace>FrankenDrift.Glue</RootNamespace>
 	<VersionPrefix>0.7.0</VersionPrefix>
+	  <VersionSuffix>indev</VersionSuffix>
   </PropertyGroup>
 	
 </Project>

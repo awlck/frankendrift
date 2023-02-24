@@ -2,11 +2,12 @@ Imports System.IO
 Imports System.Text.Encoding
 Imports System.Xml
 
-Imports Eto.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 Imports ICSharpCode.SharpZipLib
 Imports ICSharpCode.SharpZipLib.Zip.Compression.Streams
+
+Imports DashStyles = FrankenDrift.Glue.ConceptualDashStyle
 
 Module FileIO
 
