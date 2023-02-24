@@ -110,14 +110,6 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void gli_startup_m_(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
     }
 
-    internal enum GarglkInitMode
-    {
-        NotDetermined = 0,
-        GliStartup = 1,
-        GliStartupMangled = 2,
-        GarglkStartup = 3
-    }
-
     class GarGlk: IGlk
     {
         public BlorbError giblorb_set_resource_map(IntPtr fileStream) => Garglk_Pinvoke.giblorb_set_resource_map(fileStream);
