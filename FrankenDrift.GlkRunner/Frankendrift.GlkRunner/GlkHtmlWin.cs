@@ -1,6 +1,4 @@
 ﻿using FrankenDrift.GlkRunner.Glk;
-using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -35,6 +33,8 @@ namespace FrankenDrift.GlkRunner
 
     internal class GlkHtmlWin : Glue.RichTextBox, IDisposable
     {
+        private IGlk GlkApi;
+        private GlkUtil GlkUtil;
         internal static GlkHtmlWin? MainWin = null;
         internal static uint NumberOfWindows = 0;
 
@@ -64,29 +64,31 @@ namespace FrankenDrift.GlkRunner
             "TADS-monospace"
         };
 
-        internal IntPtr Stream => Glk_Pinvoke.glk_window_get_stream(glkwin_handle);
+        internal IntPtr Stream => GlkApi.glk_window_get_stream(glkwin_handle);
 
-        internal GlkHtmlWin()
+        internal GlkHtmlWin(IGlk glk)
         {
+            GlkApi = glk;
+            GlkUtil = new GlkUtil(GlkApi);
             if (MainWin is null)
             {
                 MainWin = this;
-                glkwin_handle = Glk_Pinvoke.glk_window_open(IntPtr.Zero, 0, 0, WinType.TextBuffer, NumberOfWindows);
+                glkwin_handle = GlkApi.glk_window_open(IntPtr.Zero, 0, 0, WinType.TextBuffer, NumberOfWindows);
             }
             else
             {
-                glkwin_handle = _doWindowOpen(MainWin, WinType.TextBuffer, WinMethod.Right | WinMethod.Proportional, 30);
+                glkwin_handle = _doWindowOpen(GlkApi, MainWin, WinType.TextBuffer, WinMethod.Right | WinMethod.Proportional, 30);
             }
         }
 
         GlkHtmlWin(GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
         {
-            glkwin_handle = _doWindowOpen(splitFrom, WinType.TextBuffer, splitMethod, splitSize);
+            glkwin_handle = _doWindowOpen(GlkApi, splitFrom, WinType.TextBuffer, splitMethod, splitSize);
         }
 
-        private static IntPtr _doWindowOpen(GlkHtmlWin splitFrom, WinType type, WinMethod splitMethod, uint splitSize)
+        private static IntPtr _doWindowOpen(IGlk glk, GlkHtmlWin splitFrom, WinType type, WinMethod splitMethod, uint splitSize)
         {
-            var result = Glk_Pinvoke.glk_window_open(splitFrom.glkwin_handle, splitMethod, splitSize, type, ++NumberOfWindows);
+            var result = glk.glk_window_open(splitFrom.glkwin_handle, splitMethod, splitSize, type, ++NumberOfWindows);
             if (result == IntPtr.Zero)
                 throw new GlkError("Failed to open window.");
             return result;
@@ -94,13 +96,13 @@ namespace FrankenDrift.GlkRunner
 
         internal GlkGridWin CreateStatusBar()
         {
-            return new GlkGridWin(_doWindowOpen(this, WinType.TextGrid, WinMethod.Above | WinMethod.Fixed, 1));
+            return new GlkGridWin(GlkApi, _doWindowOpen(GlkApi, this, WinType.TextGrid, WinMethod.Above | WinMethod.Fixed, 1));
         }
 
         public void Clear()
         {
-            Glk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
-            Glk_Pinvoke.glk_window_clear(glkwin_handle);
+            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            GlkApi.glk_window_clear(glkwin_handle);
         }
 
         internal unsafe string GetLineInput()
@@ -112,17 +114,17 @@ namespace FrankenDrift.GlkRunner
             var cmdToBe = new uint[capacity];
             fixed (uint* buf = cmdToBe)
             {
-                Glk_Pinvoke.glk_request_line_event_uni(glkwin_handle, buf, capacity-1, 0);
+                GlkApi.glk_request_line_event_uni(glkwin_handle, buf, capacity-1, 0);
                 if (_hyperlinks.Count > 0)
-                    Glk_Pinvoke.glk_request_hyperlink_event(glkwin_handle);
+                    GlkApi.glk_request_hyperlink_event(glkwin_handle);
                 while (true)
                 {
                     Event ev = new() { type = EventType.None };
-                    Glk_Pinvoke.glk_select(ref ev);
+                    GlkApi.glk_select(ref ev);
                     if (ev.type == EventType.LineInput && ev.win_handle == glkwin_handle)
                     {
                         var count = (int) ev.val1;
-                        Glk_Pinvoke.glk_cancel_hyperlink_event(glkwin_handle);
+                        GlkApi.glk_cancel_hyperlink_event(glkwin_handle);
                         IsWaiting = false;
                         //var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
                         //return dec.GetString(cmdToBe, 0, count);
@@ -137,7 +139,7 @@ namespace FrankenDrift.GlkRunner
                         Event ev2 = new();
                         if (_hyperlinks.ContainsKey(linkId))
                         {
-                            Glk_Pinvoke.glk_cancel_line_event(glkwin_handle, ref ev2);
+                            GlkApi.glk_cancel_line_event(glkwin_handle, ref ev2);
                             IsWaiting = false;
                             var result = _hyperlinks[linkId];
                             _hyperlinks.Clear();
@@ -156,11 +158,11 @@ namespace FrankenDrift.GlkRunner
                 throw new ConcurrentEventException("Too many input events requested");
             IsWaiting = true;
             uint result;
-            Glk_Pinvoke.glk_request_char_event(glkwin_handle);
+            GlkApi.glk_request_char_event(glkwin_handle);
             while (true)
             {
                 Event ev = new() { type = EventType.None };
-                Glk_Pinvoke.glk_select(ref ev);
+                GlkApi.glk_select(ref ev);
                 if (ev.type == EventType.CharInput && ev.win_handle == glkwin_handle)
                 {
                     result = ev.val1;
@@ -174,11 +176,11 @@ namespace FrankenDrift.GlkRunner
 
         private void FakeInput(string cmd)
         {
-            Glk_Pinvoke.glk_set_window(glkwin_handle);
-            Glk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
-            Glk_Pinvoke.glk_set_style(Style.Input);
+            GlkApi.glk_set_window(glkwin_handle);
+            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            GlkApi.glk_set_style(Style.Input);
             GlkUtil.OutputString(cmd);
-            Glk_Pinvoke.glk_set_style(Style.Normal);
+            GlkApi.glk_set_style(Style.Normal);
             GlkUtil.OutputString("\n");
         }
 
@@ -197,8 +199,8 @@ namespace FrankenDrift.GlkRunner
                 _pendingText += src;
                 return;
             }
-            Glk_Pinvoke.glk_set_window(glkwin_handle);
-            Glk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            GlkApi.glk_set_window(glkwin_handle);
+            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
 
             var consumed = 0;
             var inToken = false;
@@ -368,7 +370,7 @@ namespace FrankenDrift.GlkRunner
                                 && Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(imgPath.Groups[1].Value))
                         {
                             var res = Adrift.SharedModule.Adventure.BlorbMappings[imgPath.Groups[1].Value];
-                            Glk_Pinvoke.glk_image_draw(glkwin_handle, (uint)res, (int)ImageAlign.MarginRight, 0);
+                            GlkApi.glk_image_draw(glkwin_handle, (uint)res, (int)ImageAlign.MarginRight, 0);
                         }
                     }
                     else if (currentToken.StartsWith("audio play"))
@@ -415,7 +417,7 @@ namespace FrankenDrift.GlkRunner
                     OutputStyled(current.ToString(), styleHistory.Peek());
                     current.Clear();
                     _hyperlinks[_hyperlinksSoFar] = nextLinkRef.Item2;
-                    Glk_Pinvoke.glk_set_hyperlink(_hyperlinksSoFar++);
+                    GlkApi.glk_set_hyperlink(_hyperlinksSoFar++);
                     current.Append(c);
                 }
                 else if (nextLinkRef is not null && nextLinkRef.Item1.End.Value == consumed)
@@ -423,7 +425,7 @@ namespace FrankenDrift.GlkRunner
                     current.Append(c);
                     OutputStyled(current.ToString(), styleHistory.Peek());
                     current.Clear();
-                    Glk_Pinvoke.glk_set_hyperlink(0);
+                    GlkApi.glk_set_hyperlink(0);
                     if (linksToBe.Count > 0)
                         nextLinkRef = linksToBe.Dequeue();
                 }
@@ -431,9 +433,9 @@ namespace FrankenDrift.GlkRunner
             }
 
             OutputStyled(current.ToString(), styleHistory.Peek());
-            Glk_Pinvoke.glk_set_hyperlink(0);
-            Glk_Pinvoke.glk_window_flow_break(glkwin_handle);
-            Glk_Pinvoke.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            GlkApi.glk_set_hyperlink(0);
+            GlkApi.glk_window_flow_break(glkwin_handle);
+            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
 
             if (!IsWaiting && !string.IsNullOrEmpty(_pendingText))
             {
@@ -445,9 +447,9 @@ namespace FrankenDrift.GlkRunner
 
         internal bool DrawImageImmediately(uint imgId)
         {
-            var result = Glk_Pinvoke.glk_image_draw(glkwin_handle, imgId, (int)ImageAlign.MarginLeft, 0);
+            var result = GlkApi.glk_image_draw(glkwin_handle, imgId, (int)ImageAlign.MarginLeft, 0);
             if (result == 0) return false;
-            Glk_Pinvoke.glk_window_flow_break(glkwin_handle);
+            GlkApi.glk_window_flow_break(glkwin_handle);
             return true;
         }
 
@@ -455,30 +457,30 @@ namespace FrankenDrift.GlkRunner
         {
             if (string.IsNullOrEmpty(txt)) return;
             txt = txt.Replace("&lt;", "<").Replace("&gt;", ">").Replace("&perc;", "%").Replace("&quot;", "\"");
-            Glk_Pinvoke.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);
+            GlkApi.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);
             if ((fi.Ts & TextStyle.Monospace) != 0)
             {
-                Glk_Pinvoke.glk_set_style(Style.Preformatted);
+                GlkApi.glk_set_style(Style.Preformatted);
             }
             else if ((fi.Ts & TextStyle.Centered) != 0)
             {
-                Glk_Pinvoke.glk_set_style(Style.BlockQuote);
+                GlkApi.glk_set_style(Style.BlockQuote);
             }
             else if ((fi.Ts & (TextStyle.Italic | TextStyle.Bold)) != 0)
             {
-                Glk_Pinvoke.glk_set_style(Style.Alert);
+                GlkApi.glk_set_style(Style.Alert);
             }
             else if ((fi.Ts & TextStyle.Italic) != 0)
             {
-                Glk_Pinvoke.glk_set_style(Style.Emphasized);
+                GlkApi.glk_set_style(Style.Emphasized);
             }
             else if ((fi.Ts & TextStyle.Bold) != 0)
             {
-                Glk_Pinvoke.glk_set_style(Style.Subheader);
+                GlkApi.glk_set_style(Style.Subheader);
             }
             else
             {
-                Glk_Pinvoke.glk_set_style(Style.Normal);
+                GlkApi.glk_set_style(Style.Normal);
             }
             GlkUtil.OutputString(txt);
         }
@@ -486,7 +488,7 @@ namespace FrankenDrift.GlkRunner
         private uint GetInputTextColor()
         {
             uint result = 0;
-            var success = Glk_Pinvoke.glk_style_measure(glkwin_handle, Style.Input, StyleHint.TextColor, ref result);
+            var success = GlkApi.glk_style_measure(glkwin_handle, Style.Input, StyleHint.TextColor, ref result);
             if (success == 0)
                 return (uint)ZColor.Default;
             return result;
@@ -503,7 +505,7 @@ namespace FrankenDrift.GlkRunner
 
                 // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben
                 // TODO: Große Felder auf NULL setzen
-                Glk_Pinvoke.glk_window_close(glkwin_handle, IntPtr.Zero);
+                GlkApi.glk_window_close(glkwin_handle, IntPtr.Zero);
                 glkwin_handle = IntPtr.Zero;
             }
         }
@@ -528,30 +530,30 @@ namespace FrankenDrift.GlkRunner
                 uint result = 0;
                 AppendHTML($"Style status for style: {s}\n");
                 AppendHTML("  Indentation: ");
-                var success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Indentation, ref result);
+                var success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.Indentation, ref result);
                 AppendHTML(success == 1 ? $"{result}\n" : "n/a\n");
                 AppendHTML("  Paragraph Indentation: ");
-                success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.ParaIndentation, ref result);
+                success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.ParaIndentation, ref result);
                 AppendHTML(success == 1 ? $"{result}\n" : "n/a\n");
                 AppendHTML("  Justification: ");
-                success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Justification, ref result);
+                success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.Justification, ref result);
                 AppendHTML(success == 1 ? $"{(Justification)result}\n" : "n/a\n");
                 AppendHTML("  Font Size: ");
-                success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Size, ref result);
+                success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.Size, ref result);
                 AppendHTML(success == 1 ? $"{result}\n" : "n/a\n");
                 AppendHTML("  Font Weight: ");
-                success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Weight, ref result);
+                success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.Weight, ref result);
                 AppendHTML(success == 1 ? $"{(int)result}\n" : "n/a\n");
                 AppendHTML("  Italics: ");
-                success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Oblique, ref result);
+                success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.Oblique, ref result);
                 if (success == 1) AppendHTML(result == 1 ? "yes\n" : "no\n");
                 else AppendHTML("n/a\n");
                 AppendHTML("  Font Type: ");
-                success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.Proportional, ref result);
+                success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.Proportional, ref result);
                 if (success == 1) AppendHTML(result == 1 ? "proportional\n" : "fixed-width\n");
                 else AppendHTML("n/a\n");
                 AppendHTML("  Text color: ");
-                success = Glk_Pinvoke.glk_style_measure(glkwin_handle, s, StyleHint.TextColor, ref result);
+                success = GlkApi.glk_style_measure(glkwin_handle, s, StyleHint.TextColor, ref result);
                 AppendHTML(success == 1 ? $"0x{result:X}\n" : "n/a\n");
             }
         }
