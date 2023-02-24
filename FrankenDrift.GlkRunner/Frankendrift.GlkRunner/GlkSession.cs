@@ -140,19 +140,6 @@ namespace FrankenDrift.GlkRunner
 
         public void OutputHTML(string source) => _output.AppendHTML(source);
 
-        public void OutputString(string msg)
-        {
-            var runes = msg.EnumerateRunes().Select(r => (uint)r.Value).ToArray();
-            GlkApi.glk_put_buffer_uni(runes, (uint)runes.Length);
-        }
-
-        public void OutputStringLatin1(string msg)
-        {
-            var encoder = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
-            var bytes = encoder.GetBytes(msg);
-            GlkApi.glk_put_buffer(bytes, (uint)bytes.Length);
-        }
-
         public string QueryRestorePath()
         {
             var fileref = GlkApi.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
