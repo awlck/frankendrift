@@ -81,7 +81,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         [DllImport("libgarglk")]
         internal static extern void glk_window_clear(WindowHandle winId);
         [DllImport("libgarglk")]
-        internal static extern void glk_window_close(WindowHandle winId, IntPtr streamResult);
+        internal static extern void glk_window_close(WindowHandle winId, ref StreamResult streamResult);
         [DllImport("libgarglk")]
         internal static extern void glk_window_flow_break(WindowHandle winId);
         [DllImport("libgarglk")]
@@ -148,7 +148,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result) => Garglk_Pinvoke.glk_style_measure(winid, styl, hint, ref result);
         public void glk_tick() => Garglk_Pinvoke.glk_tick();
         public void glk_window_clear(WindowHandle winId) => Garglk_Pinvoke.glk_window_clear(winId);
-        public void glk_window_close(WindowHandle winId, IntPtr streamResult) => Garglk_Pinvoke.glk_window_close(winId, streamResult);
+        public void glk_window_close(WindowHandle winId, ref StreamResult streamResult) => Garglk_Pinvoke.glk_window_close(winId, ref streamResult);
         public void glk_window_flow_break(WindowHandle winId) => Garglk_Pinvoke.glk_window_flow_break(winId);
         public void glk_window_get_size(WindowHandle winId, out uint width, out uint height) => Garglk_Pinvoke.glk_window_get_size(winId, out width, out height);
         public StreamHandle glk_window_get_stream(WindowHandle winId) => Garglk_Pinvoke.glk_window_get_stream(winId);

@@ -507,7 +507,10 @@ namespace FrankenDrift.GlkRunner
 
                 // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben
                 // TODO: Große Felder auf NULL setzen
-                GlkApi.glk_window_close(glkwin_handle, IntPtr.Zero);
+
+                // we're not interested in the result, but alas...
+                StreamResult r = new();
+                GlkApi.glk_window_close(glkwin_handle, ref r);
                 glkwin_handle = new(IntPtr.Zero);
             }
         }

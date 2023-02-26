@@ -193,6 +193,13 @@ namespace FrankenDrift.GlkRunner.Glk
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public readonly struct StreamResult
+    {
+        public readonly uint readcount;
+        public readonly uint writecount;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public record struct WindowHandle(IntPtr hwnd)
     {
         internal bool IsValid => hwnd != IntPtr.Zero;
@@ -215,6 +222,7 @@ namespace FrankenDrift.GlkRunner.Glk
     {
         internal bool IsValid => schan != IntPtr.Zero;
     }
+
 
     public interface IGlk
     {
@@ -255,7 +263,7 @@ namespace FrankenDrift.GlkRunner.Glk
         uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result);
         void glk_tick();
         void glk_window_clear(WindowHandle winId);
-        void glk_window_close(WindowHandle winId, IntPtr streamResult);
+        void glk_window_close(WindowHandle winId, ref StreamResult streamResult);
         void glk_window_flow_break(WindowHandle winId);
         void glk_window_get_size(WindowHandle winId, out uint width, out uint height);
         StreamHandle glk_window_get_stream(WindowHandle winId);
