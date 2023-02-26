@@ -202,9 +202,9 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_fileref_destroy(IntPtr fref);
         uint glk_image_draw(IntPtr winid, uint imageId, int val1, int val2);
         uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
-        void glk_put_buffer([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
-        void glk_put_buffer_stream(IntPtr streamId, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
-        void glk_put_buffer_uni([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U4)] uint[] s, uint len);
+        void glk_put_buffer(byte[] s, uint len);
+        void glk_put_buffer_stream(IntPtr streamId, byte[] s, uint len);
+        void glk_put_buffer_uni(uint[] s, uint len);
         void glk_request_char_event(IntPtr winId);
         void glk_request_hyperlink_event(IntPtr winId);
         unsafe void glk_request_line_event(IntPtr win, byte* buf, uint maxlen, uint initlen);
