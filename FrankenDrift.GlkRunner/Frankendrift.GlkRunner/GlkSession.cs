@@ -19,7 +19,7 @@ namespace FrankenDrift.GlkRunner
         public bool Locked => false;
         public void Close() => GlkApi.glk_exit();
 
-        private readonly Dictionary<int, IntPtr> _sndChannels = new();
+        private readonly Dictionary<int, SoundChannel> _sndChannels = new();
         private readonly Dictionary<int, string> _recentlyPlayedSounds = new();
 
         public MainSession(string gameFile, IGlk glk)
@@ -137,7 +137,7 @@ namespace FrankenDrift.GlkRunner
         public string QueryRestorePath()
         {
             var fileref = GlkApi.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
-            if (fileref == IntPtr.Zero) return "";
+            if (!fileref.IsValid) return "";
             var result = GlkApi.glkunix_fileref_get_name(fileref);
             GlkApi.glk_fileref_destroy(fileref);
             return result;
@@ -151,7 +151,7 @@ namespace FrankenDrift.GlkRunner
         public string QuerySavePath()
         {
             var fileref = GlkApi.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Write, 0);
-            if (fileref == IntPtr.Zero) return "";
+            if (!fileref.IsValid) return "";
             var result = GlkApi.glkunix_fileref_get_name(fileref);
             GlkApi.glk_fileref_destroy(fileref);
             return result;
