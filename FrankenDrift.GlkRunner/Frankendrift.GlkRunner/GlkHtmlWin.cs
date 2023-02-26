@@ -38,14 +38,14 @@ namespace FrankenDrift.GlkRunner
         internal static GlkHtmlWin? MainWin = null;
         internal static uint NumberOfWindows = 0;
 
-        private IntPtr glkwin_handle;
+        private WindowHandle glkwin_handle;
 
         public int TextLength => -1;
         public string Text { get => ""; set { } }
         public string SelectedText { get => ""; set { } }
         public int SelectionStart { get => -1; set { } }
         public int SelectionLength { get => -1; set { } }
-        public bool IsDisposed => glkwin_handle == IntPtr.Zero;
+        public bool IsDisposed => glkwin_handle.IsValid;
 
         internal bool IsWaiting = false;
         private string _pendingText = "";
@@ -73,30 +73,32 @@ namespace FrankenDrift.GlkRunner
             if (MainWin is null)
             {
                 MainWin = this;
-                glkwin_handle = GlkApi.glk_window_open(IntPtr.Zero, 0, 0, WinType.TextBuffer, NumberOfWindows);
+                var noWin = new WindowHandle(IntPtr.Zero);
+                glkwin_handle = GlkApi.glk_window_open(noWin, 0, 0, WinType.TextBuffer, NumberOfWindows);
             }
             else
             {
-                glkwin_handle = _doWindowOpen(GlkApi, MainWin, WinType.TextBuffer, WinMethod.Right | WinMethod.Proportional, 30);
+                glkwin_handle = DoWindowOpen(GlkApi, MainWin, WinType.TextBuffer, WinMethod.Right | WinMethod.Proportional, 30);
             }
         }
 
-        GlkHtmlWin(GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
+        GlkHtmlWin(IGlk glk, GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
         {
-            glkwin_handle = _doWindowOpen(GlkApi, splitFrom, WinType.TextBuffer, splitMethod, splitSize);
+            GlkApi = glk;
+            glkwin_handle = DoWindowOpen(GlkApi, splitFrom, WinType.TextBuffer, splitMethod, splitSize);
         }
 
-        private static IntPtr _doWindowOpen(IGlk glk, GlkHtmlWin splitFrom, WinType type, WinMethod splitMethod, uint splitSize)
+        private static WindowHandle DoWindowOpen(IGlk glk, GlkHtmlWin splitFrom, WinType type, WinMethod splitMethod, uint splitSize)
         {
             var result = glk.glk_window_open(splitFrom.glkwin_handle, splitMethod, splitSize, type, ++NumberOfWindows);
-            if (result == IntPtr.Zero)
+            if (!result.IsValid)
                 throw new GlkError("Failed to open window.");
             return result;
         }
 
         internal GlkGridWin CreateStatusBar()
         {
-            return new GlkGridWin(GlkApi, _doWindowOpen(GlkApi, this, WinType.TextGrid, WinMethod.Above | WinMethod.Fixed, 1));
+            return new GlkGridWin(GlkApi, DoWindowOpen(GlkApi, this, WinType.TextGrid, WinMethod.Above | WinMethod.Fixed, 1));
         }
 
         public void Clear()
@@ -496,7 +498,7 @@ namespace FrankenDrift.GlkRunner
 
         protected virtual void Dispose(bool disposing)
         {
-            if (glkwin_handle != IntPtr.Zero)
+            if (glkwin_handle.IsValid)
             {
                 if (disposing)
                 {
@@ -506,7 +508,7 @@ namespace FrankenDrift.GlkRunner
                 // TODO: Nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer überschreiben
                 // TODO: Große Felder auf NULL setzen
                 GlkApi.glk_window_close(glkwin_handle, IntPtr.Zero);
-                glkwin_handle = IntPtr.Zero;
+                glkwin_handle = new(IntPtr.Zero);
             }
         }
 

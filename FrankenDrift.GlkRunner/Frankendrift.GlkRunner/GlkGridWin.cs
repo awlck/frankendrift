@@ -6,9 +6,9 @@ namespace FrankenDrift.GlkRunner
     {
         private IGlk GlkApi;
         private GlkUtil GlkUtil;
-        private IntPtr glkwin_handle;
+        private WindowHandle glkwin_handle;
 
-        internal GlkGridWin(IGlk glk, IntPtr handle)
+        internal GlkGridWin(IGlk glk, WindowHandle handle)
         {
             GlkApi = glk;
             GlkUtil = new GlkUtil(GlkApi);
