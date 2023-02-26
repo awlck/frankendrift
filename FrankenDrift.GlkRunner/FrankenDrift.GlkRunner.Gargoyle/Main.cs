@@ -17,13 +17,13 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         [DllImport("libgarglk")]
         internal static extern void glk_exit();
         [DllImport("libgarglk")]
-        internal static extern IntPtr glk_fileref_create_by_name(FileUsage usage, Glk.FileMode fmode, uint rock);
+        internal static extern FileRefHandle glk_fileref_create_by_name(FileUsage usage, [MarshalAs(UnmanagedType.LPStr)] string name, Glk.FileMode fmode, uint rock);
         [DllImport("libgarglk")]
-        internal static extern IntPtr glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock);
+        internal static extern FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock);
         [DllImport("libgarglk")]
-        internal static extern IntPtr glk_fileref_create_temp(FileUsage usage, uint rock);
+        internal static extern FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock);
         [DllImport("libgarglk")]
-        internal static extern void glk_fileref_destroy(IntPtr fref);
+        internal static extern void glk_fileref_destroy(FileRefHandle fref);
         [DllImport("libgarglk")]
         internal static extern uint glk_image_draw(WindowHandle winid, uint imageId, int val1, int val2);
         [DllImport("libgarglk")]
@@ -67,7 +67,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         [DllImport("libgarglk")]
         internal static extern void glk_set_window(WindowHandle winId);
         [DllImport("libgarglk")]
-        internal static extern IntPtr glk_stream_open_file(IntPtr fileref, Glk.FileMode fmode, uint rock);
+        internal static extern IntPtr glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock);
         [DllImport("libgarglk")]
         internal static extern IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, Glk.FileMode mode, uint rock);
         [DllImport("libgarglk")]
@@ -95,7 +95,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         [DllImport("libgarglk")]
         internal static extern void garglk_set_zcolors(uint fg, uint bg);
         [DllImport("libgarglk")]
-        internal static extern IntPtr glkunix_fileref_get_name(IntPtr fileref);
+        internal static extern IntPtr glkunix_fileref_get_name(FileRefHandle fileref);
 
         // Garglk initialization functions.
         [DllImport("libgarglk")]
@@ -116,10 +116,10 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_cancel_hyperlink_event(WindowHandle winId) => Garglk_Pinvoke.glk_cancel_hyperlink_event(winId);
         public void glk_cancel_line_event(WindowHandle winId, ref Event ev) => Garglk_Pinvoke.glk_cancel_line_event(winId, ref ev);
         public void glk_exit() => Garglk_Pinvoke.glk_exit();
-        public IntPtr glk_fileref_create_by_name(FileUsage usage, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_fileref_create_by_name(usage, fmode, rock);
-        public IntPtr glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_fileref_create_by_prompt(usage, fmode, rock);
-        public IntPtr glk_fileref_create_temp(FileUsage usage, uint rock) => Garglk_Pinvoke.glk_fileref_create_temp(usage, rock);
-        public void glk_fileref_destroy(IntPtr fref) => Garglk_Pinvoke.glk_fileref_destroy(fref);
+        public FileRefHandle glk_fileref_create_by_name(FileUsage usage, string name, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_fileref_create_by_name(usage, name, fmode, rock);
+        public FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_fileref_create_by_prompt(usage, fmode, rock);
+        public FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock) => Garglk_Pinvoke.glk_fileref_create_temp(usage, rock);
+        public void glk_fileref_destroy(FileRefHandle fref) => Garglk_Pinvoke.glk_fileref_destroy(fref);
         public uint glk_image_draw(WindowHandle winid, uint imageId, int val1, int val2) => Garglk_Pinvoke.glk_image_draw(winid, imageId, val1, val2);
         public uint glk_image_get_info(uint imageId, ref uint width, ref uint height) => Garglk_Pinvoke.glk_image_get_info(imageId, ref width, ref height);
         public void glk_put_buffer(byte[] s, uint len) => Garglk_Pinvoke.glk_put_buffer(s, len);
@@ -141,7 +141,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_set_hyperlink(uint linkval) => Garglk_Pinvoke.glk_set_hyperlink(linkval);
         public void glk_set_style(Style s) => Garglk_Pinvoke.glk_set_style(s);
         public void glk_set_window(WindowHandle winId) => Garglk_Pinvoke.glk_set_window(winId);
-        public IntPtr glk_stream_open_file(IntPtr fileref, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_stream_open_file(fileref, fmode, rock);
+        public IntPtr glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_stream_open_file(fileref, fmode, rock);
         public IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, Glk.FileMode mode, uint rock) => Garglk_Pinvoke.glk_stream_open_memory(buf, buflen, mode, rock);
         public void glk_stream_set_position(IntPtr stream, int pos, SeekMode seekMode) => Garglk_Pinvoke.glk_stream_set_position(stream, pos, seekMode);
         public void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val) => Garglk_Pinvoke.glk_stylehint_set(wintype, styl, hint, val);
@@ -155,7 +155,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_window_move_cursor(WindowHandle winId, uint xpos, uint ypos) => Garglk_Pinvoke.glk_window_move_cursor(winId, xpos, ypos);
         public WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock) => Garglk_Pinvoke.glk_window_open(split, method, size, wintype, rock);
         public void garglk_set_zcolors(uint fg, uint bg) => Garglk_Pinvoke.garglk_set_zcolors(fg, bg);
-        public string? glkunix_fileref_get_name(IntPtr fileref) => Marshal.PtrToStringAnsi(Garglk_Pinvoke.glkunix_fileref_get_name(fileref));
+        public string? glkunix_fileref_get_name(FileRefHandle fileref) => Marshal.PtrToStringAnsi(Garglk_Pinvoke.glkunix_fileref_get_name(fileref));
 
         public void SetGameName(string game) => Garglk_Pinvoke.garglk_set_story_name(game);
 

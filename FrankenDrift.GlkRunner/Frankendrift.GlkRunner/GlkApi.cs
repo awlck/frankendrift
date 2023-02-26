@@ -199,10 +199,9 @@ namespace FrankenDrift.GlkRunner.Glk
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct FileRefHandle
+    public record struct FileRefHandle(IntPtr hfref)
     {
-        private IntPtr hfref;
-        void IsValid() { hfref = IntPtr.Zero; }
+        internal bool IsValid => hfref != IntPtr.Zero;
     }
 
     public interface IGlk
@@ -212,10 +211,10 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_cancel_hyperlink_event(WindowHandle winId);
         void glk_cancel_line_event(WindowHandle winId, ref Event ev);
         void glk_exit();
-        IntPtr glk_fileref_create_by_name(FileUsage usage, FileMode fmode, uint rock);
-        IntPtr glk_fileref_create_by_prompt(FileUsage usage, FileMode fmode, uint rock);
-        IntPtr glk_fileref_create_temp(FileUsage usage, uint rock);
-        void glk_fileref_destroy(IntPtr fref);
+        FileRefHandle glk_fileref_create_by_name(FileUsage usage, string name, FileMode fmode, uint rock);
+        FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, FileMode fmode, uint rock);
+        FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock);
+        void glk_fileref_destroy(FileRefHandle fref);
         uint glk_image_draw(WindowHandle winid, uint imageId, int val1, int val2);
         uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
         void glk_put_buffer(byte[] s, uint len);
@@ -237,7 +236,7 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_set_hyperlink(uint linkval);
         void glk_set_style(Style s);
         void glk_set_window(WindowHandle winId);
-        IntPtr glk_stream_open_file(IntPtr fileref, FileMode fmode, uint rock);
+        IntPtr glk_stream_open_file(FileRefHandle fileref, FileMode fmode, uint rock);
         IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
         void glk_stream_set_position(IntPtr stream, int pos, SeekMode seekMode);
         void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
@@ -251,7 +250,7 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_window_move_cursor(WindowHandle winId, uint xpos, uint ypos);
         WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock);
         void garglk_set_zcolors(uint fg, uint bg);
-        string? glkunix_fileref_get_name(IntPtr fileref);
+        string? glkunix_fileref_get_name(FileRefHandle fileref);
 
         // And some extra functions we want that could have different implementations
         void SetGameName(string game);
