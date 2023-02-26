@@ -204,10 +204,16 @@ namespace FrankenDrift.GlkRunner.Glk
         internal bool IsValid => hfref != IntPtr.Zero;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public record struct StreamHandle(IntPtr hstrm)
+    {
+        internal bool IsValid => hstrm != IntPtr.Zero;
+    }
+
     public interface IGlk
     {
 #pragma warning disable IDE1006 // Naming Styles
-        BlorbError giblorb_set_resource_map(IntPtr fileStream);
+        BlorbError giblorb_set_resource_map(StreamHandle fileStream);
         void glk_cancel_hyperlink_event(WindowHandle winId);
         void glk_cancel_line_event(WindowHandle winId, ref Event ev);
         void glk_exit();
@@ -218,7 +224,7 @@ namespace FrankenDrift.GlkRunner.Glk
         uint glk_image_draw(WindowHandle winid, uint imageId, int val1, int val2);
         uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
         void glk_put_buffer(byte[] s, uint len);
-        void glk_put_buffer_stream(IntPtr streamId, byte[] s, uint len);
+        void glk_put_buffer_stream(StreamHandle streamId, byte[] s, uint len);
         void glk_put_buffer_uni(uint[] s, uint len);
         void glk_request_char_event(WindowHandle winId);
         void glk_request_hyperlink_event(WindowHandle winId);
@@ -236,9 +242,9 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_set_hyperlink(uint linkval);
         void glk_set_style(Style s);
         void glk_set_window(WindowHandle winId);
-        IntPtr glk_stream_open_file(FileRefHandle fileref, FileMode fmode, uint rock);
-        IntPtr glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
-        void glk_stream_set_position(IntPtr stream, int pos, SeekMode seekMode);
+        StreamHandle glk_stream_open_file(FileRefHandle fileref, FileMode fmode, uint rock);
+        StreamHandle glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
+        void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode);
         void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
         uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result);
         void glk_tick();
@@ -246,7 +252,7 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_window_close(WindowHandle winId, IntPtr streamResult);
         void glk_window_flow_break(WindowHandle winId);
         void glk_window_get_size(WindowHandle winId, out uint width, out uint height);
-        IntPtr glk_window_get_stream(WindowHandle winId);
+        StreamHandle glk_window_get_stream(WindowHandle winId);
         void glk_window_move_cursor(WindowHandle winId, uint xpos, uint ypos);
         WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock);
         void garglk_set_zcolors(uint fg, uint bg);

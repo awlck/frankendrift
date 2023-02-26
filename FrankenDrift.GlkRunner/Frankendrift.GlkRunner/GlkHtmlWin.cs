@@ -64,7 +64,7 @@ namespace FrankenDrift.GlkRunner
             "TADS-monospace"
         };
 
-        internal IntPtr Stream => GlkApi.glk_window_get_stream(glkwin_handle);
+        internal StreamHandle Stream => GlkApi.glk_window_get_stream(glkwin_handle);
 
         internal GlkHtmlWin(IGlk glk)
         {
