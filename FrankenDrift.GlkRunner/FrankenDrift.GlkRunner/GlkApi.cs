@@ -56,7 +56,7 @@ namespace FrankenDrift.GlkRunner.Glk
         GraphicsCharInput = 23
     }
 
-    enum EventType : uint
+    public enum EventType : uint
     {
         None = 0,
         Timer = 1,
@@ -183,10 +183,10 @@ namespace FrankenDrift.GlkRunner.Glk
 
     public struct Event
     {
-        internal EventType type;
-        internal IntPtr win_handle;
-        internal uint val1;
-        internal uint val2;
+        public EventType type;
+        public IntPtr win_handle;
+        public uint val1;
+        public uint val2;
     }
 
     public interface IGlk
