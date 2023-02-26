@@ -210,6 +210,12 @@ namespace FrankenDrift.GlkRunner.Glk
         internal bool IsValid => hstrm != IntPtr.Zero;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public record struct SoundChannel(IntPtr schan)
+    {
+        internal bool IsValid => schan != IntPtr.Zero;
+    }
+
     public interface IGlk
     {
 #pragma warning disable IDE1006 // Naming Styles
@@ -230,14 +236,14 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_request_hyperlink_event(WindowHandle winId);
         unsafe void glk_request_line_event(WindowHandle win, byte* buf, uint maxlen, uint initlen);
         unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen);
-        IntPtr glk_schannel_create(uint rock);
-        void glk_schannel_destroy(IntPtr chan);
-        void glk_schannel_pause(IntPtr chan);
-        uint glk_schannel_play(IntPtr chan, uint sndId);
-        uint glk_schannel_play_ext(IntPtr chan, uint sndId, uint repeats, uint notify);
-        void glk_schannel_set_volume(IntPtr chan, uint vol);
-        void glk_schannel_stop(IntPtr chan);
-        void glk_schannel_unpause(IntPtr chan);
+        SoundChannel glk_schannel_create(uint rock);
+        void glk_schannel_destroy(SoundChannel chan);
+        void glk_schannel_pause(SoundChannel chan);
+        uint glk_schannel_play(SoundChannel chan, uint sndId);
+        uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify);
+        void glk_schannel_set_volume(SoundChannel chan, uint vol);
+        void glk_schannel_stop(SoundChannel chan);
+        void glk_schannel_unpause(SoundChannel chan);
         void glk_select(ref Event ev);
         void glk_set_hyperlink(uint linkval);
         void glk_set_style(Style s);

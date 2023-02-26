@@ -42,21 +42,21 @@ namespace FrankenDrift.GlkRunner.WinGlk
         [DllImport("Glk")]
         internal static extern unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen);
         [DllImport("Glk")]
-        internal static extern IntPtr glk_schannel_create(uint rock);
+        internal static extern SoundChannel glk_schannel_create(uint rock);
         [DllImport("Glk")]
-        internal static extern void glk_schannel_destroy(IntPtr chan);
+        internal static extern void glk_schannel_destroy(SoundChannel chan);
         [DllImport("Glk")]
-        internal static extern void glk_schannel_pause(IntPtr chan);
+        internal static extern void glk_schannel_pause(SoundChannel chan);
         [DllImport("Glk")]
-        internal static extern uint glk_schannel_play(IntPtr chan, uint sndId);
+        internal static extern uint glk_schannel_play(SoundChannel chan, uint sndId);
         [DllImport("Glk")]
-        internal static extern uint glk_schannel_play_ext(IntPtr chan, uint sndId, uint repeats, uint notify);
+        internal static extern uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify);
         [DllImport("Glk")]
-        internal static extern void glk_schannel_set_volume(IntPtr chan, uint vol);
+        internal static extern void glk_schannel_set_volume(SoundChannel chan, uint vol);
         [DllImport("Glk")]
-        internal static extern void glk_schannel_stop(IntPtr chan);
+        internal static extern void glk_schannel_stop(SoundChannel chan);
         [DllImport("Glk")]
-        internal static extern void glk_schannel_unpause(IntPtr chan);
+        internal static extern void glk_schannel_unpause(SoundChannel chan);
         [DllImport("Glk")]
         internal static extern void glk_select(ref Event ev);
         [DllImport("Glk")]
@@ -122,14 +122,14 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public void glk_request_hyperlink_event(WindowHandle winId) => Winglk_Pinvoke.glk_request_hyperlink_event(winId);
         public unsafe void glk_request_line_event(WindowHandle win, byte* buf, uint maxlen, uint initlen) => Winglk_Pinvoke.glk_request_line_event(win, buf, maxlen, initlen);
         public unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen) => Winglk_Pinvoke.glk_request_line_event_uni(win, buf, maxlen, initlen);
-        public IntPtr glk_schannel_create(uint rock) => Winglk_Pinvoke.glk_schannel_create(rock);
-        public void glk_schannel_destroy(IntPtr chan) => Winglk_Pinvoke.glk_schannel_destroy(chan);
-        public void glk_schannel_pause(IntPtr chan) => Winglk_Pinvoke.glk_schannel_pause(chan);
-        public uint glk_schannel_play(IntPtr chan, uint sndId) => Winglk_Pinvoke.glk_schannel_play(chan, sndId);
-        public uint glk_schannel_play_ext(IntPtr chan, uint sndId, uint repeats, uint notify) => Winglk_Pinvoke.glk_schannel_play_ext(chan, sndId, repeats, notify);
-        public void glk_schannel_set_volume(IntPtr chan, uint vol) => Winglk_Pinvoke.glk_schannel_set_volume(chan, vol);
-        public void glk_schannel_stop(IntPtr chan) => Winglk_Pinvoke.glk_schannel_stop(chan);
-        public void glk_schannel_unpause(IntPtr chan) => Winglk_Pinvoke.glk_schannel_unpause(chan);
+        public SoundChannel glk_schannel_create(uint rock) => Winglk_Pinvoke.glk_schannel_create(rock);
+        public void glk_schannel_destroy(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_destroy(chan);
+        public void glk_schannel_pause(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_pause(chan);
+        public uint glk_schannel_play(SoundChannel chan, uint sndId) => Winglk_Pinvoke.glk_schannel_play(chan, sndId);
+        public uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify) => Winglk_Pinvoke.glk_schannel_play_ext(chan, sndId, repeats, notify);
+        public void glk_schannel_set_volume(SoundChannel chan, uint vol) => Winglk_Pinvoke.glk_schannel_set_volume(chan, vol);
+        public void glk_schannel_stop(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_stop(chan);
+        public void glk_schannel_unpause(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_unpause(chan);
         public void glk_select(ref Event ev) => Winglk_Pinvoke.glk_select(ref ev);
         public void glk_set_hyperlink(uint linkval) => Winglk_Pinvoke.glk_set_hyperlink(linkval);
         public void glk_set_style(Style s) => Winglk_Pinvoke.glk_set_style(s);

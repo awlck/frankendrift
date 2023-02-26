@@ -19,7 +19,7 @@ namespace FrankenDrift.GlkRunner
         public bool Locked => false;
         public void Close() => GlkApi.glk_exit();
 
-        private readonly Dictionary<int, IntPtr> _sndChannels = new();
+        private readonly Dictionary<int, SoundChannel> _sndChannels = new();
         private readonly Dictionary<int, string> _recentlyPlayedSounds = new();
 
         public MainSession(string gameFile, IGlk glk)
