@@ -235,7 +235,7 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_window_move_cursor(IntPtr winId, uint xpos, uint ypos);
         IntPtr glk_window_open(IntPtr split, WinMethod method, uint size, WinType wintype, uint rock);
         void garglk_set_zcolors(uint fg, uint bg);
-        IntPtr glkunix_fileref_get_name(IntPtr fileref);
+        string? glkunix_fileref_get_name(IntPtr fileref);
 
         // And some extra functions we want that could have different implementations
         void SetGameName(string game);

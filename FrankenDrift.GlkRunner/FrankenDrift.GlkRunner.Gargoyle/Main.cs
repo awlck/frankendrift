@@ -155,7 +155,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_window_move_cursor(IntPtr winId, uint xpos, uint ypos) => Garglk_Pinvoke.glk_window_move_cursor(winId, xpos, ypos);
         public IntPtr glk_window_open(IntPtr split, WinMethod method, uint size, WinType wintype, uint rock) => Garglk_Pinvoke.glk_window_open(split, method, size, wintype, rock);
         public void garglk_set_zcolors(uint fg, uint bg) => Garglk_Pinvoke.garglk_set_zcolors(fg, bg);
-        public IntPtr glkunix_fileref_get_name(IntPtr fileref) => Garglk_Pinvoke.glkunix_fileref_get_name(fileref);
+        public string? glkunix_fileref_get_name(IntPtr fileref) => Marshal.PtrToStringAnsi(Garglk_Pinvoke.glkunix_fileref_get_name(fileref));
 
         public void SetGameName(string game) => Garglk_Pinvoke.garglk_set_story_name(game);
 

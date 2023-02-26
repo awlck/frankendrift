@@ -121,12 +121,6 @@ namespace FrankenDrift.GlkRunner
             return Environment.ProcessPath;
         }
 
-        public string FilerefGetName(IntPtr fileref)
-        {
-            var fn = GlkApi.glkunix_fileref_get_name(fileref);
-            return Marshal.PtrToStringAnsi(fn);
-        }
-
         public void InitInput()
         { }
 
@@ -144,7 +138,7 @@ namespace FrankenDrift.GlkRunner
         {
             var fileref = GlkApi.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
             if (fileref == IntPtr.Zero) return "";
-            var result = FilerefGetName(fileref);
+            var result = GlkApi.glkunix_fileref_get_name(fileref);
             GlkApi.glk_fileref_destroy(fileref);
             return result;
         }
@@ -158,7 +152,7 @@ namespace FrankenDrift.GlkRunner
         {
             var fileref = GlkApi.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Write, 0);
             if (fileref == IntPtr.Zero) return "";
-            var result = FilerefGetName(fileref);
+            var result = GlkApi.glkunix_fileref_get_name(fileref);
             GlkApi.glk_fileref_destroy(fileref);
             return result;
         }
