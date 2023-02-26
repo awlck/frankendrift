@@ -68,7 +68,7 @@ namespace FrankenDrift.GlkRunner.WinGlk
         [DllImport("Glk")]
         internal static extern StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock);
         [DllImport("Glk")]
-        internal static extern StreamHandle glk_stream_open_memory(IntPtr buf, uint buflen, Glk.FileMode mode, uint rock);
+        internal static unsafe extern StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock);
         [DllImport("Glk")]
         internal static extern void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode);
         [DllImport("Glk")]
@@ -135,7 +135,7 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public void glk_set_style(Style s) => Winglk_Pinvoke.glk_set_style(s);
         public void glk_set_window(WindowHandle winId) => Winglk_Pinvoke.glk_set_window(winId);
         public StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock) => Winglk_Pinvoke.glk_stream_open_file(fileref, fmode, rock);
-        public StreamHandle glk_stream_open_memory(IntPtr buf, uint buflen, Glk.FileMode mode, uint rock) => Winglk_Pinvoke.glk_stream_open_memory(buf, buflen, mode, rock);
+        public unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock) => Winglk_Pinvoke.glk_stream_open_memory(buf, buflen, mode, rock);
         public void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode) => Winglk_Pinvoke.glk_stream_set_position(stream, pos, seekMode);
         public void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val) => Winglk_Pinvoke.glk_stylehint_set(wintype, styl, hint, val);
         public uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result) => Winglk_Pinvoke.glk_style_measure(winid, styl, hint, ref result);

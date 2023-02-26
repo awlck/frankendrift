@@ -257,7 +257,7 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_set_style(Style s);
         void glk_set_window(WindowHandle winId);
         StreamHandle glk_stream_open_file(FileRefHandle fileref, FileMode fmode, uint rock);
-        StreamHandle glk_stream_open_memory(IntPtr buf, uint buflen, FileMode mode, uint rock);
+        unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, FileMode mode, uint rock);
         void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode);
         void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
         uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result);
