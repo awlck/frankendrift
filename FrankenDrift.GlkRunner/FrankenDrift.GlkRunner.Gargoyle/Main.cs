@@ -100,6 +100,8 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern uint glk_gestalt(Gestalt sel, uint val);
         [DllImport("libgarglk")]
         internal static extern unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen);
+        [DllImport("libgarglk")]
+        internal static extern void glk_request_timer_events(uint millisecs);
 
         // Garglk initialization functions.
         [DllImport("libgarglk")]
@@ -162,6 +164,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public string? glkunix_fileref_get_name(FileRefHandle fileref) => Marshal.PtrToStringAnsi(Garglk_Pinvoke.glkunix_fileref_get_name(fileref));
         public uint glk_gestalt(Gestalt sel, uint val) => Garglk_Pinvoke.glk_gestalt(sel, val);
         public unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen) => Garglk_Pinvoke.glk_gestalt_ext(sel, val, arr, arrlen);
+        public void glk_request_timer_events(uint millisecs) => Garglk_Pinvoke.glk_request_timer_events(millisecs);
 
         public void SetGameName(string game) => Garglk_Pinvoke.garglk_set_story_name(game);
 

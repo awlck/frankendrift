@@ -58,6 +58,9 @@ namespace FrankenDrift.GlkRunner
                 _sndChannels[i] = GlkApi.glk_schannel_create((uint)i);
             Adrift.SharedModule.UserSession.OpenAdventure(gameFile);
             _soundSupported = GlkApi.glk_gestalt(Gestalt.Sound2, 0) != 0;
+            // The underlying Runner wants a tick once per second to trigger real-time-based events
+            if (GlkApi.glk_gestalt(Gestalt.Timer, 0) != 0)
+                GlkApi.glk_request_timer_events(1000);
         }
 
         public void Run()
@@ -75,6 +78,12 @@ namespace FrankenDrift.GlkRunner
             {
                 case EventType.LineInput:
                     SubmitCommand();
+                    break;
+                case EventType.Timer:
+                    // For what little good it does us -- the output window will be tied up waiting for input,
+                    // so any text that gets output won't be seen until the user has sent off the command they
+                    // are currently editing. But this will still cause anything other than text output to happen.
+                    Adrift.SharedModule.UserSession.TimeBasedStuff();
                     break;
                 default:
                     break;

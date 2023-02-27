@@ -99,6 +99,8 @@ namespace FrankenDrift.GlkRunner.WinGlk
         internal static extern uint glk_gestalt(Gestalt sel, uint val);
         [DllImport("Glk")]
         internal static extern unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen);
+        [DllImport("Glk")]
+        internal static extern void glk_request_timer_events(uint millisecs);
 
         [DllImport("Glk")]
         internal static extern int InitGlk(uint version);
@@ -155,6 +157,7 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public string? glkunix_fileref_get_name(FileRefHandle fileref) => Marshal.PtrToStringAnsi(Winglk_Pinvoke.glkunix_fileref_get_name(fileref));
         public uint glk_gestalt(Gestalt sel, uint val) => Winglk_Pinvoke.glk_gestalt(sel, val);
         public unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen) => Winglk_Pinvoke.glk_gestalt_ext(sel, val, arr, arrlen);
+        public void glk_request_timer_events(uint millisecs) => Winglk_Pinvoke.glk_request_timer_events(millisecs);
 
         public void SetGameName(string game) => Winglk_Pinvoke.winglk_window_set_title(game);
     }

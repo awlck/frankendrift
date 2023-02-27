@@ -274,6 +274,7 @@ namespace FrankenDrift.GlkRunner.Glk
         string? glkunix_fileref_get_name(FileRefHandle fileref);
         uint glk_gestalt(Gestalt sel, uint val);
         unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen);
+        void glk_request_timer_events(uint millisecs);
 
         // And some extra functions we want that could have different implementations
         void SetGameName(string game);
