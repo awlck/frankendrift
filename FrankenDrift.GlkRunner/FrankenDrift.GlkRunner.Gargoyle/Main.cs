@@ -96,6 +96,10 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void garglk_set_zcolors(uint fg, uint bg);
         [DllImport("libgarglk")]
         internal static extern IntPtr glkunix_fileref_get_name(FileRefHandle fileref);
+        [DllImport("libgarglk")]
+        internal static extern uint glk_gestalt(Gestalt sel, uint val);
+        [DllImport("libgarglk")]
+        internal static extern unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen);
 
         // Garglk initialization functions.
         [DllImport("libgarglk")]
@@ -156,6 +160,8 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock) => Garglk_Pinvoke.glk_window_open(split, method, size, wintype, rock);
         public void garglk_set_zcolors(uint fg, uint bg) => Garglk_Pinvoke.garglk_set_zcolors(fg, bg);
         public string? glkunix_fileref_get_name(FileRefHandle fileref) => Marshal.PtrToStringAnsi(Garglk_Pinvoke.glkunix_fileref_get_name(fileref));
+        public uint glk_gestalt(Gestalt sel, uint val) => Garglk_Pinvoke.glk_gestalt(sel, val);
+        public unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen) => Garglk_Pinvoke.glk_gestalt_ext(sel, val, arr, arrlen);
 
         public void SetGameName(string game) => Garglk_Pinvoke.garglk_set_story_name(game);
 

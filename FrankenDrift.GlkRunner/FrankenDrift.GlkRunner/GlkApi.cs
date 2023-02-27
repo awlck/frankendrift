@@ -31,7 +31,7 @@ namespace FrankenDrift.GlkRunner.Glk
         ExactPrint = 2
     }
 
-    enum Gestalt : uint
+    public enum Gestalt : uint
     {
         Version = 0,
         CharInput = 1,
@@ -271,6 +271,8 @@ namespace FrankenDrift.GlkRunner.Glk
         WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock);
         void garglk_set_zcolors(uint fg, uint bg);
         string? glkunix_fileref_get_name(FileRefHandle fileref);
+        uint glk_gestalt(Gestalt sel, uint val);
+        unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen);
 
         // And some extra functions we want that could have different implementations
         void SetGameName(string game);
@@ -279,17 +281,23 @@ namespace FrankenDrift.GlkRunner.Glk
 
     public class GlkUtil
     {
-        private IGlk GlkApi;
+        private readonly IGlk GlkApi;
+        private readonly bool _unicodeAvailable;
 
         public GlkUtil(IGlk glk)
         {
             GlkApi = glk;
+            _unicodeAvailable = (GlkApi.glk_gestalt(Gestalt.Unicode, 0) != 0);
         }
 
         internal void OutputString(string msg)
         {
-            var runes = msg.EnumerateRunes().Select(r => (uint)r.Value).ToArray();
-            GlkApi.glk_put_buffer_uni(runes, (uint)runes.Length);
+            if (_unicodeAvailable)
+            {
+                var runes = msg.EnumerateRunes().Select(r => (uint)r.Value).ToArray();
+                GlkApi.glk_put_buffer_uni(runes, (uint)runes.Length);
+            }
+            else OutputStringLatin1(msg);
         }
 
         internal void OutputStringLatin1(string msg)

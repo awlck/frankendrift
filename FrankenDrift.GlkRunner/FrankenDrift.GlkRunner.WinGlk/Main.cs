@@ -95,6 +95,10 @@ namespace FrankenDrift.GlkRunner.WinGlk
         internal static extern void garglk_set_zcolors(uint fg, uint bg);
         [DllImport("Glk")]
         internal static extern IntPtr glkunix_fileref_get_name(FileRefHandle fileref);
+        [DllImport("Glk")]
+        internal static extern uint glk_gestalt(Gestalt sel, uint val);
+        [DllImport("Glk")]
+        internal static extern unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen);
 
         [DllImport("Glk")]
         internal static extern int InitGlk(uint version);
@@ -149,6 +153,8 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock) => Winglk_Pinvoke.glk_window_open(split, method, size, wintype, rock);
         public void garglk_set_zcolors(uint fg, uint bg) => Winglk_Pinvoke.garglk_set_zcolors(fg, bg);
         public string? glkunix_fileref_get_name(FileRefHandle fileref) => Marshal.PtrToStringAnsi(Winglk_Pinvoke.glkunix_fileref_get_name(fileref));
+        public uint glk_gestalt(Gestalt sel, uint val) => Winglk_Pinvoke.glk_gestalt(sel, val);
+        public unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen) => Winglk_Pinvoke.glk_gestalt_ext(sel, val, arr, arrlen);
 
         public void SetGameName(string game) => Winglk_Pinvoke.winglk_window_set_title(game);
     }
