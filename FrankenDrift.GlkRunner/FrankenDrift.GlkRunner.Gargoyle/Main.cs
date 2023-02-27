@@ -37,7 +37,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         [DllImport("libgarglk")]
         internal static extern void glk_request_hyperlink_event(WindowHandle winId);
         [DllImport("libgarglk")]
-        internal static extern unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen);
+        internal static extern void glk_request_line_event_uni(WindowHandle win, Memory<UInt32> buf, uint maxlen, uint initlen);
         [DllImport("libgarglk")]
         internal static extern SoundChannel glk_schannel_create(uint rock);
         [DllImport("libgarglk")]
@@ -114,7 +114,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_put_buffer_uni(uint[] s, uint len) => Garglk_Pinvoke.glk_put_buffer_uni(s, len);
         public void glk_request_char_event(WindowHandle winId) => Garglk_Pinvoke.glk_request_char_event(winId);
         public void glk_request_hyperlink_event(WindowHandle winId) => Garglk_Pinvoke.glk_request_hyperlink_event(winId);
-        public unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen) => Garglk_Pinvoke.glk_request_line_event_uni(win, buf, maxlen, initlen);
+        public void glk_request_line_event_uni(WindowHandle win, Memory<UInt32> buf, uint maxlen, uint initlen) => Garglk_Pinvoke.glk_request_line_event_uni(win, buf, maxlen, initlen);
         public SoundChannel glk_schannel_create(uint rock) => Garglk_Pinvoke.glk_schannel_create(rock);
         public void glk_schannel_pause(SoundChannel chan) => Garglk_Pinvoke.glk_schannel_pause(chan);
         public uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify) => Garglk_Pinvoke.glk_schannel_play_ext(chan, sndId, repeats, notify);

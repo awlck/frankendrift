@@ -241,7 +241,8 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_put_buffer_uni(uint[] s, uint len);
         void glk_request_char_event(WindowHandle winId);
         void glk_request_hyperlink_event(WindowHandle winId);
-        unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen);
+        // maxlen is redundant here, but we keep it so that we're not changing the Glk API. See #38
+        void glk_request_line_event_uni(WindowHandle win, Memory<UInt32> buf, uint maxlen, uint initlen);
         SoundChannel glk_schannel_create(uint rock);
         void glk_schannel_pause(SoundChannel chan);
         uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify);
