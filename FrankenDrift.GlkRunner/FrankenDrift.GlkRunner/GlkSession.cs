@@ -9,9 +9,10 @@ namespace FrankenDrift.GlkRunner
     public class MainSession : Glue.UIGlue, frmRunner
     {
         internal static MainSession? Instance = null;
-        private IGlk GlkApi;
+        private readonly IGlk GlkApi;
         private GlkHtmlWin? _output;
         private GlkGridWin? _status;
+        private readonly bool _soundSupported;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
         public RichTextBox txtOutput => _output;
@@ -56,6 +57,7 @@ namespace FrankenDrift.GlkRunner
             for (int i = 1; i <= 8; i++)
                 _sndChannels[i] = GlkApi.glk_schannel_create((uint)i);
             Adrift.SharedModule.UserSession.OpenAdventure(gameFile);
+            _soundSupported = GlkApi.glk_gestalt(Gestalt.Sound2, 0) != 0;
         }
 
         public void Run()
@@ -256,6 +258,7 @@ namespace FrankenDrift.GlkRunner
 
         internal void PlaySound(string snd, int channel, bool loop)
         {
+            if (!_soundSupported) return;
             if (_recentlyPlayedSounds.ContainsKey(channel) && _recentlyPlayedSounds[channel] == snd)
             {
                 UnpauseSound(channel);
@@ -271,16 +274,19 @@ namespace FrankenDrift.GlkRunner
 
         private void UnpauseSound(int channel)
         {
+            if (!_soundSupported) return;
             GlkApi.glk_schannel_unpause(_sndChannels[channel]);
         }
 
         internal void PauseSound(int channel)
         {
+            if (!_soundSupported) return;
             GlkApi.glk_schannel_pause(_sndChannels[channel]);
         }
 
         internal void StopSound(int channel)
         {
+            if (!_soundSupported) return;
             GlkApi.glk_schannel_stop(_sndChannels[channel]);
             if (_recentlyPlayedSounds.ContainsKey(channel))
                 _recentlyPlayedSounds.Remove(channel);
