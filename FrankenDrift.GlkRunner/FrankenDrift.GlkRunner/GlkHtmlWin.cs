@@ -33,12 +33,13 @@ namespace FrankenDrift.GlkRunner
 
     internal class GlkHtmlWin : Glue.RichTextBox, IDisposable
     {
-        private IGlk GlkApi;
-        private GlkUtil GlkUtil;
+        private readonly IGlk GlkApi;
+        private readonly GlkUtil GlkUtil;
         internal static GlkHtmlWin? MainWin = null;
         internal static uint NumberOfWindows = 0;
 
         private WindowHandle glkwin_handle;
+        private static bool _imagesSupported;
 
         public int TextLength => -1;
         public string Text { get => ""; set { } }
@@ -75,6 +76,7 @@ namespace FrankenDrift.GlkRunner
                 MainWin = this;
                 var noWin = new WindowHandle(IntPtr.Zero);
                 glkwin_handle = GlkApi.glk_window_open(noWin, 0, 0, WinType.TextBuffer, NumberOfWindows);
+                _imagesSupported = GlkApi.glk_gestalt(Gestalt.Graphics, 0) != 0 && GlkApi.glk_gestalt(Gestalt.DrawImage, (uint)WinType.TextBuffer) != 0;
             }
             else
             {
@@ -85,6 +87,7 @@ namespace FrankenDrift.GlkRunner
         GlkHtmlWin(IGlk glk, GlkHtmlWin splitFrom, WinMethod splitMethod, uint splitSize)
         {
             GlkApi = glk;
+            GlkUtil = new GlkUtil(GlkApi);
             glkwin_handle = DoWindowOpen(GlkApi, splitFrom, WinType.TextBuffer, splitMethod, splitSize);
         }
 
@@ -365,7 +368,7 @@ namespace FrankenDrift.GlkRunner
 
                         styleHistory.Push(new FontInfo { Ts = currstyle, TextColor = color, TagName = "font" });
                     }
-                    else if (currentToken.StartsWith("img"))
+                    else if (currentToken.StartsWith("img") && _imagesSupported)
                     {
                         var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
                         if (imgPath.Success && Adrift.SharedModule.Adventure.BlorbMappings is { Count: > 0 }
@@ -449,6 +452,7 @@ namespace FrankenDrift.GlkRunner
 
         internal bool DrawImageImmediately(uint imgId)
         {
+            if (!_imagesSupported) return false;
             var result = GlkApi.glk_image_draw(glkwin_handle, imgId, (int)ImageAlign.MarginLeft, 0);
             if (result == 0) return false;
             GlkApi.glk_window_flow_break(glkwin_handle);
