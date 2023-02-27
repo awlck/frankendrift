@@ -41,6 +41,7 @@ namespace FrankenDrift.GlkRunner
         private WindowHandle glkwin_handle;
         private static bool _imagesSupported;
         private static bool _hyperlinksSupported;
+        private static bool _colorSupported;
 
         public int TextLength => -1;
         public string Text { get => ""; set { } }
@@ -79,6 +80,7 @@ namespace FrankenDrift.GlkRunner
                 glkwin_handle = GlkApi.glk_window_open(noWin, 0, 0, WinType.TextBuffer, NumberOfWindows);
                 _imagesSupported = GlkApi.glk_gestalt(Gestalt.Graphics, 0) != 0 && GlkApi.glk_gestalt(Gestalt.DrawImage, (uint)WinType.TextBuffer) != 0;
                 _hyperlinksSupported = GlkApi.glk_gestalt(Gestalt.Hyperlinks, 0) != 0 && GlkApi.glk_gestalt(Gestalt.HyperlinkInput, (uint)WinType.TextBuffer) != 0;
+                _colorSupported = GlkApi.glk_gestalt(Gestalt.GarglkText, 0) != 0;
             }
             else
             {
@@ -108,7 +110,8 @@ namespace FrankenDrift.GlkRunner
 
         public void Clear()
         {
-            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            if (_colorSupported)
+                GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
             GlkApi.glk_window_clear(glkwin_handle);
         }
 
@@ -184,7 +187,8 @@ namespace FrankenDrift.GlkRunner
         private void FakeInput(string cmd)
         {
             GlkApi.glk_set_window(glkwin_handle);
-            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            if (_colorSupported)
+                GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
             GlkApi.glk_set_style(Style.Input);
             GlkUtil.OutputString(cmd);
             GlkApi.glk_set_style(Style.Normal);
@@ -207,7 +211,8 @@ namespace FrankenDrift.GlkRunner
                 return;
             }
             GlkApi.glk_set_window(glkwin_handle);
-            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            if (_colorSupported)
+                GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
 
             var consumed = 0;
             var inToken = false;
@@ -444,7 +449,8 @@ namespace FrankenDrift.GlkRunner
                 GlkApi.glk_set_hyperlink(0);
             if (_imagesSupported)
                 GlkApi.glk_window_flow_break(glkwin_handle);
-            GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
+            if (_colorSupported)
+                GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
 
             if (!IsWaiting && !string.IsNullOrEmpty(_pendingText))
             {
@@ -467,7 +473,8 @@ namespace FrankenDrift.GlkRunner
         {
             if (string.IsNullOrEmpty(txt)) return;
             txt = txt.Replace("&lt;", "<").Replace("&gt;", ">").Replace("&perc;", "%").Replace("&quot;", "\"");
-            GlkApi.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);
+            if (_colorSupported)
+                GlkApi.garglk_set_zcolors(fi.TextColor, (uint)ZColor.Default);
             if ((fi.Ts & TextStyle.Monospace) != 0)
             {
                 GlkApi.glk_set_style(Style.Preformatted);

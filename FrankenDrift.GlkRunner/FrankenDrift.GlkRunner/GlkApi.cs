@@ -55,7 +55,8 @@ namespace FrankenDrift.GlkRunner.Glk
         DateTime = 20,
         Sound2 = 21,
         ResourceStream = 22,
-        GraphicsCharInput = 23
+        GraphicsCharInput = 23,
+        GarglkText = 0x1100
     }
 
     enum EventType : uint
