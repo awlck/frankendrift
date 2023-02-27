@@ -30,6 +30,14 @@ namespace FrankenDrift.GlkRunner
             Instance = this;
             GlkApi = glk;
 
+            var util = new GlkUtil(GlkApi);
+            if (!util._unicodeAvailable)
+            {
+                _output = new(glk);
+                _output.AppendHTML("Sorry, can't run with a non-unicode Glk library.\n<waitkey>\n");
+                Environment.Exit(2);
+            }
+
             // If playing a blorb file, open it with the Glk library as well
             if (gameFile.EndsWith(".blorb"))
             {

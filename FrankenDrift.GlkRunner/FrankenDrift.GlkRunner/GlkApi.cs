@@ -284,7 +284,7 @@ namespace FrankenDrift.GlkRunner.Glk
     public class GlkUtil
     {
         private readonly IGlk GlkApi;
-        private readonly bool _unicodeAvailable;
+        internal readonly bool _unicodeAvailable;
 
         public GlkUtil(IGlk glk)
         {
