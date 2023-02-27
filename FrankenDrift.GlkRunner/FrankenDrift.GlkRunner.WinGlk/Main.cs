@@ -16,8 +16,6 @@ namespace FrankenDrift.GlkRunner.WinGlk
         [DllImport("Glk")]
         internal static extern void glk_exit();
         [DllImport("Glk")]
-        internal static extern FileRefHandle glk_fileref_create_by_name(FileUsage usage, [MarshalAs(UnmanagedType.LPStr)] string name, Glk.FileMode fmode, uint rock);
-        [DllImport("Glk")]
         internal static extern FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock);
         [DllImport("Glk")]
         internal static extern FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock);
@@ -38,21 +36,13 @@ namespace FrankenDrift.GlkRunner.WinGlk
         [DllImport("Glk")]
         internal static extern void glk_request_hyperlink_event(WindowHandle winId);
         [DllImport("Glk")]
-        internal static extern unsafe void glk_request_line_event(WindowHandle win, byte* buf, uint maxlen, uint initlen);
-        [DllImport("Glk")]
         internal static extern unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen);
         [DllImport("Glk")]
         internal static extern SoundChannel glk_schannel_create(uint rock);
         [DllImport("Glk")]
-        internal static extern void glk_schannel_destroy(SoundChannel chan);
-        [DllImport("Glk")]
         internal static extern void glk_schannel_pause(SoundChannel chan);
         [DllImport("Glk")]
-        internal static extern uint glk_schannel_play(SoundChannel chan, uint sndId);
-        [DllImport("Glk")]
         internal static extern uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify);
-        [DllImport("Glk")]
-        internal static extern void glk_schannel_set_volume(SoundChannel chan, uint vol);
         [DllImport("Glk")]
         internal static extern void glk_schannel_stop(SoundChannel chan);
         [DllImport("Glk")]
@@ -67,8 +57,6 @@ namespace FrankenDrift.GlkRunner.WinGlk
         internal static extern void glk_set_window(WindowHandle winId);
         [DllImport("Glk")]
         internal static extern StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock);
-        [DllImport("Glk")]
-        internal static unsafe extern StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock);
         [DllImport("Glk")]
         internal static extern void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode);
         [DllImport("Glk")]
@@ -109,7 +97,6 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public void glk_cancel_hyperlink_event(WindowHandle winId) => Winglk_Pinvoke.glk_cancel_hyperlink_event(winId);
         public void glk_cancel_line_event(WindowHandle winId, ref Event ev) => Winglk_Pinvoke.glk_cancel_line_event(winId, ref ev);
         public void glk_exit() => Winglk_Pinvoke.glk_exit();
-        public FileRefHandle glk_fileref_create_by_name(FileUsage usage, string name, Glk.FileMode fmode, uint rock) => Winglk_Pinvoke.glk_fileref_create_by_name(usage, name, fmode, rock);
         public FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock) => Winglk_Pinvoke.glk_fileref_create_by_prompt(usage, fmode, rock);
         public FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock) => Winglk_Pinvoke.glk_fileref_create_temp(usage, rock);
         public void glk_fileref_destroy(FileRefHandle fref) => Winglk_Pinvoke.glk_fileref_destroy(fref);
@@ -120,14 +107,10 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public void glk_put_buffer_uni(uint[] s, uint len) => Winglk_Pinvoke.glk_put_buffer_uni(s, len);
         public void glk_request_char_event(WindowHandle winId) => Winglk_Pinvoke.glk_request_char_event(winId);
         public void glk_request_hyperlink_event(WindowHandle winId) => Winglk_Pinvoke.glk_request_hyperlink_event(winId);
-        public unsafe void glk_request_line_event(WindowHandle win, byte* buf, uint maxlen, uint initlen) => Winglk_Pinvoke.glk_request_line_event(win, buf, maxlen, initlen);
         public unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen) => Winglk_Pinvoke.glk_request_line_event_uni(win, buf, maxlen, initlen);
         public SoundChannel glk_schannel_create(uint rock) => Winglk_Pinvoke.glk_schannel_create(rock);
-        public void glk_schannel_destroy(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_destroy(chan);
         public void glk_schannel_pause(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_pause(chan);
-        public uint glk_schannel_play(SoundChannel chan, uint sndId) => Winglk_Pinvoke.glk_schannel_play(chan, sndId);
         public uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify) => Winglk_Pinvoke.glk_schannel_play_ext(chan, sndId, repeats, notify);
-        public void glk_schannel_set_volume(SoundChannel chan, uint vol) => Winglk_Pinvoke.glk_schannel_set_volume(chan, vol);
         public void glk_schannel_stop(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_stop(chan);
         public void glk_schannel_unpause(SoundChannel chan) => Winglk_Pinvoke.glk_schannel_unpause(chan);
         public void glk_select(ref Event ev) => Winglk_Pinvoke.glk_select(ref ev);
@@ -135,7 +118,6 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public void glk_set_style(Style s) => Winglk_Pinvoke.glk_set_style(s);
         public void glk_set_window(WindowHandle winId) => Winglk_Pinvoke.glk_set_window(winId);
         public StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock) => Winglk_Pinvoke.glk_stream_open_file(fileref, fmode, rock);
-        public unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock) => Winglk_Pinvoke.glk_stream_open_memory(buf, buflen, mode, rock);
         public void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode) => Winglk_Pinvoke.glk_stream_set_position(stream, pos, seekMode);
         public void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val) => Winglk_Pinvoke.glk_stylehint_set(wintype, styl, hint, val);
         public uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result) => Winglk_Pinvoke.glk_style_measure(winid, styl, hint, ref result);

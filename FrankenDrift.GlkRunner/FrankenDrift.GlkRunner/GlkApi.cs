@@ -231,7 +231,6 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_cancel_hyperlink_event(WindowHandle winId);
         void glk_cancel_line_event(WindowHandle winId, ref Event ev);
         void glk_exit();
-        FileRefHandle glk_fileref_create_by_name(FileUsage usage, string name, FileMode fmode, uint rock);
         FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, FileMode fmode, uint rock);
         FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock);
         void glk_fileref_destroy(FileRefHandle fref);
@@ -242,14 +241,10 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_put_buffer_uni(uint[] s, uint len);
         void glk_request_char_event(WindowHandle winId);
         void glk_request_hyperlink_event(WindowHandle winId);
-        unsafe void glk_request_line_event(WindowHandle win, byte* buf, uint maxlen, uint initlen);
         unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen);
         SoundChannel glk_schannel_create(uint rock);
-        void glk_schannel_destroy(SoundChannel chan);
         void glk_schannel_pause(SoundChannel chan);
-        uint glk_schannel_play(SoundChannel chan, uint sndId);
         uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify);
-        void glk_schannel_set_volume(SoundChannel chan, uint vol);
         void glk_schannel_stop(SoundChannel chan);
         void glk_schannel_unpause(SoundChannel chan);
         void glk_select(ref Event ev);
@@ -257,7 +252,6 @@ namespace FrankenDrift.GlkRunner.Glk
         void glk_set_style(Style s);
         void glk_set_window(WindowHandle winId);
         StreamHandle glk_stream_open_file(FileRefHandle fileref, FileMode fmode, uint rock);
-        unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, FileMode mode, uint rock);
         void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode);
         void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
         uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result);

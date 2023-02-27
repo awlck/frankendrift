@@ -17,8 +17,6 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         [DllImport("libgarglk")]
         internal static extern void glk_exit();
         [DllImport("libgarglk")]
-        internal static extern FileRefHandle glk_fileref_create_by_name(FileUsage usage, [MarshalAs(UnmanagedType.LPStr)] string name, Glk.FileMode fmode, uint rock);
-        [DllImport("libgarglk")]
         internal static extern FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock);
         [DllImport("libgarglk")]
         internal static extern FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock);
@@ -39,21 +37,13 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         [DllImport("libgarglk")]
         internal static extern void glk_request_hyperlink_event(WindowHandle winId);
         [DllImport("libgarglk")]
-        internal static extern unsafe void glk_request_line_event(WindowHandle win, byte* buf, uint maxlen, uint initlen);
-        [DllImport("libgarglk")]
         internal static extern unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen);
         [DllImport("libgarglk")]
         internal static extern SoundChannel glk_schannel_create(uint rock);
         [DllImport("libgarglk")]
-        internal static extern void glk_schannel_destroy(SoundChannel chan);
-        [DllImport("libgarglk")]
         internal static extern void glk_schannel_pause(SoundChannel chan);
         [DllImport("libgarglk")]
-        internal static extern uint glk_schannel_play(SoundChannel chan, uint sndId);
-        [DllImport("libgarglk")]
         internal static extern uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify);
-        [DllImport("libgarglk")]
-        internal static extern void glk_schannel_set_volume(SoundChannel chan, uint vol);
         [DllImport("libgarglk")]
         internal static extern void glk_schannel_stop(SoundChannel chan);
         [DllImport("libgarglk")]
@@ -68,8 +58,6 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void glk_set_window(WindowHandle winId);
         [DllImport("libgarglk")]
         internal static extern StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock);
-        [DllImport("libgarglk")]
-        internal static unsafe extern StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock);
         [DllImport("libgarglk")]
         internal static extern void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode);
         [DllImport("libgarglk")]
@@ -116,7 +104,6 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_cancel_hyperlink_event(WindowHandle winId) => Garglk_Pinvoke.glk_cancel_hyperlink_event(winId);
         public void glk_cancel_line_event(WindowHandle winId, ref Event ev) => Garglk_Pinvoke.glk_cancel_line_event(winId, ref ev);
         public void glk_exit() => Garglk_Pinvoke.glk_exit();
-        public FileRefHandle glk_fileref_create_by_name(FileUsage usage, string name, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_fileref_create_by_name(usage, name, fmode, rock);
         public FileRefHandle glk_fileref_create_by_prompt(FileUsage usage, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_fileref_create_by_prompt(usage, fmode, rock);
         public FileRefHandle glk_fileref_create_temp(FileUsage usage, uint rock) => Garglk_Pinvoke.glk_fileref_create_temp(usage, rock);
         public void glk_fileref_destroy(FileRefHandle fref) => Garglk_Pinvoke.glk_fileref_destroy(fref);
@@ -127,14 +114,10 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_put_buffer_uni(uint[] s, uint len) => Garglk_Pinvoke.glk_put_buffer_uni(s, len);
         public void glk_request_char_event(WindowHandle winId) => Garglk_Pinvoke.glk_request_char_event(winId);
         public void glk_request_hyperlink_event(WindowHandle winId) => Garglk_Pinvoke.glk_request_hyperlink_event(winId);
-        public unsafe void glk_request_line_event(WindowHandle win, byte* buf, uint maxlen, uint initlen) => Garglk_Pinvoke.glk_request_line_event(win, buf, maxlen, initlen);
         public unsafe void glk_request_line_event_uni(WindowHandle win, uint* buf, uint maxlen, uint initlen) => Garglk_Pinvoke.glk_request_line_event_uni(win, buf, maxlen, initlen);
         public SoundChannel glk_schannel_create(uint rock) => Garglk_Pinvoke.glk_schannel_create(rock);
-        public void glk_schannel_destroy(SoundChannel chan) => Garglk_Pinvoke.glk_schannel_destroy(chan);
         public void glk_schannel_pause(SoundChannel chan) => Garglk_Pinvoke.glk_schannel_pause(chan);
-        public uint glk_schannel_play(SoundChannel chan, uint sndId) => Garglk_Pinvoke.glk_schannel_play(chan, sndId);
         public uint glk_schannel_play_ext(SoundChannel chan, uint sndId, uint repeats, uint notify) => Garglk_Pinvoke.glk_schannel_play_ext(chan, sndId, repeats, notify);
-        public void glk_schannel_set_volume(SoundChannel chan, uint vol) => Garglk_Pinvoke.glk_schannel_set_volume(chan, vol);
         public void glk_schannel_stop(SoundChannel chan) => Garglk_Pinvoke.glk_schannel_stop(chan);
         public void glk_schannel_unpause(SoundChannel chan) => Garglk_Pinvoke.glk_schannel_unpause(chan);
         public void glk_select(ref Event ev) => Garglk_Pinvoke.glk_select(ref ev);
@@ -142,7 +125,6 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         public void glk_set_style(Style s) => Garglk_Pinvoke.glk_set_style(s);
         public void glk_set_window(WindowHandle winId) => Garglk_Pinvoke.glk_set_window(winId);
         public StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock) => Garglk_Pinvoke.glk_stream_open_file(fileref, fmode, rock);
-        public unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock) => Garglk_Pinvoke.glk_stream_open_memory(buf, buflen, mode, rock);
         public void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode) => Garglk_Pinvoke.glk_stream_set_position(stream, pos, seekMode);
         public void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val) => Garglk_Pinvoke.glk_stylehint_set(wintype, styl, hint, val);
         public uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result) => Garglk_Pinvoke.glk_style_measure(winid, styl, hint, ref result);
