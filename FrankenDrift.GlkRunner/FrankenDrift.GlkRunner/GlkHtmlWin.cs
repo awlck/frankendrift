@@ -40,6 +40,7 @@ namespace FrankenDrift.GlkRunner
 
         private WindowHandle glkwin_handle;
         private static bool _imagesSupported;
+        private static bool _hyperlinksSupported;
 
         public int TextLength => -1;
         public string Text { get => ""; set { } }
@@ -77,6 +78,7 @@ namespace FrankenDrift.GlkRunner
                 var noWin = new WindowHandle(IntPtr.Zero);
                 glkwin_handle = GlkApi.glk_window_open(noWin, 0, 0, WinType.TextBuffer, NumberOfWindows);
                 _imagesSupported = GlkApi.glk_gestalt(Gestalt.Graphics, 0) != 0 && GlkApi.glk_gestalt(Gestalt.DrawImage, (uint)WinType.TextBuffer) != 0;
+                _hyperlinksSupported = GlkApi.glk_gestalt(Gestalt.Hyperlinks, 0) != 0 && GlkApi.glk_gestalt(Gestalt.HyperlinkInput, (uint)WinType.TextBuffer) != 0;
             }
             else
             {
@@ -120,7 +122,7 @@ namespace FrankenDrift.GlkRunner
             fixed (uint* buf = cmdToBe)
             {
                 GlkApi.glk_request_line_event_uni(glkwin_handle, buf, capacity-1, 0);
-                if (_hyperlinks.Count > 0)
+                if (_hyperlinks.Count > 0 && _hyperlinksSupported)
                     GlkApi.glk_request_hyperlink_event(glkwin_handle);
                 while (true)
                 {
@@ -216,7 +218,7 @@ namespace FrankenDrift.GlkRunner
             styleHistory.Push(new FontInfo { Ts = TextStyle.Normal, TextColor = (uint)ZColor.Default, TagName = "<base>" });
 
             var linksToBe = new Queue<LinkRef>();
-            if (DoSbAutoHyperlinks)
+            if (_hyperlinksSupported && DoSbAutoHyperlinks)
             {
                 var linkTargetSearcher = new Regex("^([0-9a-zA-Z]+?)\\) .+$", RegexOptions.Multiline);
                 var linkTargets = linkTargetSearcher.Matches(src);
@@ -438,8 +440,10 @@ namespace FrankenDrift.GlkRunner
             }
 
             OutputStyled(current.ToString(), styleHistory.Peek());
-            GlkApi.glk_set_hyperlink(0);
-            GlkApi.glk_window_flow_break(glkwin_handle);
+            if (_hyperlinksSupported)
+                GlkApi.glk_set_hyperlink(0);
+            if (_imagesSupported)
+                GlkApi.glk_window_flow_break(glkwin_handle);
             GlkApi.garglk_set_zcolors((uint)ZColor.Default, (uint)ZColor.Default);
 
             if (!IsWaiting && !string.IsNullOrEmpty(_pendingText))
