@@ -283,17 +283,17 @@ namespace FrankenDrift.GlkRunner.Glk
     public class GlkUtil
     {
         private readonly IGlk GlkApi;
-        private readonly bool _unicodeAvailable;
+        internal readonly bool UnicodeAvailable;
 
         public GlkUtil(IGlk glk)
         {
             GlkApi = glk;
-            _unicodeAvailable = (GlkApi.glk_gestalt(Gestalt.Unicode, 0) != 0);
+            UnicodeAvailable = (GlkApi.glk_gestalt(Gestalt.Unicode, 0) != 0);
         }
 
         internal void OutputString(string msg)
         {
-            if (_unicodeAvailable)
+            if (UnicodeAvailable)
             {
                 var runes = msg.EnumerateRunes().Select(r => (uint)r.Value).ToArray();
                 GlkApi.glk_put_buffer_uni(runes, (uint)runes.Length);

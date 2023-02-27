@@ -119,6 +119,7 @@ namespace FrankenDrift.GlkRunner
         {
             if (IsWaiting)
                 throw new ConcurrentEventException("Too many input events requested");
+            if (!GlkUtil.UnicodeAvailable) return GetLineInputLatin1();
             IsWaiting = true;
             const uint capacity = 256;
             var cmdToBe = new uint[capacity];
@@ -136,12 +137,54 @@ namespace FrankenDrift.GlkRunner
                         var count = (int) ev.val1;
                         GlkApi.glk_cancel_hyperlink_event(glkwin_handle);
                         IsWaiting = false;
-                        //var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
-                        //return dec.GetString(cmdToBe, 0, count);
                         var result = new StringBuilder(count);
                         for (var i = 0; i < count; i++)
                             result.Append(new Rune(buf[i]).ToString());
                         return result.ToString();
+                    }
+                    else if (ev.type == EventType.Hyperlink && ev.win_handle == glkwin_handle)
+                    {
+                        var linkId = ev.val1;
+                        Event ev2 = new();
+                        if (_hyperlinks.ContainsKey(linkId))
+                        {
+                            GlkApi.glk_cancel_line_event(glkwin_handle, ref ev2);
+                            IsWaiting = false;
+                            var result = _hyperlinks[linkId];
+                            _hyperlinks.Clear();
+                            FakeInput(result);
+                            return result;
+                        }
+                    }
+                    else MainSession.Instance!.ProcessEvent(ev);
+                }
+            }
+        }
+
+        internal unsafe string GetLineInputLatin1()
+        {  // I sure don't love the smell of code duplication in the morning, but alas...
+            if (IsWaiting)
+                throw new ConcurrentEventException("Too many input events requested");
+            IsWaiting = true;
+            const uint capacity = 256;
+            var cmdToBe = new byte[capacity];
+            fixed (byte* buf = cmdToBe)
+            {
+                GlkApi.glk_request_line_event(glkwin_handle, buf, capacity - 1, 0);
+                if (_hyperlinks.Count > 0 && _hyperlinksSupported)
+                    GlkApi.glk_request_hyperlink_event(glkwin_handle);
+                while (true)
+                {
+                    Event ev = new() { type = EventType.None };
+                    GlkApi.glk_select(ref ev);
+                    if (ev.type == EventType.LineInput && ev.win_handle == glkwin_handle)
+                    {
+                        var count = (int)ev.val1;
+                        GlkApi.glk_cancel_hyperlink_event(glkwin_handle);
+                        IsWaiting = false;
+                        var result = new StringBuilder(count);
+                        var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                        return dec.GetString(cmdToBe, 0, count);
                     }
                     else if (ev.type == EventType.Hyperlink && ev.win_handle == glkwin_handle)
                     {
