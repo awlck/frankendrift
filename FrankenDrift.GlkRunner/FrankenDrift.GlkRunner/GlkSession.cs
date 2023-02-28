@@ -9,9 +9,10 @@ namespace FrankenDrift.GlkRunner
     public class MainSession : Glue.UIGlue, frmRunner
     {
         internal static MainSession? Instance = null;
-        private IGlk GlkApi;
+        private readonly IGlk GlkApi;
         private GlkHtmlWin? _output;
         private GlkGridWin? _status;
+        private readonly bool _soundSupported;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
         public RichTextBox txtOutput => _output;
@@ -19,7 +20,7 @@ namespace FrankenDrift.GlkRunner
         public bool Locked => false;
         public void Close() => GlkApi.glk_exit();
 
-        private readonly Dictionary<int, IntPtr> _sndChannels = new();
+        private readonly Dictionary<int, SoundChannel> _sndChannels = new();
         private readonly Dictionary<int, string> _recentlyPlayedSounds = new();
 
         public MainSession(string gameFile, IGlk glk)
@@ -28,6 +29,14 @@ namespace FrankenDrift.GlkRunner
                 throw new ApplicationException("Dual MainSessions?");
             Instance = this;
             GlkApi = glk;
+
+            var util = new GlkUtil(GlkApi);
+            if (!util._unicodeAvailable)
+            {
+                _output = new(glk);
+                _output.AppendHTML("Sorry, can't run with a non-unicode Glk library.\n<waitkey>\n");
+                Environment.Exit(2);
+            }
 
             // If playing a blorb file, open it with the Glk library as well
             if (gameFile.EndsWith(".blorb"))
@@ -56,6 +65,10 @@ namespace FrankenDrift.GlkRunner
             for (int i = 1; i <= 8; i++)
                 _sndChannels[i] = GlkApi.glk_schannel_create((uint)i);
             Adrift.SharedModule.UserSession.OpenAdventure(gameFile);
+            _soundSupported = GlkApi.glk_gestalt(Gestalt.Sound2, 0) != 0;
+            // The underlying Runner wants a tick once per second to trigger real-time-based events
+            if (GlkApi.glk_gestalt(Gestalt.Timer, 0) != 0)
+                GlkApi.glk_request_timer_events(1000);
         }
 
         public void Run()
@@ -73,6 +86,12 @@ namespace FrankenDrift.GlkRunner
             {
                 case EventType.LineInput:
                     SubmitCommand();
+                    break;
+                case EventType.Timer:
+                    // For what little good it does us -- the output window will be tied up waiting for input,
+                    // so any text that gets output won't be seen until the user has sent off the command they
+                    // are currently editing. But this will still cause anything other than text output to happen.
+                    Adrift.SharedModule.UserSession.TimeBasedStuff();
                     break;
                 default:
                     break;
@@ -121,12 +140,6 @@ namespace FrankenDrift.GlkRunner
             return Environment.ProcessPath;
         }
 
-        public string FilerefGetName(IntPtr fileref)
-        {
-            var fn = GlkApi.glkunix_fileref_get_name(fileref);
-            return Marshal.PtrToStringAnsi(fn);
-        }
-
         public void InitInput()
         { }
 
@@ -143,8 +156,8 @@ namespace FrankenDrift.GlkRunner
         public string QueryRestorePath()
         {
             var fileref = GlkApi.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Read, 0);
-            if (fileref == IntPtr.Zero) return "";
-            var result = FilerefGetName(fileref);
+            if (!fileref.IsValid) return "";
+            var result = GlkApi.glkunix_fileref_get_name(fileref);
             GlkApi.glk_fileref_destroy(fileref);
             return result;
         }
@@ -157,8 +170,8 @@ namespace FrankenDrift.GlkRunner
         public string QuerySavePath()
         {
             var fileref = GlkApi.glk_fileref_create_by_prompt(FileUsage.SavedGame | FileUsage.BinaryMode, Glk.FileMode.Write, 0);
-            if (fileref == IntPtr.Zero) return "";
-            var result = FilerefGetName(fileref);
+            if (!fileref.IsValid) return "";
+            var result = GlkApi.glkunix_fileref_get_name(fileref);
             GlkApi.glk_fileref_destroy(fileref);
             return result;
         }
@@ -262,6 +275,7 @@ namespace FrankenDrift.GlkRunner
 
         internal void PlaySound(string snd, int channel, bool loop)
         {
+            if (!_soundSupported) return;
             if (_recentlyPlayedSounds.ContainsKey(channel) && _recentlyPlayedSounds[channel] == snd)
             {
                 UnpauseSound(channel);
@@ -277,16 +291,19 @@ namespace FrankenDrift.GlkRunner
 
         private void UnpauseSound(int channel)
         {
+            if (!_soundSupported) return;
             GlkApi.glk_schannel_unpause(_sndChannels[channel]);
         }
 
         internal void PauseSound(int channel)
         {
+            if (!_soundSupported) return;
             GlkApi.glk_schannel_pause(_sndChannels[channel]);
         }
 
         internal void StopSound(int channel)
         {
+            if (!_soundSupported) return;
             GlkApi.glk_schannel_stop(_sndChannels[channel]);
             if (_recentlyPlayedSounds.ContainsKey(channel))
                 _recentlyPlayedSounds.Remove(channel);
