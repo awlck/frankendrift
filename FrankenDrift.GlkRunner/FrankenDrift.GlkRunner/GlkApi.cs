@@ -194,36 +194,43 @@ namespace FrankenDrift.GlkRunner.Glk
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct StreamResult
+    public struct StreamResult
     {
-        public readonly uint readcount;
-        public readonly uint writecount;
+        public uint readcount;
+        public uint writecount;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct WindowHandle(IntPtr hwnd)
     {
         internal bool IsValid => hwnd != IntPtr.Zero;
+        public static implicit operator IntPtr(WindowHandle hwnd) => hwnd;
+        public static implicit operator WindowHandle(IntPtr hwnd) => new WindowHandle(hwnd);
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct FileRefHandle(IntPtr hfref)
     {
         internal bool IsValid => hfref != IntPtr.Zero;
+        public static implicit operator IntPtr(FileRefHandle hfref) => hfref;
+        public static implicit operator FileRefHandle(IntPtr hfref) => new FileRefHandle(hfref);
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct StreamHandle(IntPtr hstrm)
     {
         internal bool IsValid => hstrm != IntPtr.Zero;
+        public static implicit operator IntPtr(StreamHandle hstrm) => hstrm;
+        public static implicit operator StreamHandle(IntPtr hstrm) => new StreamHandle(hstrm);
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct SoundChannel(IntPtr schan)
     {
         internal bool IsValid => schan != IntPtr.Zero;
+        public static implicit operator IntPtr(SoundChannel schan) => schan;
+        public static implicit operator SoundChannel(IntPtr schan) => new SoundChannel(schan);
     }
-
 
     public interface IGlk
     {
