@@ -204,7 +204,7 @@ namespace FrankenDrift.GlkRunner.Glk
     public record struct WindowHandle(IntPtr hwnd)
     {
         internal bool IsValid => hwnd != IntPtr.Zero;
-        public static implicit operator IntPtr(WindowHandle hwnd) => hwnd;
+        public static implicit operator IntPtr(WindowHandle h) => h.hwnd;
         public static implicit operator WindowHandle(IntPtr hwnd) => new WindowHandle(hwnd);
     }
 
@@ -212,7 +212,7 @@ namespace FrankenDrift.GlkRunner.Glk
     public record struct FileRefHandle(IntPtr hfref)
     {
         internal bool IsValid => hfref != IntPtr.Zero;
-        public static implicit operator IntPtr(FileRefHandle hfref) => hfref;
+        public static implicit operator IntPtr(FileRefHandle h) => h.hfref;
         public static implicit operator FileRefHandle(IntPtr hfref) => new FileRefHandle(hfref);
     }
 
@@ -220,7 +220,7 @@ namespace FrankenDrift.GlkRunner.Glk
     public record struct StreamHandle(IntPtr hstrm)
     {
         internal bool IsValid => hstrm != IntPtr.Zero;
-        public static implicit operator IntPtr(StreamHandle hstrm) => hstrm;
+        public static implicit operator IntPtr(StreamHandle h) => h.hstrm;
         public static implicit operator StreamHandle(IntPtr hstrm) => new StreamHandle(hstrm);
     }
 
@@ -228,7 +228,7 @@ namespace FrankenDrift.GlkRunner.Glk
     public record struct SoundChannel(IntPtr schan)
     {
         internal bool IsValid => schan != IntPtr.Zero;
-        public static implicit operator IntPtr(SoundChannel schan) => schan;
+        public static implicit operator IntPtr(SoundChannel h) => h.schan;
         public static implicit operator SoundChannel(IntPtr schan) => new SoundChannel(schan);
     }
 

@@ -56,7 +56,7 @@ namespace FrankenDrift.GlkRunner.AsyncGlk
         [JSImport("glk_stream_open_file", "main.js")]
         internal static partial IntPtr glk_stream_open_file(IntPtr fileref, int fmode, int rock);
         [JSImport("glk_stream_open_memory", "main.js")]
-        internal static partial IntPtr glk_stream_open_memory([JSMarshalAs<JSType.MemoryView>] ArraySegment<Byte> buf, int mode, int rock);
+        internal static partial IntPtr glk_stream_open_memory([JSMarshalAs<JSType.MemoryView>] Span<Byte> buf, int mode, int rock);
         [JSImport("glk_stream_set_position", "main.js")]
         internal static partial void glk_stream_set_position(IntPtr stream, int pos, int seekMode);
         [JSImport("glk_stylehint_set", "main.js")]
@@ -146,7 +146,7 @@ namespace FrankenDrift.GlkRunner.AsyncGlk
         public void glk_set_style(Style s) => AsyncGlk_imports.glk_set_style((int) s);
         public void glk_set_window(WindowHandle winId) => AsyncGlk_imports.glk_set_window(winId);
         public StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock) => AsyncGlk_imports.glk_stream_open_file(fileref, (int) fmode, (int) rock);
-        public unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock) => 0;
+        public unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock) => AsyncGlk_imports.glk_stream_open_memory(new Span<Byte>(buf, (int) buflen), (int) mode, (int) rock);
         public void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode) => AsyncGlk_imports.glk_stream_set_position(stream, (int) pos, (int) seekMode);
         public void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val) => AsyncGlk_imports.glk_stylehint_set((int) wintype, (int) styl, (int) hint, (int) val);
         public uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result) => 0;
@@ -168,7 +168,9 @@ namespace FrankenDrift.GlkRunner.AsyncGlk
         public StreamHandle glk_window_get_stream(WindowHandle winId) => AsyncGlk_imports.glk_window_get_stream(winId);
         public void glk_window_move_cursor(WindowHandle winId, uint xpos, uint ypos) => AsyncGlk_imports.glk_window_move_cursor(winId, (int) xpos, (int) ypos);
         public WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock) => AsyncGlk_imports.glk_window_open(split, (int) method, (int) size, (int) wintype, (int) rock);
-        public void garglk_set_zcolors(uint fg, uint bg) => AsyncGlk_imports.garglk_set_zcolors((int) fg, (int) bg);
+        // TODO: fix this
+        //public void garglk_set_zcolors(uint fg, uint bg) => AsyncGlk_imports.garglk_set_zcolors((int) fg, (int) bg);
+        public void garglk_set_zcolors(uint fg, uint bg) {}
         public string? glkunix_fileref_get_name(FileRefHandle fileref) => AsyncGlk_imports.glkunix_fileref_get_name(fileref);
 
         public void SetGameName(string game) {}
@@ -183,6 +185,11 @@ namespace FrankenDrift.GlkRunner.AsyncGlk
                 Console.WriteLine("Error: No file selected!");
                 return 1;
             }
+
+            AsyncGlk GlkApi = new AsyncGlk();
+
+            var sess = new MainSession(args[^1], GlkApi);
+            sess.Run();
 
             return 0;
         }
