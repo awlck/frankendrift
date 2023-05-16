@@ -1,4 +1,5 @@
 Imports System.Drawing
+Imports System.Text
 
 Public Class clsAdventure
 
@@ -55,6 +56,8 @@ Public Class clsAdventure
     Friend sDirectionsRE(11) As String
     Friend lstTasks As List(Of clsTask) ' Simply a list, sorted by priority
     Friend dictRandValues As New Dictionary(Of String, List(Of Integer))
+
+    Friend complainedAboutTextOverrides As Boolean = False
 
 
     Public Enum TaskExecutionEnum
@@ -801,10 +804,6 @@ Public Class clsAdventure
         End Set
     End Property
 
-
-
-
-
     Friend ReadOnly Property AllKeys() As List(Of String) ' StringArrayList
         Get
             Dim salKeys As New List(Of String) 'stringArrayList
@@ -847,5 +846,71 @@ Public Class clsAdventure
 
         End Get
     End Property
+
+    Friend Function AreTextOverridesValid(Optional issueWarning As Boolean = True) As Boolean
+        ' Check whether text overrides can produce an infinite loop by checking
+        ' whether the graph of overrides contains any cycles.
+        Dim adj As New Dictionary(Of String, List(Of String))
+        Dim deg As New Dictionary(Of String, Integer)
+        ' Compute adjacency
+        For Each vert In htblALRs.Values
+            Dim item As String = vert.NewText.ToString(True)
+            ' Text overrides that evaluate to themselves don't count.
+            If vert.OldText = item Then Continue For
+            If Not adj.ContainsKey(vert.OldText) Then adj(vert.OldText) = New List(Of String)
+            adj(vert.OldText).Add(item)
+            If Not adj.ContainsKey(item) Then adj(item) = New List(Of String)
+            deg(vert.OldText) = 0
+            deg(item) = 0
+        Next
+        ' Compute in-degree of each vertex
+        For Each vert In htblALRs.Values
+            If vert.OldText = vert.NewText.ToString(False) Then Continue For
+            For Each v In adj(vert.OldText)
+                deg(v) += 1
+            Next
+        Next
+
+        Dim q As New Queue(Of String)
+        ' Add everything with an in-degree of zero to the initial queue
+        For Each degPair In deg
+            If degPair.Value = 0 Then q.Enqueue(degPair.Key)
+        Next
+
+        Dim counter As Integer = 0
+        While Not q.Count = 0
+            Dim u As String = q.Dequeue()
+            counter += 1
+            ' Decrease unaccounted-for in-degree of every node pointed to by one,
+            ' since the current node has an unaccounted-for in-degree of zero and is
+            ' therefore definitely not part of a cycle.
+            For Each neighbor As String In adj(u)
+                deg(neighbor) -= 1
+                If deg(neighbor) = 0 Then q.Enqueue(neighbor)
+            Next
+        End While
+
+        For Each v In deg
+            If v.Value > 0 Then Debug.WriteLine($"Potentially broken text override: ""{v.Key}"" has degree {v.Value} after pruning.")
+        Next
+
+        If counter <> adj.Count Then
+            If issueWarning Then
+                Dim result As New StringBuilder
+                result.Append("Text overrides form a cycle.").Append(vbCrLf).Append(vbCrLf)
+                For Each vert In htblALRs.Values
+                    Dim replacement = vert.NewText.ToString(False)
+                    If vert.OldText = replacement Then Continue For
+                    If deg(replacement) > 0 Then
+                        result.Append(vert.OldText).Append(" --> ").Append(replacement).Append(vbCrLf)
+                    End If
+                Next
+                ErrMsg(result.ToString())
+                Adventure.complainedAboutTextOverrides = True
+            End If
+            Return False
+        End If
+        Return True
+    End Function
 
 End Class

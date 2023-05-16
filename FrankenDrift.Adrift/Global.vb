@@ -730,7 +730,10 @@ Public Module SharedModule
     End Function
 
 
-    Public Function ReplaceALRs(ByVal sText As String, Optional ByVal bAutoCapitalise As Boolean = True) As String
+    Public Function ReplaceALRs(ByVal sText As String, Optional ByVal bAutoCapitalise As Boolean = True, Optional topLevel As Boolean = True) As String
+        If topLevel AndAlso Adventure IsNot Nothing Then
+            If Not Adventure.AreTextOverridesValid(Not Adventure.complainedAboutTextOverrides) Then Return sText
+        End If
         Try
             If sText = "" Then Return ""
 
@@ -744,7 +747,7 @@ Public Module SharedModule
                 If sText.Contains(alr.OldText) Then
                     Dim sALR As String = alr.NewText.ToString ' Get it in a variable in case we have DisplayOnce
                     If sText = sALR Then Exit For
-                    sText = sText.Replace(alr.OldText, ReplaceALRs(sALR, False))
+                    sText = sText.Replace(alr.OldText, ReplaceALRs(sALR, False, False))
                 End If
             Next
 
@@ -766,7 +769,7 @@ Public Module SharedModule
                     If sText.Contains(alr.OldText) Then
                         Dim sALR As String = alr.NewText.ToString ' Get it in a variable in case we have DisplayOnce
                         If sText = sALR Then Exit For
-                        sText = sText.Replace(alr.OldText, ReplaceALRs(sALR, False))
+                        sText = sText.Replace(alr.OldText, ReplaceALRs(sALR, False, False))
                     End If
                 Next
             End If
