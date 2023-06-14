@@ -71,9 +71,9 @@ namespace FrankenDrift.Runner
 
             _showMapByDefault = new CheckBox
             {
-                Text = "Show map window on launch",
+                Text = "Show map window (experimental) on launch",
                 Checked = !SettingsManager.Settings.SuppressMap,
-                ToolTip = "Whether to open the map window by default when starting FrankenDrift."
+                ToolTip = "Whether to open the experimental map by default when starting FrankenDrift."
             };
 
             _fontSizeLabel = new Label {Text = SettingsManager.Settings.EnableDevFont ? "Alter default size by:" : "Use this font size:" };
