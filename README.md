@@ -23,7 +23,7 @@ The following features are known not to work:
 
 * in-line graphics (graphics always display in a separate window)
 * sound
-* the automatic map
+* auto-map support is currently experimental.
 
 ## License
 
