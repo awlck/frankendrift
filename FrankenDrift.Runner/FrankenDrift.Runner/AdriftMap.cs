@@ -150,7 +150,7 @@ namespace FrankenDrift.Runner
 			MinimumSize = new Size(640, 480);
 			_imgMap = new MapContent(this);
 			Content = (Panel)_imgMap;
-			Title = "Map (expreimental) -- FrankenDrift";
+			Title = "Map (experimental) -- FrankenDrift";
 			Closing += AdriftMapOnClosing;
 		}
 
