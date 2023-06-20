@@ -117,6 +117,10 @@ namespace FrankenDrift.GlkRunner
 
         public void ErrMsg(string message, Exception ex = null)
         {
+            Console.WriteLine("Fatal error: " + message);
+            if (_output is null) {
+                _output = new GlkHtmlWin(GlkApi);
+            }
             _output.AppendHTML($"<b>ADRIFT Fatal Error: {message}</b><br>");
         }
 

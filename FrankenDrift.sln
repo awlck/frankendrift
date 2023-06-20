@@ -31,6 +31,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrankenDrift.GlkRunner.WinG
 		{7D86D825-06D8-4205-B6B1-B91AC80DA98F} = {7D86D825-06D8-4205-B6B1-B91AC80DA98F}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FrankenDrift.GlkRunner", "FrankenDrift.GlkRunner", "{E2D7ACD2-1A32-41DA-B199-95E81E83DFE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrankenDrift.GlkRunner.AsyncGlk", "FrankenDrift.GlkRunner\FrankenDrift.GlkRunner.AsyncGlk\FrankenDrift.GlkRunner.AsyncGlk.csproj", "{2C44381C-9B55-4004-BF59-A0A3B55006D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,11 +77,18 @@ Global
 		{33B72C00-DCCD-44C4-84CD-FA68FF078C61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33B72C00-DCCD-44C4-84CD-FA68FF078C61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33B72C00-DCCD-44C4-84CD-FA68FF078C61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C44381C-9B55-4004-BF59-A0A3B55006D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C44381C-9B55-4004-BF59-A0A3B55006D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C44381C-9B55-4004-BF59-A0A3B55006D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C44381C-9B55-4004-BF59-A0A3B55006D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {78CD939C-C8DA-4003-B2E2-D8DB0F3195AE}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2C44381C-9B55-4004-BF59-A0A3B55006D6} = {E2D7ACD2-1A32-41DA-B199-95E81E83DFE8}
 	EndGlobalSection
 EndGlobal

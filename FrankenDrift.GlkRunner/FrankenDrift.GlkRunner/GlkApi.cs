@@ -59,7 +59,7 @@ namespace FrankenDrift.GlkRunner.Glk
         GarglkText = 0x1100
     }
 
-    enum EventType : uint
+    public enum EventType : uint
     {
         None = 0,
         Timer = 1,
@@ -187,43 +187,50 @@ namespace FrankenDrift.GlkRunner.Glk
     [StructLayout(LayoutKind.Sequential)]
     public struct Event
     {
-        internal EventType type;
-        internal WindowHandle win_handle;
-        internal uint val1;
-        internal uint val2;
+        public EventType type;
+        public WindowHandle win_handle;
+        public uint val1;
+        public uint val2;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct StreamResult
+    public struct StreamResult
     {
-        public readonly uint readcount;
-        public readonly uint writecount;
+        public uint readcount;
+        public uint writecount;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct WindowHandle(IntPtr hwnd)
     {
         internal bool IsValid => hwnd != IntPtr.Zero;
+        public static implicit operator IntPtr(WindowHandle h) => h.hwnd;
+        public static implicit operator WindowHandle(IntPtr hwnd) => new WindowHandle(hwnd);
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct FileRefHandle(IntPtr hfref)
     {
         internal bool IsValid => hfref != IntPtr.Zero;
+        public static implicit operator IntPtr(FileRefHandle h) => h.hfref;
+        public static implicit operator FileRefHandle(IntPtr hfref) => new FileRefHandle(hfref);
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct StreamHandle(IntPtr hstrm)
     {
         internal bool IsValid => hstrm != IntPtr.Zero;
+        public static implicit operator IntPtr(StreamHandle h) => h.hstrm;
+        public static implicit operator StreamHandle(IntPtr hstrm) => new StreamHandle(hstrm);
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public record struct SoundChannel(IntPtr schan)
     {
         internal bool IsValid => schan != IntPtr.Zero;
+        public static implicit operator IntPtr(SoundChannel h) => h.schan;
+        public static implicit operator SoundChannel(IntPtr schan) => new SoundChannel(schan);
     }
-
 
     public interface IGlk
     {

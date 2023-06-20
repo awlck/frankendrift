@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <TargetFramework>net7.0</TargetFramework>
+    <WasmMainJSPath>frankendrift.js</WasmMainJSPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FrankenDrift.GlkRunner\FrankenDrift.GlkRunner.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <WasmExtraFilesToDeploy Include="parchment.html" />
+  </ItemGroup>
+
+</Project>
