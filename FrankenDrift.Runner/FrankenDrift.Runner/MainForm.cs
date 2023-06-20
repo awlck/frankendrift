@@ -60,7 +60,7 @@ namespace FrankenDrift.Runner
         public MainForm()
         {
             InitializeComponent();
-            map = new AdriftMap();
+            map = new AdriftMap(this);
             _timer = new UITimer { Interval = 1.0d };
 
             loadGameCommand.Executed += LoadGameCommandOnExecuted;
@@ -114,7 +114,7 @@ namespace FrankenDrift.Runner
             restartGameCommand = new Command { MenuText = "Restart Game", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.Shift | Keys.R };
             transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.T };
             replayCommand = new Command { MenuText = "Replay Commands", Enabled = false, Shortcut = Application.Instance.CommonModifier | Application.Instance.AlternateModifier | Keys.R };
-            showMapCommand = new Command { MenuText = "Open Map Window", Enabled = true, Shortcut = Application.Instance.CommonModifier | Keys.M };
+            showMapCommand = new Command { MenuText = "Open Map (experimental)", Enabled = true, Shortcut = Application.Instance.CommonModifier | Keys.M };
 
             var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -517,6 +517,11 @@ namespace FrankenDrift.Runner
         {
             if (_graphics != graphics) throw new ArgumentException("Reporting closure of a graphics window that isn't ours", nameof(graphics));
             _graphics = null;
+        }
+
+        internal void DisableMap()
+        {
+            showMapCommand.Enabled = false;
         }
     }
 }

@@ -6,5 +6,4 @@
 	<VersionPrefix>0.7.0</VersionPrefix>
 	  <VersionSuffix>indev</VersionSuffix>
   </PropertyGroup>
-	
 </Project>

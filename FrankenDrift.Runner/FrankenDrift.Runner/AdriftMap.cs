@@ -161,15 +161,18 @@ namespace FrankenDrift.Runner
 		private Color _nodeText = Color.FromArgb(0, 0, 0);
 		private Color _linkColor = Color.FromArgb(70, 0, 0);
 
+		internal MainForm _main;
+
 		private MapContent _imgMap;
 		internal Point CurrentCenter { get; set; }
 
-		public AdriftMap()
+		public AdriftMap(MainForm main)
 		{
+			_main = main;
 			MinimumSize = new Size(640, 480);
 			_imgMap = new MapContent(this);
 			Content = (Panel)_imgMap;
-			Title = "Map -- FrankenDrift";
+			Title = "Map (experimental) -- FrankenDrift";
 			Closing += AdriftMapOnClosing;
 		}
 
@@ -760,6 +763,7 @@ namespace FrankenDrift.Runner
 		private readonly AdriftMap theMap;
 		private bool dragging = false;
 		private PointF dragPrevious;
+		private bool _disabled = false;
 		internal MapContent(AdriftMap theMap)
 		{
 			this.theMap = theMap;
@@ -795,14 +799,27 @@ namespace FrankenDrift.Runner
 
 		private void MapContentOnPaint(object sender, PaintEventArgs e)
 		{
-			if (theMap.Page is null) return;
+			if (theMap.Page is null || _disabled) return;
 			var gfx = e.Graphics;
 			gfx.TranslateTransform(-theMap.CurrentCenter);
 			gfx.TranslateTransform(Width / 2, Height / 2);
 			// clear the screen before redraw
 			gfx.Clear(new SolidBrush(theMap._mapBackground));
-			foreach (var node in theMap.Page.Nodes)
-				theMap.DrawNode(gfx, node);
+			try
+			{
+				foreach (var node in theMap.Page.Nodes)
+					theMap.DrawNode(gfx, node);
+			}
+			catch (Exception ex)
+			{
+				theMap.Visible = false;
+				_disabled = true;
+				theMap._main.OutputHTML("<font size=+2 color=red><b>A map error has occurred.</b></font><br><br><font face=\"monospace\" size=-2>");
+				theMap._main.OutputHTML(ex.Message);
+				theMap._main.OutputHTML("<br>");
+				theMap._main.OutputHTML(ex.StackTrace);
+				theMap._main.OutputHTML("</font><br><br><b>The map will be disabled for the remainder of this session.</b><br>");
+			}
 		}
 	}
 }

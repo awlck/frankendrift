@@ -6,8 +6,11 @@ namespace FrankenDrift.Runner
 {
     public static class FontExtensions
     {
-        static readonly string[] Monospaces = { "Courier", "Courier New", "Consolas", "Andale Mono", "Liberation Mono", "Ubuntu Mono", "DejaVu Sans Mono",
-            "Droid Sans Mono", "Lucida Console", "Menlo", "OCR-A", "OCR-A extended", "Overpass Mono", "Oxygen Mono", "Roboto Mono", "Source Code Pro" };
+        static readonly string[] Monospaces = {
+            "monospace", "Courier", "Courier New", "Consolas", "Andale Mono", "Liberation Mono", "Ubuntu Mono","DejaVu Sans Mono",
+            "Droid Sans Mono", "Lucida Console", "Menlo", "OCR-A", "OCR-A extended", "Overpass Mono", "Oxygen Mono", "Roboto Mono",
+            "Source Code Pro", "TADS-typewriter"
+        };
 
         public static Font WithFontFace(this Font font, string face)
         {
