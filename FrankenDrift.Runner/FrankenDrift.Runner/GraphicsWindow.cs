@@ -46,7 +46,7 @@ namespace FrankenDrift.Runner
                     var scratch = "";
                     var img = SharedModule.Blorb.GetImage(res, true, ref scratch);
                     if (img is null) return;
-                    _view.Image = img;
+                    _view.Image = new Bitmap(img);
                 }
             }
             else if (File.Exists(path))

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Sockets;
-using Eto.Drawing;
 
 namespace FrankenDrift.Glue
 {
@@ -49,7 +48,7 @@ namespace FrankenDrift.Glue
         // public void ClearOutput();
         public void InitInput();
 
-        public void ShowCoverArt(Image img);
+        public void ShowCoverArt(byte[] img);
 
         public void DoEvents();
         public string GetAppDataPath();
@@ -79,7 +78,7 @@ namespace FrankenDrift.Glue
         public void SetInput(string str) => txtInput.Text = str;
         public void SubmitCommand();
 
-        public void Close() => Eto.Forms.Application.Instance.Quit();
+        public void Close();
     }
 
     public interface RichTextBox

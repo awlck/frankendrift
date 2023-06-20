@@ -2,15 +2,14 @@
 
 Imports System.Xml
 
-Imports Eto.Drawing
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
 
 Public Class RunnerSession
 
     Public sIt, sHim, sHer, sThem As String
-    Friend stackFonts As New Stack(Of Font)
-    Friend stackColours As New Stack(Of String)
+    ' Friend stackFonts As New Stack(Of Font)
+    ' Friend stackColours As New Stack(Of String)
     Public dtDebug As DateTime
     Public iDebugIndent As Integer
     Public bNoDebug As Boolean
@@ -31,7 +30,7 @@ Public Class RunnerSession
     Public sGameFolder As String
     Public bGraphics As Boolean = True
     Public WithEvents Map As FrankenDrift.Glue.Map
-    Friend DefaultFont As Font
+    ' Friend DefaultFont As Font
     Friend bUseDefaultFont As Boolean = False
     Friend sTurnOutput As String = ""
     Friend bRequiresRestoreLayout As Boolean = False
@@ -172,7 +171,11 @@ Public Class RunnerSession
 
         States.Clear()
         salCommands.Clear()
+#If Not Adravalon Then
         salCommands.Add(fRunner.txtInput.Text)
+#Else
+        salCommands.Add("")
+#End If
         iPreviousOffset = 0
         Dim eFileType As FileIO.FileTypeEnum = FileTypeEnum.TextAdventure_TAF
         If sFilename.ToLower.EndsWith(".blorb") Then eFileType = FileTypeEnum.Blorb
@@ -2638,7 +2641,7 @@ NextMessage:
 
     Public Sub ShowUserSplash()
         If clsBlorb.Frontispiece > -1 Then
-            Dim imgSplash As Image = Blorb.GetImage(clsBlorb.Frontispiece)
+            Dim imgSplash As Byte() = Blorb.GetImage(clsBlorb.Frontispiece)
             If imgSplash IsNot Nothing Then
                 Glue.ShowCoverArt(imgSplash)
             End If
