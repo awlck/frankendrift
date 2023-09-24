@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	  <OutputType>WinExe</OutputType>
@@ -9,8 +9,17 @@
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<PublishAot>true</PublishAot>
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
+	</PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\FrankenDrift.GlkRunner\FrankenDrift.GlkRunner.csproj" />
   </ItemGroup>
+
+	<!--<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<DirectPInvoke Include="libgarglk" />
+	</ItemGroup>-->
 
 </Project>
