@@ -1,11 +1,5 @@
-﻿Imports System.Xml.Serialization
+﻿Imports FrankenDrift.Glue
 
-Imports FrankenDrift.Glue
-
-<SerializableAttribute(),
-    XmlTypeAttribute([Namespace]:="http://babel.ifarchive.org/protocol/iFiction/"),
-    XmlRootAttribute("ifindex", [Namespace]:="http://babel.ifarchive.org/protocol/iFiction/",
-    IsNullable:=False)>
 Public Class clsBabelTreatyInfo
 
     Public Sub New()
@@ -17,52 +11,13 @@ Public Class clsBabelTreatyInfo
 
     Public Function FromString(ByVal sXML As String) As Boolean
 
-        Try
-            Dim serializer As New XmlSerializer(GetType(clsBabelTreatyInfo))
-            Dim bytes As Byte() = System.Text.Encoding.UTF8.GetBytes(sXML)
-            Dim ms As New System.IO.MemoryStream(bytes)
-            Adventure.BabelTreatyInfo = CType(serializer.Deserialize(ms), clsBabelTreatyInfo)
-            ms.Close()
-            Return True
-        Catch ex As Exception
-            ErrMsg("FromString error parsing ifindex", ex)
-            Return False
-        End Try
+        Return True
 
     End Function
 
-
-    Public Shadows Function ToString(Optional ByVal bIncludeXMLTag As Boolean = True) As String
-
-        Try
-            Dim serializer As New XmlSerializer(GetType(clsBabelTreatyInfo))
-            Dim ms As New System.IO.MemoryStream
-            Dim xmlTextWriter As New System.Xml.XmlTextWriter(ms, System.Text.Encoding.UTF8)
-
-            serializer.Serialize(xmlTextWriter, Me)
-
-            ms = CType(xmlTextWriter.BaseStream, System.IO.MemoryStream)
-            Dim sXML As String = (New System.Text.UTF8Encoding).GetString(ms.ToArray)
-            Dim iOffset As Integer = 0
-            While iOffset < sXML.Length AndAlso sXML(iOffset) <> "<"c
-                iOffset += 1
-            End While
-
-            If bIncludeXMLTag Then
-                Return sXML.Substring(iOffset)
-            Else
-                Return sXML.Substring(iOffset).Replace("<?xml version=""1.0"" encoding=""utf-8""?>", "")
-            End If
-        Catch ex As Exception
-            ErrMsg("ToString error parsing ifindex", ex)
-            Return ""
-        End Try
-
-    End Function
 
 
     Private oStories() As clsStory
-    <System.Xml.Serialization.XmlElementAttribute("story", GetType(clsStory))>
     Public Property Stories() As clsStory()
         Get
             Return oStories
@@ -74,7 +29,6 @@ Public Class clsBabelTreatyInfo
 
 
     Private sVersion As String
-    <System.Xml.Serialization.XmlAttributeAttribute("version")>
     Public Property Version() As String
         Get
             Return sVersion
@@ -106,7 +60,6 @@ Public Class clsBabelTreatyInfo
             End Sub
 
             Private sIFID As String
-            <System.Xml.Serialization.XmlElement("ifid")>
             Public Property IFID() As String
                 Get
                     Return sIFID
@@ -116,7 +69,6 @@ Public Class clsBabelTreatyInfo
                 End Set
             End Property
 
-            <System.Xml.Serialization.XmlElement("format")>
             Public Property Format() As String
                 Get
                     Return "adrift"
@@ -126,37 +78,12 @@ Public Class clsBabelTreatyInfo
                 End Set
             End Property
 
-            Private iBAFN As Integer
-            <System.Xml.Serialization.XmlElement("bafn")>
-            Public Property BAFN() As Integer
-                Get
-                    Return iBAFN
-                End Get
-                Set(ByVal value As Integer)
-                    iBAFN = value
-                    If iBAFN <> 0 Then bBAFNSpecified = True
-                End Set
-            End Property
-
-            Private bBAFNSpecified As Boolean
-            <System.Xml.Serialization.XmlIgnoreAttribute()>
-            Public Property BAFNSpecified() As Boolean
-                Get
-                    Return bBAFNSpecified
-                End Get
-                Set(ByVal Value As Boolean)
-                    bBAFNSpecified = Value
-                End Set
-            End Property
-
         End Class
-        <System.Xml.Serialization.XmlElement("identification")>
         Public Identification As New clsIdentification
 
         ' The <bibliographic> section is mandatory.
         Public Class clsBibliographic
 
-            <System.Xml.Serialization.XmlElement("title")>
             Public Property Title() As String
                 Get
                     Return Adventure.Title
@@ -166,7 +93,6 @@ Public Class clsBabelTreatyInfo
                 End Set
             End Property
 
-            <System.Xml.Serialization.XmlElement("author")>
             Public Property Author() As String
                 Get
                     Return Adventure.Author
@@ -178,7 +104,6 @@ Public Class clsBabelTreatyInfo
 
             ' Always reads this from the current culture, so can change if modified on a different machine
             Private sLanguage As String
-            <System.Xml.Serialization.XmlElement("language")>
             Public Property Language() As String
                 Get
                     Return Threading.Thread.CurrentThread.CurrentCulture.ToString()
@@ -189,7 +114,6 @@ Public Class clsBabelTreatyInfo
             End Property
 
             Private sHeadline As String
-            <System.Xml.Serialization.XmlElement("headline")>
             Public Property Headline() As String
                 Get
                     Return sHeadline
@@ -199,52 +123,7 @@ Public Class clsBabelTreatyInfo
                 End Set
             End Property
 
-            Private dtFirstPublished As DateTime
-            <System.Xml.Serialization.XmlElement("firstpublished")>
-            Public Property FirstPublished() As DateTime
-                Get
-                    Return dtFirstPublished
-                End Get
-                Set(ByVal value As DateTime)
-                    dtFirstPublished = value
-                    If value <> Date.MinValue Then bFirstPublishedSpecified = True
-                End Set
-            End Property
-
-            Private bFirstPublishedSpecified As Boolean
-            <System.Xml.Serialization.XmlIgnoreAttribute()>
-            Public Property FirstPublishedSpecified() As Boolean
-                Get
-                    Return bFirstPublishedSpecified
-                End Get
-                Set(ByVal Value As Boolean)
-                    bFirstPublishedSpecified = Value
-                End Set
-            End Property
-
-            Private sGenre As String
-            <System.Xml.Serialization.XmlElement("genre")>
-            Public Property Genre() As String
-                Get
-                    Return sGenre
-                End Get
-                Set(ByVal value As String)
-                    sGenre = value
-                End Set
-            End Property
-
-            Private sGroup As String
-            Public Property Group() As String
-                Get
-                    Return sGroup
-                End Get
-                Set(ByVal value As String)
-                    sGroup = value
-                End Set
-            End Property
-
             Private sDescription As String
-            <System.Xml.Serialization.XmlElement("description")>
             Public Property Description() As String
                 Get
                     Return sDescription
@@ -276,7 +155,6 @@ Public Class clsBabelTreatyInfo
             End Property
 
             Private bSeriesNumberSpecified As Boolean
-            <System.Xml.Serialization.XmlIgnoreAttribute()>
             Public Property SeriesNumberSpecified() As Boolean
                 Get
                     Return bSeriesNumberSpecified
@@ -294,7 +172,6 @@ Public Class clsBabelTreatyInfo
                 Cruel
             End Enum
             Private eForgiveness As ForgivenessEnum
-            <System.Xml.Serialization.XmlElement("forgiveness")>
             Public Property Forgiveness() As ForgivenessEnum
                 Get
                     Return eForgiveness
@@ -306,7 +183,6 @@ Public Class clsBabelTreatyInfo
             End Property
 
             Private bForgivenessSpecified As Boolean
-            <System.Xml.Serialization.XmlIgnoreAttribute()>
             Public Property ForgivenessSpecified() As Boolean
                 Get
                     Return bForgivenessSpecified
@@ -317,7 +193,6 @@ Public Class clsBabelTreatyInfo
             End Property
 
         End Class
-        <System.Xml.Serialization.XmlElement("bibliographic")>
         Public Bibliographic As New clsBibliographic
 
         ' The <resources> tag is optional. This section, if present, details
@@ -325,8 +200,6 @@ Public Class clsBabelTreatyInfo
         ' file, and to be available to any player. By "other" is meant files
         ' which are not embedded in the story file. (So, for instance, pictures
         ' in a blorbed Z-machine story file do not count as "other".)
-        <System.SerializableAttribute(),
-            System.Xml.Serialization.XmlTypeAttribute([TypeName]:="resources", [Namespace]:="http://babel.ifarchive.org/protocol/iFiction/")>
         Public Class clsResources
 
             Public Class clsAuxiliary
@@ -358,8 +231,6 @@ Public Class clsBabelTreatyInfo
         Public Resources As clsResources
 
         ' The <contacts> tag is optional.
-        <System.SerializableAttribute(),
-            System.Xml.Serialization.XmlTypeAttribute([TypeName]:="contacts", [Namespace]:="http://babel.ifarchive.org/protocol/iFiction/")>
         Public Class clsContacts
 
             Private sURL As String
@@ -396,7 +267,6 @@ Public Class clsBabelTreatyInfo
             ' This is required to be either "jpg" or "png". No other casings,
             ' spellings or image formats are permitted.
             Private sFormat As String
-            <System.Xml.Serialization.XmlElement("format")>
             Public Property Format() As String
                 Get
                     If imgCoverArt IsNot Nothing Then Return sFormat Else Return Nothing
@@ -410,7 +280,6 @@ Public Class clsBabelTreatyInfo
                 End Set
             End Property
 
-            <System.Xml.Serialization.XmlElement("height")>
             Public Property Height() As Integer
                 Get
                     Return 0
@@ -421,7 +290,6 @@ Public Class clsBabelTreatyInfo
             End Property
 
             Private bHeightSpecified As Boolean
-            <System.Xml.Serialization.XmlIgnoreAttribute()>
             Public Property HeightSpecified() As Boolean
                 Get
                     Return False
@@ -431,7 +299,6 @@ Public Class clsBabelTreatyInfo
                 End Set
             End Property
 
-            <System.Xml.Serialization.XmlElement("width")>
             Public Property Width() As Integer
                 Get
                     Return 0
@@ -442,7 +309,6 @@ Public Class clsBabelTreatyInfo
             End Property
 
             Private bWidthSpecified As Boolean
-            <System.Xml.Serialization.XmlIgnoreAttribute()>
             Public Property WidthSpecified() As Boolean
                 Get
                     Return False
@@ -453,7 +319,6 @@ Public Class clsBabelTreatyInfo
             End Property
 
         End Class
-        <System.Xml.Serialization.XmlElement("cover")>
         Public Cover As clsCover
 
         Public Class clsADRIFT
@@ -470,8 +335,6 @@ Public Class clsBabelTreatyInfo
         ' 5.11 - Releases
         '   Attached
         '   History
-        <System.SerializableAttribute(),
-           System.Xml.Serialization.XmlTypeAttribute([TypeName]:="releases", [Namespace]:="http://babel.ifarchive.org/protocol/iFiction/")>
         Public Class clsReleases
 
             Public Sub New()
@@ -489,7 +352,6 @@ Public Class clsBabelTreatyInfo
                 Public Class clsRelease
 
                     Private iVersion As Integer = 1
-                    <System.Xml.Serialization.XmlElement("version")>
                     Public Property Version() As Integer
                         Get
                             Return iVersion
@@ -501,7 +363,6 @@ Public Class clsBabelTreatyInfo
                     End Property
 
                     Private bVersionSpecified As Boolean
-                    <System.Xml.Serialization.XmlIgnoreAttribute()>
                     Public Property VersionSpecified() As Boolean
                         Get
                             Return bVersionSpecified
@@ -512,7 +373,6 @@ Public Class clsBabelTreatyInfo
                     End Property
 
                     Private dtReleaseDate As DateTime
-                    <System.Xml.Serialization.XmlElement("releasedate")>
                     Public Property ReleaseDateXML() As String
                         Get
                             Return ReleaseDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat)
@@ -522,7 +382,6 @@ Public Class clsBabelTreatyInfo
                         End Set
                     End Property
 
-                    <System.Xml.Serialization.XmlIgnore()>
                     Public Property ReleaseDate() As DateTime
                         Get
 #If Generator Then
@@ -537,7 +396,6 @@ Public Class clsBabelTreatyInfo
                     End Property
 
                     Private sCompiler As String
-                    <System.Xml.Serialization.XmlElement("compiler")>
                     Public Property Compiler() As String
                         Get
                             Return "ADRIFT 5"
@@ -547,7 +405,6 @@ Public Class clsBabelTreatyInfo
                     End Property
 
                     Private sCompilerVersion As String
-                    <System.Xml.Serialization.XmlElement("compilerversion")>
                     Public Property CompilerVersion() As String
                         Get
                             Return Application.ProductVersion
@@ -557,16 +414,13 @@ Public Class clsBabelTreatyInfo
                     End Property
 
                 End Class
-                <System.Xml.Serialization.XmlElement("release")>
                 Public Release As New clsRelease
 
             End Class
-            <System.Xml.Serialization.XmlElement("attached")>
             Public Attached As New clsAttached
 
         End Class
 
-        <System.Xml.Serialization.XmlElement("releases")>
         Public Releases As clsReleases
 
 
