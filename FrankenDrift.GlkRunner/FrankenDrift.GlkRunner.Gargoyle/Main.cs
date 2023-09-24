@@ -108,10 +108,12 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void garglk_set_program_name([MarshalAs(UnmanagedType.LPStr)] string name);
         [DllImport("libgarglk")]
         internal static extern void garglk_set_story_name([MarshalAs(UnmanagedType.LPStr)] string name);
+#if !GarglkStatic
         [DllImport("libgarglk")]
         internal static extern void gli_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
         [DllImport("libgarglk")]
         internal static extern void garglk_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
+#endif
         [DllImport("libgarglk", EntryPoint = "_Z11gli_startupiPPc")]
         internal static extern void gli_startup_m_(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
     }
@@ -170,6 +172,9 @@ namespace FrankenDrift.GlkRunner.Gargoyle
 
         internal void GarglkInit(string[] argv)
         {
+#if GarglkStatic
+            Garglk_Pinvoke.gli_startup_m_(argv.Length, argv);
+#else
             // Depending on the Garglk library version, the startup function could have
             // a number of names. We need to try them all.
             try  // First attempt.
@@ -188,6 +193,7 @@ namespace FrankenDrift.GlkRunner.Gargoyle
             // This must succeed, or the Garglk library would go uninitialized,
             // so we let the program crash and burn if this one fails as well.
             Garglk_Pinvoke.gli_startup(argv.Length, argv);
+#endif
         }
     }
 
