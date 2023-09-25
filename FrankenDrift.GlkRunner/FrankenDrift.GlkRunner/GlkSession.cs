@@ -185,24 +185,24 @@ namespace FrankenDrift.GlkRunner
         public void SetBackgroundColour()
         {
             var adventure = Adrift.SharedModule.Adventure;
-            if (!adventure.DeveloperDefaultBackgroundColour.IsEmpty)
+            if (adventure.DeveloperDefaultBackgroundColour != 0)
             {
-                int colorToBe = adventure.DeveloperDefaultBackgroundColour.ToArgb() & 0x00FFFFFF;
+                int colorToBe = adventure.DeveloperDefaultBackgroundColour & 0x00FFFFFF;
                 foreach (Style s in (Style[]) Enum.GetValues(typeof(Style)))
                     GlkApi.glk_stylehint_set(WinType.AllTypes, s, StyleHint.BackColor, colorToBe);
             }
-            if (!adventure.DeveloperDefaultOutputColour.IsEmpty && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
+            if (adventure.DeveloperDefaultOutputColour != 0 && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
             {
-                int colorToBe = adventure.DeveloperDefaultOutputColour.ToArgb() & 0x00FFFFFF;
+                int colorToBe = adventure.DeveloperDefaultOutputColour & 0x00FFFFFF;
                 foreach (Style s in (Style[]) Enum.GetValues(typeof(Style)))
                 {
                     if (s == Style.Input) continue;
                     GlkApi.glk_stylehint_set(WinType.AllTypes, s, StyleHint.TextColor, colorToBe);
                 }
             }
-            if (!adventure.DeveloperDefaultInputColour.IsEmpty && adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
+            if (adventure.DeveloperDefaultInputColour != 0 && adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
             {
-                int colorToBe = adventure.DeveloperDefaultInputColour.ToArgb() & 0x00FFFFFF;
+                int colorToBe = adventure.DeveloperDefaultInputColour & 0x00FFFFFF;
                 GlkApi.glk_stylehint_set(WinType.AllTypes, Style.Input, StyleHint.TextColor, colorToBe);
             }
 

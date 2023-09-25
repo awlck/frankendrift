@@ -53,8 +53,6 @@ Public Module SharedModule
 
     Public iImageSizeMode As Integer
 
-    Friend pfc As System.Drawing.Text.PrivateFontCollection = Nothing
-
     Public Enum PerspectiveEnum
         None = 0
         FirstPerson = 1     ' I/Me/Myself
@@ -421,56 +419,6 @@ Public Module SharedModule
         End Set
     End Property
 
-    Friend Function GetBackgroundColour() As Color
-
-        If Adventure IsNot Nothing Then
-            If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultBackgroundColour = Nothing Then
-                Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "Background", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_BACKGROUNDCOLOUR)).ToString)))
-            Else
-                Return Adventure.DeveloperDefaultBackgroundColour
-            End If
-        Else
-            Return Color.FromArgb(DEFAULT_BACKGROUNDCOLOUR)
-        End If
-
-    End Function
-
-    Friend Function GetInputColour() As Color
-        If Adventure IsNot Nothing Then
-            If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultInputColour = Nothing Then
-                Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "Text1", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_INPUTCOLOUR)).ToString)))
-            Else
-                Return Adventure.DeveloperDefaultInputColour
-            End If
-        Else
-            Return Color.FromArgb(DEFAULT_INPUTCOLOUR)
-        End If
-    End Function
-
-    Friend Function GetOutputColour() As Color
-        If Adventure IsNot Nothing Then
-            If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultOutputColour = Nothing Then
-                Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "Text2", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_OUTPUTCOLOUR)).ToString)))
-            Else
-                Return Adventure.DeveloperDefaultOutputColour
-            End If
-        Else
-            Return Color.FromArgb(DEFAULT_OUTPUTCOLOUR)
-        End If
-    End Function
-
-    Friend Function GetLinkColour() As Color
-        If Adventure IsNot Nothing Then
-            If Not AllowDevToSetColours OrElse Adventure.DeveloperDefaultLinkColour = Nothing Then
-                Return ColorTranslator.FromOle(CInt(GetSetting("ADRIFT", "Runner", "LinkColour", ColorTranslator.ToOle(Color.FromArgb(DEFAULT_LINKCOLOUR)).ToString)))
-            Else
-                Return Adventure.DeveloperDefaultLinkColour
-            End If
-        Else
-            Return Color.FromArgb(DEFAULT_LINKCOLOUR)
-        End If
-    End Function
-
     Friend Enum eJustification
         [Left]
         [Right]
@@ -479,63 +427,6 @@ Public Module SharedModule
     Public Sub Source2HTML(ByVal sSource As String, ByRef RichText As RichTextBox, ByVal bClearRTB As Boolean, Optional ByVal bDebug As Boolean = False, Optional ByRef sUnprocessedText As String = Nothing)
         Glue.OutputHTML(sSource)
     End Sub
-
-
-    Private Class WmfStuff
-
-        <Flags>
-        Private Enum EmfToWmfBitsFlags
-            EmfToWmfBitsFlagsDefault = &H0
-            EmfToWmfBitsFlagsEmbedEmf = &H1
-            EmfToWmfBitsFlagsIncludePlaceable = &H2
-            EmfToWmfBitsFlagsNoXORClip = &H4
-        End Enum
-
-        Private Shared MM_ISOTROPIC As Integer = 7
-        Private Shared MM_ANISOTROPIC As Integer = 8
-
-        <System.Runtime.InteropServices.DllImport("gdiplus.dll")>
-        Private Shared Function GdipEmfToWmfBits(_hEmf As IntPtr, _bufferSize As UInteger, _buffer As Byte(), _mappingMode As Integer, _flags As EmfToWmfBitsFlags) As UInteger
-        End Function
-        <System.Runtime.InteropServices.DllImport("gdi32.dll")>
-        Private Shared Function SetMetaFileBitsEx(_bufferSize As UInteger, _buffer As Byte()) As IntPtr
-        End Function
-        <System.Runtime.InteropServices.DllImport("gdi32.dll")>
-        Private Shared Function CopyMetaFile(hWmf As IntPtr, filename As String) As IntPtr
-        End Function
-        <System.Runtime.InteropServices.DllImport("gdi32.dll")>
-        Private Shared Function DeleteMetaFile(hWmf As IntPtr) As Boolean
-        End Function
-        <System.Runtime.InteropServices.DllImport("gdi32.dll")>
-        Private Shared Function DeleteEnhMetaFile(hEmf As IntPtr) As Boolean
-        End Function
-
-        Public Shared Function MakeMetafileStream(image As System.Drawing.Image) As IO.MemoryStream
-            Dim metafile As System.Drawing.Imaging.Metafile = Nothing
-            Using g As Graphics = Graphics.FromImage(image)
-                Dim hDC As IntPtr = g.GetHdc()
-                metafile = New System.Drawing.Imaging.Metafile(hDC, System.Drawing.Imaging.EmfType.EmfOnly)
-                g.ReleaseHdc(hDC)
-            End Using
-
-            Using g As Graphics = Graphics.FromImage(metafile)
-                g.DrawImage(image, 0, 0)
-            End Using
-            Dim _hEmf As IntPtr = metafile.GetHenhmetafile()
-            Dim _bufferSize As UInteger = GdipEmfToWmfBits(_hEmf, 0, Nothing, MM_ANISOTROPIC, EmfToWmfBitsFlags.EmfToWmfBitsFlagsDefault)
-            Dim _buffer As Byte() = New Byte(CInt(_bufferSize) - 1) {}
-            GdipEmfToWmfBits(_hEmf, _bufferSize, _buffer, MM_ANISOTROPIC, EmfToWmfBitsFlags.EmfToWmfBitsFlagsDefault)
-            DeleteEnhMetaFile(_hEmf)
-
-            Dim stream As New IO.MemoryStream()
-            stream.Write(_buffer, 0, CInt(_bufferSize))
-            stream.Seek(0, 0)
-
-            Return stream
-        End Function
-
-    End Class
-
 
     ' Scrolls to the end of the text, and adds a <Wait> box if necessary
     Friend Sub ScrollToEnd(ByVal RichText As RichTextBox)

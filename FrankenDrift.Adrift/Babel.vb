@@ -390,7 +390,7 @@ Public Class clsBabelTreatyInfo
         ' image; and the information must, of course, be correct.
 
         Public Class clsCover
-            Friend imgCoverArt As System.Drawing.Image
+            Friend imgCoverArt As Byte()
 
 
             ' This is required to be either "jpg" or "png". No other casings,
@@ -413,7 +413,7 @@ Public Class clsBabelTreatyInfo
             <System.Xml.Serialization.XmlElement("height")>
             Public Property Height() As Integer
                 Get
-                    If imgCoverArt IsNot Nothing Then Return imgCoverArt.Height Else Return 0
+                    Return 0
                 End Get
                 Set(ByVal value As Integer)
                     ' Provided for serialization only
@@ -424,7 +424,7 @@ Public Class clsBabelTreatyInfo
             <System.Xml.Serialization.XmlIgnoreAttribute()>
             Public Property HeightSpecified() As Boolean
                 Get
-                    Return imgCoverArt IsNot Nothing
+                    Return False
                 End Get
                 Set(ByVal Value As Boolean)
                     ' Ignore
@@ -434,7 +434,7 @@ Public Class clsBabelTreatyInfo
             <System.Xml.Serialization.XmlElement("width")>
             Public Property Width() As Integer
                 Get
-                    If imgCoverArt IsNot Nothing Then Return imgCoverArt.Width Else Return 0
+                    Return 0
                 End Get
                 Set(ByVal value As Integer)
                     ' Provided for serialization only
@@ -445,7 +445,7 @@ Public Class clsBabelTreatyInfo
             <System.Xml.Serialization.XmlIgnoreAttribute()>
             Public Property WidthSpecified() As Boolean
                 Get
-                    Return imgCoverArt IsNot Nothing
+                    Return False
                 End Get
                 Set(ByVal Value As Boolean)
                     ' Ignore

@@ -1,3 +1,4 @@
+
 Imports System.Drawing
 
 Public Class clsAdventure
@@ -90,7 +91,7 @@ Public Class clsAdventure
                             Dim fs As New IO.FileStream(value, IO.FileMode.Open, IO.FileAccess.Read)
                             ReDim bytImage(iLength - 1)
                             fs.Read(bytImage, 0, CInt(iLength))
-                            .imgCoverArt = New Bitmap(New IO.MemoryStream(bytImage))
+                            .imgCoverArt = bytImage
                             fs.Close()
                             .Format = IO.Path.GetExtension(value).ToLower.Substring(1)
                         End If
@@ -614,11 +615,10 @@ Public Class clsAdventure
         End Set
     End Property
 
-
-    Public Property DeveloperDefaultBackgroundColour As Color = Color.FromArgb(DEFAULT_BACKGROUNDCOLOUR)
-    Public Property DeveloperDefaultInputColour As Color = Color.FromArgb(DEFAULT_INPUTCOLOUR) ' 210, 37, 39)
-    Public Property DeveloperDefaultOutputColour As Color = Color.FromArgb(DEFAULT_OUTPUTCOLOUR) ' 25, 165, 138)
-    Public Property DeveloperDefaultLinkColour As Color = Color.FromArgb(DEFAULT_LINKCOLOUR) ' 75, 215, 188)
+    Public Property DeveloperDefaultBackgroundColour As Integer = DEFAULT_BACKGROUNDCOLOUR
+    Public Property DeveloperDefaultInputColour As Integer = DEFAULT_INPUTCOLOUR
+    Public Property DeveloperDefaultOutputColour As Integer = DEFAULT_OUTPUTCOLOUR
+    Public Property DeveloperDefaultLinkColour As Integer = DEFAULT_LINKCOLOUR
 
     Private iDefaultFontSize As Integer = 12
     Public Property DefaultFontSize As Integer
@@ -628,16 +628,6 @@ Public Class clsAdventure
         Set(value As Integer)
             If value >= 8 AndAlso value <= 36 Then iDefaultFontSize = value
         End Set
-    End Property
-
-    Private oDefaultFont As Font = Nothing
-    Public ReadOnly Property DefaultFont As Font
-        Get
-            If oDefaultFont Is Nothing Then
-                oDefaultFont = New Font(DefaultFontName, DefaultFontSize, GraphicsUnit.Point)
-            End If
-            Return oDefaultFont
-        End Get
     End Property
 
     Dim _iWaitTurns As Integer = 3
@@ -722,7 +712,6 @@ Public Class clsAdventure
         Title = "Untitled"
         Author = "Anonymous"
         sFilename = "untitled.taf"
-        oDefaultFont = Nothing
         sGameFilename = ""
         With UserSession
             .sIt = ""

@@ -1553,14 +1553,10 @@ NextTask:
                     If Not .Item("Introduction") Is Nothing Then a.Introduction = LoadDescription(xmlDoc.Item("Adventure"), "Introduction") ' New Description(.Item("Introduction").InnerText)
                     If .Item("FontName") IsNot Nothing Then a.DefaultFontName = .Item("FontName").InnerText
                     If .Item("FontSize") IsNot Nothing Then a.DefaultFontSize = SafeInt(.Item("FontSize").InnerText)
-                    a.DeveloperDefaultBackgroundColour = Nothing
-                    a.DeveloperDefaultInputColour = Nothing
-                    a.DeveloperDefaultOutputColour = Nothing
-                    a.DeveloperDefaultLinkColour = Nothing
-                    If .Item("BackgroundColour") IsNot Nothing Then a.DeveloperDefaultBackgroundColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("BackgroundColour").InnerText))
-                    If .Item("InputColour") IsNot Nothing Then a.DeveloperDefaultInputColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("InputColour").InnerText))
-                    If .Item("OutputColour") IsNot Nothing Then a.DeveloperDefaultOutputColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("OutputColour").InnerText))
-                    If .Item("LinkColour") IsNot Nothing Then a.DeveloperDefaultLinkColour = System.Drawing.ColorTranslator.FromOle(CInt(.Item("LinkColour").InnerText))
+                    If .Item("BackgroundColour") IsNot Nothing Then a.DeveloperDefaultBackgroundColour = CInt(.Item("BackgroundColour").InnerText)
+                    If .Item("InputColour") IsNot Nothing Then a.DeveloperDefaultInputColour = CInt(.Item("InputColour").InnerText)
+                    If .Item("OutputColour") IsNot Nothing Then a.DeveloperDefaultOutputColour = CInt(.Item("OutputColour").InnerText)
+                    If .Item("LinkColour") IsNot Nothing Then a.DeveloperDefaultLinkColour = CInt(.Item("LinkColour").InnerText)
                     If .Item("ShowFirstLocation") IsNot Nothing Then a.ShowFirstRoom = GetBool(.Item("ShowFirstLocation").InnerText)
                     If .Item("UserStatus") IsNot Nothing Then a.sUserStatus = .Item("UserStatus").InnerText
                     If .Item("ifindex") IsNot Nothing Then Adventure.BabelTreatyInfo.FromString(.Item("ifindex").OuterXml) ' Pre 5.0.20

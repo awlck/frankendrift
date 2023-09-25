@@ -472,12 +472,12 @@ namespace FrankenDrift.Runner
             var adventure = Adrift.SharedModule.Adventure;
             if (SettingsManager.Settings.EnableDevColors)
             {
-                if (!adventure.DeveloperDefaultBackgroundColour.IsEmpty)
-                    output._defaultBackground = Color.FromArgb(adventure.DeveloperDefaultBackgroundColour.ToArgb());
-                if (!adventure.DeveloperDefaultOutputColour.IsEmpty && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
-                    output._defaultColor = Color.FromArgb(adventure.DeveloperDefaultOutputColour.ToArgb());
-                if (!adventure.DeveloperDefaultInputColour.IsEmpty && adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
-                    output._defaultInput = Color.FromArgb(adventure.DeveloperDefaultInputColour.ToArgb());
+                if (adventure.DeveloperDefaultBackgroundColour != 0)
+                    output._defaultBackground = Color.FromArgb(adventure.DeveloperDefaultBackgroundColour);
+                if (adventure.DeveloperDefaultOutputColour != 0 && adventure.DeveloperDefaultOutputColour != adventure.DeveloperDefaultBackgroundColour)
+                    output._defaultColor = Color.FromArgb(adventure.DeveloperDefaultOutputColour);
+                if (adventure.DeveloperDefaultInputColour != 0 && adventure.DeveloperDefaultInputColour != adventure.DeveloperDefaultBackgroundColour)
+                    output._defaultInput = Color.FromArgb(adventure.DeveloperDefaultInputColour);
             }
             if (SettingsManager.Settings.EnableDevFont && !string.IsNullOrWhiteSpace(adventure.DefaultFontName)
 )
