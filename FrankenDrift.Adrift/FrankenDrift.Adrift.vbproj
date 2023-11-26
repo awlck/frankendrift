@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>FrankenDrift.Adrift</RootNamespace>
-    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <DefineConstants>Runner=True,Adravalon=True</DefineConstants>
 	<VersionPrefix>0.7.0</VersionPrefix>
 	  <VersionSuffix>indev</VersionSuffix>
