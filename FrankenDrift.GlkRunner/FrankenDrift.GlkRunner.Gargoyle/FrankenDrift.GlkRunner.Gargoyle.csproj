@@ -19,13 +19,18 @@
 		<TrimmerSingleWarn>false</TrimmerSingleWarn>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' And (!$(RuntimeIdentifier.StartsWith('win')))">
-		<DefineConstants>GarglkStatic=true</DefineConstants>
+	<PropertyGroup Condition="('$(TargetFramework)' == 'net8.0' And (!$(RuntimeIdentifier.StartsWith('win'))) And '$(GarglkStatic)'!='false') Or ('$(GarglkStatic)'=='true')">
+		<DefineConstants>GarglkStatic</DefineConstants>
+		<GarglkStatic>true</GarglkStatic>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0' And (!$(RuntimeIdentifier.StartsWith('win')))">
-		<DirectPInvoke Include="libgarglk" />
+	<ItemGroup Condition="'$(GarglkStatic)' == 'true' And (!$(RuntimeIdentifier.StartsWith('win')))">
+		<DirectPInvoke Include="garglk" />
 		<NativeLibrary Include="libgarglk.a" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(GarglkStatic)' == 'true' And $(RuntimeIdentifier.StartsWith('win'))">
+		<DirectPInvoke Include="garglk" />
+		<NativeLibrary Include="garglk.lib" />
 	</ItemGroup>
 
 </Project>
