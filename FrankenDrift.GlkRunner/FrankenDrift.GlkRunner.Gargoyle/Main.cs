@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace FrankenDrift.GlkRunner.Gargoyle
 {
-    static class Garglk_Pinvoke
+    static partial class Garglk_Pinvoke
     {
         // Universal Glk functions.
         [DllImport("garglk")]
@@ -14,8 +14,8 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void glk_cancel_hyperlink_event(WindowHandle winId);
         [DllImport("garglk")]
         internal static extern void glk_cancel_line_event(WindowHandle winId, ref Event ev);
-        [DllImport("garglk")]
-        internal static extern void glk_exit();
+        [LibraryImport("garglk")]
+        internal static partial void glk_exit();
         [DllImport("garglk")]
         internal static extern FileRefHandle glk_fileref_create_by_name(FileUsage usage, [MarshalAs(UnmanagedType.LPStr)] string name, Glk.FileMode fmode, uint rock);
         [DllImport("garglk")]
@@ -26,14 +26,14 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void glk_fileref_destroy(FileRefHandle fref);
         [DllImport("garglk")]
         internal static extern uint glk_image_draw(WindowHandle winid, uint imageId, int val1, int val2);
-        [DllImport("garglk")]
-        internal static extern uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
-        [DllImport("garglk")]
-        internal static extern void glk_put_buffer([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
+        [LibraryImport("garglk")]
+        internal static partial uint glk_image_get_info(uint imageId, ref uint width, ref uint height);
+        [LibraryImport("garglk")]
+        internal static partial void glk_put_buffer([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
         [DllImport("garglk")]
         internal static extern void glk_put_buffer_stream(StreamHandle streamId, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U1)] byte[] s, uint len);
-        [DllImport("garglk")]
-        internal static extern void glk_put_buffer_uni([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U4)] uint[] s, uint len);
+        [LibraryImport("garglk")]
+        internal static partial void glk_put_buffer_uni([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U4)] uint[] s, uint len);
         [DllImport("garglk")]
         internal static extern void glk_request_char_event(WindowHandle winId);
         [DllImport("garglk")]
@@ -60,8 +60,8 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void glk_schannel_unpause(SoundChannel chan);
         [DllImport("garglk")]
         internal static extern void glk_select(ref Event ev);
-        [DllImport("garglk")]
-        internal static extern void glk_set_hyperlink(uint linkval);
+        [LibraryImport("garglk")]
+        internal static partial void glk_set_hyperlink(uint linkval);
         [DllImport("garglk")]
         internal static extern void glk_set_style(Style s);
         [DllImport("garglk")]
@@ -76,8 +76,8 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
         [DllImport("garglk")]
         internal static extern uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result);
-        [DllImport("garglk")]
-        internal static extern void glk_tick();
+        [LibraryImport("garglk")]
+        internal static partial void glk_tick();
         [DllImport("garglk")]
         internal static extern void glk_window_clear(WindowHandle winId);
         [DllImport("garglk")]
@@ -92,30 +92,30 @@ namespace FrankenDrift.GlkRunner.Gargoyle
         internal static extern void glk_window_move_cursor(WindowHandle winId, uint xpos, uint ypos);
         [DllImport("garglk")]
         internal static extern WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock);
-        [DllImport("garglk")]
-        internal static extern void garglk_set_zcolors(uint fg, uint bg);
-        [DllImport("garglk")]
+        [LibraryImport("garglk")]
+        internal static partial void garglk_set_zcolors(uint fg, uint bg);
+        [DllImport("garglk", EntryPoint = "garglk_fileref_get_name")]
         internal static extern IntPtr glkunix_fileref_get_name(FileRefHandle fileref);
         [DllImport("garglk")]
         internal static extern uint glk_gestalt(Gestalt sel, uint val);
         [DllImport("garglk")]
         internal static extern unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen);
-        [DllImport("garglk")]
-        internal static extern void glk_request_timer_events(uint millisecs);
+        [LibraryImport("garglk")]
+        internal static partial void glk_request_timer_events(uint millisecs);
 
         // Garglk initialization functions.
-        [DllImport("garglk")]
-        internal static extern void garglk_set_program_name([MarshalAs(UnmanagedType.LPStr)] string name);
-        [DllImport("garglk")]
-        internal static extern void garglk_set_story_name([MarshalAs(UnmanagedType.LPStr)] string name);
+        [LibraryImport("garglk")]
+        internal static partial void garglk_set_program_name([MarshalAs(UnmanagedType.LPStr)] string name);
+        [LibraryImport("garglk")]
+        internal static partial void garglk_set_story_name([MarshalAs(UnmanagedType.LPStr)] string name);
 #if !GarglkStatic
         [DllImport("libgarglk", EntryPoint = "_Z11gli_startupiPPc")]
         internal static extern void gli_startup_m_(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
         [DllImport("garglk")]
         internal static extern void gli_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
 #endif
-        [DllImport("garglk")]
-        internal static extern void garglk_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
+        [LibraryImport("garglk")]
+        internal static partial void garglk_startup(int argc, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] argv);
     }
 
     class GarGlk: IGlk
