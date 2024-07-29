@@ -42,6 +42,8 @@ namespace FrankenDrift.Runner
         private bool _shouldReplayCancel = false;
         private int _commandRecallIdx = 0;
         private readonly string _myVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        //private bool _gameIsOngoing => saveGameCommand.Enabled;
+        private bool _gameIsOngoing => Adrift.SharedModule.Adventure is not null && Adrift.SharedModule.Adventure.eGameState == Adrift.clsAction.EndGameEnum.Running;
         
         internal GraphicsWindow Graphics { get
         {
@@ -72,6 +74,10 @@ namespace FrankenDrift.Runner
             showMapCommand.Executed += ShowMapCommandOnExecuted;
             _timer.Elapsed += TimerOnElapsed;
             KeyDown += MainFormOnKeyDown;
+            Closing += MainFormOnClosing;
+            // ensure the application quits after the main form closes, even on platforms where that wouldn't normally be the case,
+            // or if there are auxiliary windows still open.
+            Closed += (sender, e) => Application.Instance.Quit();
 
             input.KeyDown += InputOnKeyDown;
             output.KeyDown += OutputOnKeyDown;
@@ -202,6 +208,25 @@ namespace FrankenDrift.Runner
             if (e.Key == Keys.Escape && _isReplaying)
             {
                 _shouldReplayCancel = true;
+            }
+        }
+
+        private void MainFormOnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (_gameIsOngoing)
+            {
+                var result = QuerySaveBeforeQuit();
+                switch (result)
+                {
+                    case QueryResult.YES:
+                        SaveGameCommandOnExecuted(null, null);
+                        break;
+                    case QueryResult.NO:
+                        break;
+                    case QueryResult.CANCEL:
+                        e.Cancel = true;
+                        return;
+                }
             }
         }
 
@@ -421,8 +446,8 @@ namespace FrankenDrift.Runner
 
         public QueryResult QuerySaveBeforeQuit()
         {
-            var result = MessageBox.Show("Would you like to save before quitting?", MessageBoxButtons.YesNoCancel,
-                MessageBoxType.Question);
+            var result = MessageBox.Show("Would you like to save before quitting?", "Quit? -- FrankenDrift",
+                MessageBoxButtons.YesNoCancel, MessageBoxType.Question);
             switch (result)
             {
                 case DialogResult.Yes:
