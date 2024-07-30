@@ -77,7 +77,12 @@ namespace FrankenDrift.Runner
             Closing += MainFormOnClosing;
             // ensure the application quits after the main form closes, even on platforms where that wouldn't normally be the case,
             // or if there are auxiliary windows still open.
-            Closed += (sender, e) => Application.Instance.Quit();
+            Closed += MainFormOnClosed;
+            // need to do this or gtk will keep recursively generating closing events as we try to quit.
+            Application.Instance.Terminating += (s, e) => {
+                Closing -= MainFormOnClosing;
+                Closed -= MainFormOnClosed;
+            };
 
             input.KeyDown += InputOnKeyDown;
             output.KeyDown += OutputOnKeyDown;
@@ -228,7 +233,13 @@ namespace FrankenDrift.Runner
                         return;
                 }
             }
+            Closing -= MainFormOnClosing;
         }
+
+	private void MainFormOnClosed(object sender, EventArgs e)
+	{
+            Application.Instance.Quit();
+	}
 
         private void OutputOnKeyDown(object sender, KeyEventArgs e)
         {
