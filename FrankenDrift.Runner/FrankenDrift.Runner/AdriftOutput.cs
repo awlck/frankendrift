@@ -57,7 +57,6 @@ namespace FrankenDrift.Runner
             SelectionFont = _defaultFont;
         }
         
-        public int TextLength => Text.Length;
         public int SelectionStart { get => Selection.Start; set => Selection = Selection.WithStart(value); }
         public int SelectionLength { get => Selection.Length(); set => Selection = Selection.WithLength(value); }
 
@@ -68,13 +67,13 @@ namespace FrankenDrift.Runner
         internal Color _defaultBackground = Colors.Black;
         internal Color _defaultInput = Colors.Red;
         internal Font _defaultFont;
-        private readonly Stack<Tuple<Font, Color>> _fonts = new();
+        protected readonly Stack<Tuple<Font, Color>> _fonts = new();
         private readonly MainForm _main;
         private readonly bool _wingdingsAvailable;
 
-        private bool _bold = false;
-        private bool _italic = false;
-        private bool _underline = false;
+        protected bool _bold = false;
+        protected bool _italic = false;
+        protected bool _underline = false;
         private bool _fastForward;
 
         internal float CalculateTextSize(int requestedSize)
@@ -129,7 +128,7 @@ namespace FrankenDrift.Runner
                         current.Remove(current.Length - 1, 1);
                         continue;
                     }
-                    AppendWithFont(current.ToString(), true);
+                    AppendWithFont(current.ToString());
                     current.Clear();
                     switch (currentToken)
                     {
@@ -162,6 +161,7 @@ namespace FrankenDrift.Runner
                             IsWaiting = true;
                             if (SettingsManager.Settings.EnablePressAnyKey)
                                 AppendWithFont("\n(Press any key to continue)");
+                            ScrollToEnd();
                             return;
                         case "/c":
                         case "/font":
@@ -289,12 +289,13 @@ namespace FrankenDrift.Runner
                 }
                 else current.Append(c);
             }
-            AppendWithFont(current.ToString(), true);
+            AppendWithFont(current.ToString());
             ReadOnly = true;
+            ScrollToEnd();
         }
 
         // For some reason formatting gets lost upon changing fonts unless we do this terribleness:
-        private void AppendWithFont(string src, bool scroll = false)
+        public virtual void AppendWithFont(string src, bool scroll = false)
         {
             var (font, color) = _fonts.Peek();
             SelectionForeground = color;
@@ -364,6 +365,27 @@ namespace FrankenDrift.Runner
             }
             _main.GetSecondaryWindow(tag[7..]).AppendHtml(current.ToString());
             return consumed;
+        }
+    }
+
+    class OutputLateFormatting : AdriftOutput
+    {
+        public OutputLateFormatting(MainForm main) : base(main) { }
+
+        public override void AppendWithFont(string src, bool scroll = false)
+        {
+            var (font, color) = _fonts.Peek();
+            var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
+            var begin = TextLength;
+            Append(text, scroll);
+            var end = TextLength;
+            Selection = new Range<int>(begin, end);
+            SelectionForeground = color;
+            SelectionFont = font;
+            SelectionBold = _bold;
+            SelectionUnderline = _underline;
+            SelectionItalic = _italic;
+            Selection = new Range<int>(end + 1, end + 1);
         }
     }
 }
