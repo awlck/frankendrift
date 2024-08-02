@@ -42,7 +42,6 @@ namespace FrankenDrift.Runner
         private bool _shouldReplayCancel = false;
         private int _commandRecallIdx = 0;
         private readonly string _myVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-        //private bool _gameIsOngoing => saveGameCommand.Enabled;
         private bool _gameIsOngoing => Adrift.SharedModule.Adventure is not null && Adrift.SharedModule.Adventure.eGameState == Adrift.clsAction.EndGameEnum.Running;
         
         internal GraphicsWindow Graphics { get
@@ -58,6 +57,8 @@ namespace FrankenDrift.Runner
             _graphics.Show();
             return _graphics;
         }}
+
+        public bool Quitting { get; private set; } = false;
 
         public MainForm()
         {
@@ -218,6 +219,7 @@ namespace FrankenDrift.Runner
 
         private void MainFormOnClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            Quitting = true;
             if (_gameIsOngoing)
             {
                 var result = QuerySaveBeforeQuit();

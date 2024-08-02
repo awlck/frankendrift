@@ -94,6 +94,7 @@ namespace FrankenDrift.Runner
                 _pendingText += src;
                 return;
             }
+            if (_main.Quitting) return;
             ReadOnly = false;
             if (!_wingdingsAvailable)
                 src = src.Replace("<font face=\"Wingdings\" size=14>Ø</font>", "<font size=+1>></font>");
