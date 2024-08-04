@@ -111,7 +111,6 @@ namespace FrankenDrift.Runner
             Size = new Size(600, 750);
             Padding = 10;
 
-            //output = new AdriftOutput(this);
             if (Application.Instance.Platform.IsGtk)
                 output = (AdriftOutput) new OutputLateFormatting(this);
             else

@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
-using Eto;
 
 namespace FrankenDrift.Runner
 {
@@ -85,9 +83,6 @@ namespace FrankenDrift.Runner
         private readonly MainForm _main;
         private readonly bool _wingdingsAvailable;
 
-        /* protected bool _bold = false;
-        protected bool _italic = false;
-        protected bool _underline = false; */
         protected Style _style;
         protected Style? _previousStyle = null;
         private bool _fastForward;
