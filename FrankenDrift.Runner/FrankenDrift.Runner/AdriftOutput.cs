@@ -11,6 +11,13 @@ namespace FrankenDrift.Runner
 {
     public class AdriftOutput : RichTextArea, Glue.RichTextBox
     {
+        protected struct Style
+        {
+            internal bool Bold;
+            internal bool Italic;
+            internal bool Underline;
+        }
+
         public AdriftOutput(MainForm main) : base()
         {
             _main = main;
@@ -55,6 +62,13 @@ namespace FrankenDrift.Runner
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             SelectionFont = _defaultFont;
+            _style = new()
+            {
+                Bold = false,
+                Italic = false,
+                Underline = false
+            };
+            _previousStyle = null;
         }
         
         public int SelectionStart { get => Selection.Start; set => Selection = Selection.WithStart(value); }
@@ -71,9 +85,11 @@ namespace FrankenDrift.Runner
         private readonly MainForm _main;
         private readonly bool _wingdingsAvailable;
 
-        protected bool _bold = false;
+        /* protected bool _bold = false;
         protected bool _italic = false;
-        protected bool _underline = false;
+        protected bool _underline = false; */
+        protected Style _style;
+        protected Style? _previousStyle = null;
         private bool _fastForward;
 
         internal float CalculateTextSize(int requestedSize)
@@ -136,25 +152,25 @@ namespace FrankenDrift.Runner
                             Append("\n");
                             break;
                         case "b":
-                            _bold = true;
+                            _style.Bold = true;
                             break;
                         case "/b":
-                            _bold = false;
+                            _style.Bold = false;
                             break;
                         case "i":
-                            _italic = true;
+                            _style.Italic = true;
                             break;
                         case "/i":
-                            _italic = false;
+                            _style.Italic = false;
                             break;
                         case "u":
-                            _underline = true;
+                            _style.Underline = true;
                             break;
                         case "/u":
-                            _underline = false;
+                            _style.Underline = false;
                             break;
                         case "c":
-                            _fonts.Push(new Tuple<Font, Color>(SelectionFont, _defaultInput));
+                            _fonts.Push(new Tuple<Font, Color>(_fonts.Peek().Item1, _defaultInput));
                             break;
                         case "waitkey" when !_fastForward:
                             _pendingText = src[consumed..];
@@ -298,13 +314,17 @@ namespace FrankenDrift.Runner
         public virtual void AppendWithFont(string src, bool scroll = false)
         {
             var (font, color) = _fonts.Peek();
-            SelectionForeground = color;
             SelectionFont = font;
-            SelectionBold = _bold;
-            SelectionUnderline = _underline;
-            SelectionItalic = _italic;
+            SelectionForeground = color;
+            if (_style.Bold != _previousStyle?.Bold)
+                SelectionBold = _style.Bold;
+            if (_style.Underline != _previousStyle?.Underline)
+                SelectionUnderline = _style.Underline;
+            if (_style.Italic != _previousStyle?.Italic)
+                SelectionItalic = _style.Italic;
             var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
             Append(text, scroll);
+            _previousStyle = _style;
         }
 
         internal void FinishWaiting()
@@ -374,17 +394,21 @@ namespace FrankenDrift.Runner
 
         public override void AppendWithFont(string src, bool scroll = false)
         {
-            var (font, color) = _fonts.Peek();
             var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
+            if (string.IsNullOrEmpty(text)) return;
             var begin = TextLength;
             Append(text, scroll);
             var end = TextLength;
             Selection = new Range<int>(begin, end);
-            SelectionForeground = color;
+            var (font, color) = _fonts.Peek();
             SelectionFont = font;
-            SelectionBold = _bold;
-            SelectionUnderline = _underline;
-            SelectionItalic = _italic;
+            SelectionForeground = color;
+            if (_style.Bold)
+                SelectionBold = true;
+            if (_style.Underline)
+                SelectionUnderline = true;
+            if (_style.Italic)
+                SelectionItalic = true;
             Selection = new Range<int>(end + 1, end + 1);
         }
     }
