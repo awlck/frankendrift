@@ -12,10 +12,15 @@ writing a more complete readme file, see [this IntFiction forum thread](https://
 All dependencies are in the download.
 
 ### Linux
-You will need to install the [.NET 6 Runtime](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
-from Microsoft.
+You will need to install the [.NET Runtime](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
+from Microsoft, according to the following table:
 
-(Versions prior to 0.3.0 use the .NET 5 runtime instead, and require the `libgdiplus` package for graphics.)
+| FrankenDrift Version | .NET Runtime | Other libraries  |
+| -------------------- | ------------ | ---------------- |
+| \>= 0.7              | .NET 8       | GTK3             |
+| \>= 0.3, < 0.7       | .NET 6       | GTK3             |
+| < 0.3                | .NET 5       | GTK3, libgdiplus |
+
 
 ## Known limitations
 
