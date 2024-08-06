@@ -137,7 +137,7 @@ namespace FrankenDrift.Runner
             var aboutCommand = new Command { MenuText = "About..." };
             aboutCommand.Executed += (sender, e) => new AboutDialog
             {
-                Copyright = "FrankenDrift (c) 2021-22 Adrian Welcker\nADRIFT Runner (c) 1996-2020 Campbell Wild",
+                Copyright = "FrankenDrift (c) 2021-24 Adrian Welcker\nADRIFT Runner (c) 1996-2020 Campbell Wild",
                 ProgramName = "FrankenDrift",
                 ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
                                      "with a cross-platform UI layer (Eto.Forms) glued on top.",
