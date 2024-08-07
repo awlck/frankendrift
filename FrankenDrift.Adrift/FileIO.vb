@@ -1,11 +1,12 @@
 Imports System.IO
+Imports System.IO.Compression
 Imports System.Text.Encoding
 Imports System.Xml
 
 Imports FrankenDrift.Glue
 Imports FrankenDrift.Glue.Util
-Imports ICSharpCode.SharpZipLib
-Imports ICSharpCode.SharpZipLib.Zip.Compression.Streams
+'Imports ICSharpCode.SharpZipLib
+'Imports ICSharpCode.SharpZipLib.Zip.Compression.Streams
 
 Imports DashStyles = FrankenDrift.Glue.ConceptualDashStyle
 
@@ -224,25 +225,12 @@ Module FileIO
                 .WriteEndDocument()
                 .Flush()
 
-                Dim outStream As New MemoryStream
-                Dim zStream As New DeflaterOutputStream(outStream)
-
-                Try
+                Dim stmFile As New IO.FileStream(sFilePath, FileMode.Create)
+                Using zStream As New ZLibStream(stmFile, CompressionLevel.Optimal)
                     stmMemory.Position = 0
-                    CopyStream(stmMemory, zStream)
-                Finally
-                    zStream.Close()
-                    bData = outStream.ToArray
-                    outStream.Close()
-                End Try
+                    stmMemory.CopyTo(zStream)
+                End Using
             End With
-
-            Dim stmFile As New IO.FileStream(sFilePath, FileMode.Create)
-            Dim bw As New BinaryWriter(stmFile)
-
-            bw.Write(bData)
-            bw.Close()
-            stmFile.Close()
 
             Return True
 
@@ -1389,19 +1377,11 @@ NextTask:
         Dim outStream As New System.IO.MemoryStream
         If iLength = 0 Then iLength = bZLib.Length - iOffset
         Dim inStream As New System.IO.MemoryStream(bZLib, iOffset, iLength)
-        Dim zStream As New InflaterInputStream(inStream)
-        Try
-            If Not CopyStream(zStream, outStream) Then Return Nothing
-            Return New MemoryStream(outStream.GetBuffer)
-        Catch ex As Exception
-            ErrMsg("Error decompressing byte array", ex)
-        Finally
-            zStream.Close()
-            outStream.Close()
-            inStream.Close()
-        End Try
-
-        Return Nothing
+        Using zStream As New ZLibStream(inStream, CompressionMode.Decompress)
+            zStream.CopyTo(outStream)
+        End Using
+        outStream.Position = 0
+        Return outStream
     End Function
 
     Private Function FileToMemoryStream(ByVal bCompressed As Boolean, ByVal iLength As Integer, ByVal bObfuscate As Boolean) As MemoryStream
@@ -1430,7 +1410,6 @@ NextTask:
         Return sJustKey & iNumber + 1
 
     End Function
-
 
     Private Class LoadAbortException
         Inherits Exception
@@ -2780,24 +2759,6 @@ NextUDF:
         Return s500Text
     End Function
 
-    Friend Function CopyStream(input As Stream, output As Stream) As Boolean
-        Try
-            Dim iBlock As Integer = 1024
-            Dim iBytes As Integer
-            Dim buffer1 As Byte() = New Byte(iBlock - 1) {}
-            iBytes = input.Read(buffer1, 0, iBlock)
-            Do While (iBytes > 0)
-                output.Write(buffer1, 0, iBytes)
-                iBytes = input.Read(buffer1, 0, iBlock)
-            Loop
-            output.Flush()
-            Return True
-        Catch ex As SharpZipBaseException
-            ErrMsg("CopyStream error", ex)
-            Return False
-        End Try
-    End Function
-
     Friend Sub CreateMandatoryProperties()
         For Each sKey As String In New String() {OBJECTARTICLE, OBJECTPREFIX, OBJECTNOUN}
             If Not Adventure.htblObjectProperties.ContainsKey(sKey) Then
@@ -2953,17 +2914,13 @@ NextUDF:
 
                 ReDim bAdventure(-1)
 
-                Dim outStream As New System.IO.MemoryStream
                 Dim inStream As New System.IO.MemoryStream(bAdvZLib)
-                Dim zStream As New InflaterInputStream(inStream)
-                Try
-                    CopyStream(zStream, outStream)
-                    bAdventure = outStream.ToArray
-                Finally
-                    zStream.Close()
-                    outStream.Close()
-                    inStream.Close()
-                End Try
+                Using outStream As New MemoryStream
+                    Using zStream As New ZLibStream(inStream, CompressionMode.Decompress)
+                        zStream.CopyTo(outStream)
+                    End Using
+                    bAdventure = outStream.ToArray()
+                End Using
             End If
 
             Dim a As clsAdventure = Adventure
