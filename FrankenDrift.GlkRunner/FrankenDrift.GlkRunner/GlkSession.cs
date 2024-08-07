@@ -76,7 +76,7 @@ namespace FrankenDrift.GlkRunner
             while (true)
             {
                 var cmd = _output.GetLineInput();
-                SubmitCommand(cmd);
+                SubmitCommand(cmd.Trim());
             }
         }
 

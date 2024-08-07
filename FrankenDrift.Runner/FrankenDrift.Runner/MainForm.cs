@@ -201,7 +201,7 @@ namespace FrankenDrift.Runner
             if (e.Key != Keys.Enter) return;
             if (Adrift.SharedModule.Adventure is not null)
             {
-                SubmitCommand(input.Text);
+                SubmitCommand(input.Text.Trim());
             }
 #if DEBUG
             else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
