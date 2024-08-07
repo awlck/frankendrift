@@ -80,13 +80,10 @@ Public Class clsCharacter
                     For Each d As DirectionsEnum In [Enum].GetValues(GetType(DirectionsEnum))
                         If Adventure.htblLocations(Location.LocationKey).arlDirections(d).LocationKey = node.Key Then
                             If node.Key = WalkTo Then WalkTo = ""
-                            Dim bAutoComplete As Boolean = UserSession.bAutoComplete
-                            UserSession.bAutoComplete = False
                             fRunner.SetInput(d.ToString)
                             sLastPosition = Location.LocationKey
                             fRunner.SubmitCommand()
                             sLastPosition = ""
-                            UserSession.bAutoComplete = bAutoComplete
                             Exit Sub
                         End If
                     Next
@@ -220,19 +217,6 @@ Public Class clsCharacter
         End Get
         Set(ByVal Value As GenderEnum)
             SetPropertyValue("Gender", Value.ToString)
-        End Set
-    End Property
-
-
-    Private bKnown As Boolean
-    Public Property Known() As Boolean
-        Get
-            Return bKnown
-        End Get
-        Set(ByVal value As Boolean)
-            If value <> bKnown Then
-                SetPropertyValue("Known", value)
-            End If
         End Set
     End Property
 

@@ -718,7 +718,6 @@ Public Class clsAdventure
             .sThem = ""
             .sHim = ""
             .sHer = ""
-            .ClearAutoCompletes()
         End With
         For i As Integer = 0 To 11
             Enabled(CType(i, EnabledOptionEnum)) = True
