@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FrankenDrift.Runner
 {
@@ -26,7 +27,7 @@ namespace FrankenDrift.Runner
             if (File.Exists(_settingsFile))
             {
                 var settingsText = File.ReadAllText(_settingsFile);
-                _settings = JsonSerializer.Deserialize<Settings>(settingsText);
+                _settings = JsonSerializer.Deserialize<Settings>(settingsText, SourceGenerationContext.Default.Settings);
                 if (_settings.UserFontSize < 6)
                     _settings.UserFontSize = 6;
             }
@@ -54,8 +55,7 @@ namespace FrankenDrift.Runner
 
         public void Save()
         {
-            var options = new JsonSerializerOptions {WriteIndented = true};
-            string jsonSettings = JsonSerializer.Serialize(_settings, options);
+            string jsonSettings = JsonSerializer.Serialize(_settings, SourceGenerationContext.Default.Settings);
             Directory.CreateDirectory(_settingsPath);
             File.WriteAllText(_settingsFile, jsonSettings);
         }
@@ -73,5 +73,11 @@ namespace FrankenDrift.Runner
         public bool EnablePressAnyKey { get; set; }
         public bool SuppressLocationName { get; set; }
         public bool SuppressMap { get; set; }
+    }
+
+    [JsonSourceGenerationOptions(WriteIndented = true)]
+    [JsonSerializable(typeof(Settings))]
+    internal partial class SourceGenerationContext : JsonSerializerContext
+    {
     }
 }
