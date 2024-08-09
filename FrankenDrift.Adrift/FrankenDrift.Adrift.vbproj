@@ -1,11 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <RootNamespace>FrankenDrift.Adrift</RootNamespace>
     <TargetFramework>net8.0</TargetFramework>
     <DefineConstants>Runner=True,Adravalon=True</DefineConstants>
 	<VersionPrefix>0.7.0</VersionPrefix>
-	  <VersionSuffix>indev</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
