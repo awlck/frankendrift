@@ -680,7 +680,6 @@ Module FileIO
         Try
             If Not IO.File.Exists(sFilename) Then
                 ErrMsg("File '" & sFilename & "' not found.")
-                RemoveFileFromList(sFilename)
                 Return False
             End If
 

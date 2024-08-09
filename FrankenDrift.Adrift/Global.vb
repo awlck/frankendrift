@@ -222,85 +222,9 @@ Public Module SharedModule
         End If
     End Function
 
-    Public Function IsRunningOnMono() As Boolean
-        Return Type.GetType("Mono.Runtime") IsNot Nothing
-    End Function
-
-    Public Sub RemoveFileFromList(ByVal sFilename As String)
-
-        If sFilename Is Nothing Then Exit Sub
-
-        Dim lRecents As New List(Of String)
-        Dim iRetrieve As Integer
-        Dim sProject As String
-        Dim UTMMain As Infragistics.Win.UltraWinToolbars.UltraToolbarsManager = fRunner.UTMMain
-        sProject = "Runner"
-
-        For iPrevious As Integer = 1 To 20
-            Dim sPrevious As String = GetSetting("ADRIFT", sProject, "Recent_" & iPrevious, "")
-            'If sPrevious = sFilename Then DeleteSetting("ADRIFT", sProject, "Recent_" & iPrevious)            
-            If sPrevious <> "" AndAlso sPrevious.ToLower <> sFilename.ToLower Then lRecents.Add(sPrevious)
-        Next
-
-        For Each sRecent As String In lRecents
-            iRetrieve += 1
-            SaveSetting("ADRIFT", sProject, "Recent_" & iRetrieve, sRecent)
-        Next
-        For iPrevious As Integer = iRetrieve + 1 To 20
-            Try
-                DeleteSetting("ADRIFT", sProject, "Recent_" & iPrevious)
-            Catch
-            End Try
-        Next
-
-        For m As Integer = UTMMain.Tools.Count - 1 To 0 Step -1
-            If CStr(UTMMain.Tools(m).SharedProps.Tag) = "_RECENT_" Then
-                UTMMain.Tools.RemoveAt(m)
-            End If
-        Next
-
-        AddPrevious(UTMMain, sProject)
-    End Sub
-
-
-    Public Sub AddFileToList(ByVal sFilename As String)
-
-        If sFilename Is Nothing Then Exit Sub
-
-        Dim sRecents(19) As String
-        Dim iRetrieve As Integer
-        Dim sPrevious As String
-        Dim sProject As String
-        Dim UTMMain As Infragistics.Win.UltraWinToolbars.UltraToolbarsManager = fRunner.UTMMain
-        sProject = "Runner"
-
-        For iPrevious As Integer = 1 To 20
-            sPrevious = GetSetting("ADRIFT", sProject, "Recent_" & iPrevious, "")
-            If sPrevious.ToUpper <> sFilename.ToUpper AndAlso iRetrieve < 19 Then
-                iRetrieve += 1
-                sRecents(iRetrieve) = sPrevious
-            End If
-        Next
-        sRecents(0) = sFilename
-
-        For iPrevious As Integer = 1 To 20
-            SaveSetting("ADRIFT", sProject, "Recent_" & iPrevious, SafeString(sRecents(iPrevious - 1)))
-        Next
-
-        For m As Integer = UTMMain.Tools.Count - 1 To 0 Step -1
-            If CStr(UTMMain.Tools(m).SharedProps.Tag) = "_RECENT_" Then
-                UTMMain.Tools.RemoveAt(m)
-            End If
-        Next
-
-        AddPrevious(UTMMain, sProject)
-    End Sub
-
-
     Public Sub ErrMsg(ByVal sMessage As String, Optional ByVal ex As System.Exception = Nothing)
         Glue.ErrMsg(sMessage, ex)
     End Sub
-
 
     Public Function CharacterCount(ByVal sText As String, ByVal cCharacter As Char) As Integer
         CharacterCount = 0
@@ -401,38 +325,9 @@ Public Module SharedModule
         Return sText.IndexOf(sSearchFor, startIndex - 1) + 1
     End Function
 
-
-    Public Function DoubleToString(ByVal dfDouble As Double, Optional ByVal sFormat As String = "#,##0") As String
-        Return dfDouble.ToString(sFormat, System.Globalization.CultureInfo.InvariantCulture.NumberFormat)
-    End Function
-
-    Private _AllowDevToSetColours As Boolean?
-    Public Property AllowDevToSetColours As Boolean
-        Get
-            If Not _AllowDevToSetColours.HasValue Then
-                _AllowDevToSetColours = CBool(GetSetting("ADRIFT", "Runner", "AllowColours", "1"))
-            End If
-            Return _AllowDevToSetColours.Value
-        End Get
-        Set(value As Boolean)
-            _AllowDevToSetColours = value
-        End Set
-    End Property
-
-    Friend Enum eJustification
-        [Left]
-        [Right]
-        [Central]
-    End Enum
     Public Sub Source2HTML(ByVal sSource As String, ByRef RichText As RichTextBox, ByVal bClearRTB As Boolean, Optional ByVal bDebug As Boolean = False, Optional ByRef sUnprocessedText As String = Nothing)
         Glue.OutputHTML(sSource)
     End Sub
-
-    ' Scrolls to the end of the text, and adds a <Wait> box if necessary
-    Friend Sub ScrollToEnd(ByVal RichText As RichTextBox)
-        Glue.ScrollToEnd()
-    End Sub
-
 
     ' Escape any characters that are special in RE's
     Friend Function MakeTextRESafe(ByVal sText As String) As String
@@ -2840,10 +2735,6 @@ Public Module SharedModule
             Return ""
         End Try
     End Function
-
-    Public Sub Sleep(ByVal iSeconds As Integer)
-        Threading.Thread.Sleep(iSeconds * 1000)
-    End Sub
 
     Public Function EnumParsePropertyPropertyOf(ByVal sValue As String) As clsProperty.PropertyOfEnum
         Select Case sValue
