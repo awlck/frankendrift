@@ -363,7 +363,7 @@ namespace FrankenDrift.GlkRunner
                         if (face.Success)
                         {
                             var f = face.Groups[1].Value;
-                            if (Monospaces.Any(msf => msf.ToLowerInvariant() == f))
+                            if (Monospaces.Any(msf => msf.Equals(f, StringComparison.InvariantCultureIgnoreCase)))
                                 currstyle |= TextStyle.Monospace;
                         }
 
