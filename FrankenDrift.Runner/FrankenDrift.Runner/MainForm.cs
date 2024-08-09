@@ -372,7 +372,7 @@ namespace FrankenDrift.Runner
 
         internal AdriftOutput GetSecondaryWindow(string name)
         {
-            if (_secondaryWindows.ContainsKey(name)) return _secondaryWindows[name].Output;
+            if (_secondaryWindows.TryGetValue(name, out SecondaryWindow value)) return value.Output;
             var win = new SecondaryWindow(this)
             {
                 ShowActivated = false,
