@@ -31,7 +31,7 @@ namespace FrankenDrift.GlkRunner
         internal string TagName;
     }
 
-    internal class GlkHtmlWin : Glue.RichTextBox, IDisposable
+    internal partial class GlkHtmlWin : Glue.RichTextBox, IDisposable
     {
         private readonly IGlk GlkApi;
         private readonly GlkUtil GlkUtil;
@@ -136,8 +136,6 @@ namespace FrankenDrift.GlkRunner
                         var count = (int) ev.val1;
                         GlkApi.glk_cancel_hyperlink_event(glkwin_handle);
                         IsWaiting = false;
-                        //var dec = Encoding.GetEncoding(Encoding.Latin1.CodePage, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
-                        //return dec.GetString(cmdToBe, 0, count);
                         var result = new StringBuilder(count);
                         for (var i = 0; i < count; i++)
                             result.Append(new Rune(buf[i]).ToString());
@@ -224,8 +222,7 @@ namespace FrankenDrift.GlkRunner
             var linksToBe = new Queue<LinkRef>();
             if (_hyperlinksSupported && DoSbAutoHyperlinks)
             {
-                var linkTargetSearcher = new Regex("^([0-9a-zA-Z]+?)\\) .+$", RegexOptions.Multiline);
-                var linkTargets = linkTargetSearcher.Matches(src);
+                var linkTargets = LinkTargetRegex().Matches(src);
                 if (linkTargets.Count == 0)
                     goto NoSuitableLinkTargetsFound;
                 for (var i = 0; i < linkTargets.Count; i++)
@@ -312,8 +309,7 @@ namespace FrankenDrift.GlkRunner
                     {
                         var color = currentTextStyle.TextColor;
                         var tokenLower = currentToken.ToLower();
-                        var re = new Regex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?");
-                        var col = re.Match(tokenLower);
+                        var col = ColorRegex().Match(tokenLower);
                         if (col.Success)
                         {
                             if (uint.TryParse(col.Groups[1].Value, System.Globalization.NumberStyles.HexNumber, null, out var newColor))
@@ -363,8 +359,7 @@ namespace FrankenDrift.GlkRunner
                             color = 0xd2b48c;
 
                         var currstyle = currentTextStyle.Ts;
-                        re = new Regex("face ?= ?\"(.*?)\"");
-                        var face = re.Match(tokenLower);
+                        var face = FontFaceRegex().Match(tokenLower);
                         if (face.Success)
                         {
                             var f = face.Groups[1].Value;
@@ -376,7 +371,7 @@ namespace FrankenDrift.GlkRunner
                     }
                     else if (currentToken.StartsWith("img") && _imagesSupported)
                     {
-                        var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
+                        var imgPath = SrcRegex().Match(currentToken);
                         if (imgPath.Success && Adrift.SharedModule.Adventure.BlorbMappings is { Count: > 0 }
                                 && Adrift.SharedModule.Adventure.BlorbMappings.TryGetValue(imgPath.Groups[1].Value, out int res))
                         {
@@ -385,10 +380,10 @@ namespace FrankenDrift.GlkRunner
                     }
                     else if (currentToken.StartsWith("audio play"))
                     {
-                        var sndPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
+                        var sndPath = SrcRegex().Match(currentToken);
                         if (!sndPath.Success) continue;
                         var channel = 1;
-                        var chanMatch = new Regex("channel=(\\d)").Match(currentToken);
+                        var chanMatch = ChannelRegex().Match(currentToken);
                         if (chanMatch.Success)
                         {
                             channel = int.Parse(chanMatch.Groups[1].Value);
@@ -399,8 +394,7 @@ namespace FrankenDrift.GlkRunner
                     }
                     else if (currentToken.StartsWith("audio pause"))
                     {
-                        var re = new Regex("channel=(\\d)");
-                        var m = re.Match(currentToken);
+                        var m = ChannelRegex().Match(currentToken);
                         if (m.Success)
                         {
                             var ch = int.Parse(m.Groups[1].Value);
@@ -411,8 +405,7 @@ namespace FrankenDrift.GlkRunner
                     }
                     else if (currentToken.StartsWith("audio stop"))
                     {
-                        var re = new Regex("channel=(\\d)");
-                        var m = re.Match(currentToken);
+                        var m = ChannelRegex().Match(currentToken);
                         if (m.Success)
                         {
                             var ch = int.Parse(m.Groups[1].Value);
@@ -575,5 +568,16 @@ namespace FrankenDrift.GlkRunner
                 AppendHTML(success == 1 ? $"0x{result:X}\n" : "n/a\n");
             }
         }
+
+        [GeneratedRegex("src ?= ?\"(.+)\"")]
+        private static partial Regex SrcRegex();
+        [GeneratedRegex("channel=(\\d)")]
+        private static partial Regex ChannelRegex();
+        [GeneratedRegex("face ?= ?\"(.*?)\"")]
+        private static partial Regex FontFaceRegex();
+        [GeneratedRegex("^([0-9a-zA-Z]+?)\\) .+$", RegexOptions.Multiline)]
+        private static partial Regex LinkTargetRegex();
+        [GeneratedRegex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?")]
+        private static partial Regex ColorRegex();
     }
 }

@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace FrankenDrift.Runner
 {
-    public class AdriftOutput : RichTextArea, Glue.RichTextBox
+    public partial class AdriftOutput : RichTextArea, Glue.RichTextBox
     {
         protected struct TextStyle
         {
@@ -201,7 +201,7 @@ namespace FrankenDrift.Runner
                     }
                     if (currentToken.StartsWith("img"))  // graphics.
                     {
-                        var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
+                        var imgPath = ImgSrcRegex().Match(currentToken);
                         if (imgPath.Success && SettingsManager.Settings.EnableGraphics)
                             _main.Graphics.DisplayImage(imgPath.Groups[1].Value);
                         continue;
@@ -213,8 +213,7 @@ namespace FrankenDrift.Runner
                     if (current.Length == 0 && previousToken.StartsWith("font"))
                         _fonts.Pop();
                     var tokenLower = currentToken.ToLower();
-                    var re = new Regex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?");
-                    var col = re.Match(currentToken);
+                    var col = FontColorRegex().Match(currentToken);
                     if (col.Success)
                     {
                         var colorString =  ("#" + col.Groups[1].Value);
@@ -266,8 +265,7 @@ namespace FrankenDrift.Runner
                     else if (tokenLower.Contains("tan"))
                         color = Colors.Tan;
                     
-                    re = new Regex("face ?= ?\"(.*?)\"");
-                    var face = re.Match(currentToken);
+                    var face = FontFaceRegex().Match(currentToken);
                     if (face.Success)
                     {
                         var f = face.Groups[1].Value;
@@ -275,8 +273,7 @@ namespace FrankenDrift.Runner
                             font = font.WithFontFace(f);
                     }
 
-                    re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
-                    var size = re.Match(currentToken);
+                    var size = FontSizeRegex().Match(currentToken);
                     if (size.Success)
                     {
                         var sizeString = size.Groups[1].Value;
@@ -381,6 +378,18 @@ namespace FrankenDrift.Runner
             _main.GetSecondaryWindow(tag[7..]).AppendHtml(current.ToString());
             return consumed;
         }
+
+        [GeneratedRegex("size ?= ?\"?([+-]?\\d+)\"?")]
+        private static partial Regex FontSizeRegex();
+
+        [GeneratedRegex("face ?= ?\"(.*?)\"")]
+        private static partial Regex FontFaceRegex();
+
+        [GeneratedRegex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?")]
+        private static partial Regex FontColorRegex();
+
+        [GeneratedRegex("src ?= ?\"(.+)\"")]
+        private static partial Regex ImgSrcRegex();
     }
 
     class OutputLateFormatting : AdriftOutput
