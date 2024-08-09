@@ -4,13 +4,12 @@ image:
 
 clone_depth: 5
 
-install:
-  - cd FrankenDrift.Runner/FrankenDrift.Runner.Win
-
 build_script:
-  - ps: dotnet publish --self-contained -f net8.0-windows -r win-x64 -p:PublishReadyToRun=true -c Release -p:VersionSuffix="$env:APPVEYOR_BUILD_VERSION-$($env:APPVEYOR_REPO_COMMIT.Substring(0, 8))"
-  - ps: cd ../../Frankendrift.GlkRunner/Frankendrift.GlkRunner.Gargoyle; dotnet publish --self-contained -f net8.0 -r win-x64 -c:Release -p:VersionSuffix="$env:APPVEYOR_BUILD_VERSION-$($env:APPVEYOR_REPO_COMMIT.Substring(0,8))"
+  - ps: dotnet publish --self-contained -f net8.0-windows -r win-x64 -c Release "FrankenDrift.Runner/FrankenDrift.Runner.Win" -p:VersionSuffix="$env:APPVEYOR_BUILD_VERSION" -p:PublishTrimmed=true -p:TrimMode=partial -p:BuiltInComInteropSupport=true -p:EnableUnsafeBinaryFormatterSerialization=false -p:EnableUnsafeUTF7Encoding=false -p:HttpActivityPropagationSupport=false -p:MetadataUpdaterSupport=false
+  - ps: dotnet publish --self-contained -f net8.0 -r win-x64 -c Release  "FrankenDrift.GlkRunner/Frankendrift.GlkRunner.Gargoyle" -p:VersionSuffix="$env:APPVEYOR_BUILD_VERSION"
+  - ps: dotnet publish --no-self-contained -f net8.0 -c Release "FrankenDrift.Runner/FrankenDrift.Runner.Gtk"
 
 artifacts:
   - path: FrankenDrift.Runner/FrankenDrift.Runner.Win/bin/Release/net8.0-windows/win-x64/publish
+  - path: FrankenDrift.Runner/FrankenDrift.Runner.Gtk/bin/Release/net8.0/publish
   - path: FrankenDrift.GlkRunner/FrankenDrift.GlkRunner.Gargoyle/bin/Release/net8.0/win-x64/publish
