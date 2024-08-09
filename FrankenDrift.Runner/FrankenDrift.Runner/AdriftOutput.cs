@@ -9,7 +9,7 @@ namespace FrankenDrift.Runner
 {
     public class AdriftOutput : RichTextArea, Glue.RichTextBox
     {
-        protected struct Style
+        protected struct TextStyle
         {
             internal bool Bold;
             internal bool Italic;
@@ -83,8 +83,8 @@ namespace FrankenDrift.Runner
         private readonly MainForm _main;
         private readonly bool _wingdingsAvailable;
 
-        protected Style _style;
-        protected Style? _previousStyle = null;
+        protected TextStyle _style;
+        protected TextStyle? _previousStyle = null;
         private bool _fastForward;
 
         internal float CalculateTextSize(int requestedSize)
