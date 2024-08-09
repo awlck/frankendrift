@@ -392,10 +392,8 @@ namespace FrankenDrift.Runner
         private static partial Regex ImgSrcRegex();
     }
 
-    class OutputLateFormatting : AdriftOutput
+    class OutputLateFormatting(MainForm main) : AdriftOutput(main)
     {
-        public OutputLateFormatting(MainForm main) : base(main) { }
-
         public override void AppendWithFont(string src, bool scroll = false)
         {
             var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
