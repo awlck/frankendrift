@@ -24,6 +24,7 @@ namespace FrankenDrift.Runner
         private Command transcriptCommand;
         private Command replayCommand;
         private Command showMapCommand;
+        private Command clearScreenCommand;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
 
@@ -73,6 +74,7 @@ namespace FrankenDrift.Runner
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
             replayCommand.Executed += ReplayCommandOnExecuted;
             showMapCommand.Executed += ShowMapCommandOnExecuted;
+            clearScreenCommand.Executed += ClearScreenCommandOnExecuted;
             _timer.Elapsed += TimerOnElapsed;
             KeyDown += MainFormOnKeyDown;
             Closing += MainFormOnClosing;
@@ -97,11 +99,6 @@ namespace FrankenDrift.Runner
             Glue.Application.SetFrontend(this);
             Adrift.SharedModule.UserSession.bShowShortLocations = !SettingsManager.Settings.SuppressLocationName;
             output.AppendHtml($"FrankenDrift {_myVersion}");
-        }
-
-        private void ShowMapCommandOnExecuted(object sender, EventArgs e)
-        {
-            map.Show();
         }
 
         void InitializeComponent()
@@ -130,6 +127,7 @@ namespace FrankenDrift.Runner
             transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.T };
             replayCommand = new Command { MenuText = "Replay Commands", Enabled = false, Shortcut = Application.Instance.CommonModifier | Application.Instance.AlternateModifier | Keys.R };
             showMapCommand = new Command { MenuText = "Open Map (experimental)", Enabled = true, Shortcut = Application.Instance.CommonModifier | Keys.M };
+            clearScreenCommand = new Command { MenuText = "Clear Screen", Enabled = true, ToolTip = "Clears the output window, removing all text. Doing this occasionally can improve performance during long-lasting game sessions." };
 
             var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -153,9 +151,9 @@ namespace FrankenDrift.Runner
             {
                 Items =
                 {
-					// File submenu
 					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
-                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand, showMapCommand }}
+                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand }},
+                    new SubMenuItem { Text = "&View", Items = { showMapCommand, clearScreenCommand }}
                 },
                 ApplicationItems =
                 {
@@ -165,6 +163,16 @@ namespace FrankenDrift.Runner
                 QuitItem = quitCommand,
                 AboutItem = aboutCommand
             };
+        }
+
+        private void ClearScreenCommandOnExecuted(object sender, EventArgs e)
+        {
+            output.Clear();
+        }
+
+        private void ShowMapCommandOnExecuted(object sender, EventArgs e)
+        {
+            map.Show();
         }
 
         private void TimerOnElapsed(object sender, EventArgs e)
