@@ -22,13 +22,13 @@ cleanup
 mkdir "$TEMPDIR/arm64"
 cp -r "bin/Release/net8.0/osx-arm64/publish/FrankenDrift.Runner.Mac.app" "$TEMPDIR/arm64"
 codesign --deep --force -s - "$TEMPDIR/arm64/FrankenDrift.Runner.Mac.app"
-hdiutil create -format UDZO -volname "FrankenDrift $BLDVER" -srcfolder "$TEMPDIR/arm64" "$SRCDIR/frankendrift-$BLDVER.macarm64.dmg"
+hdiutil create -format UDZO -volname "FrankenDrift $BLDVER" -srcfolder "$TEMPDIR/arm64" "$SRCDIR/frankendrift-$BLDVER-mac.arm64.dmg"
 
 cleanup
 /usr/local/share/dotnet/x64/dotnet publish --self-contained -c Release -f net8.0 -r osx-x64 -p:PublishReadyToRun=true -p:TieredCompilation=true
 mkdir "$TEMPDIR/x64"
 cp -r "bin/Release/net8.0/osx-x64/publish/FrankenDrift.Runner.Mac.app" "$TEMPDIR/x64"
 codesign --deep --remove-signature "$TEMPDIR/x64/FrankenDrift.Runner.Mac.app"
-hdiutil create -fs 'HFS+' -format UDZO -volname "FrankenDrift $BLDVER" -srcfolder "$TEMPDIR/x64" "$SRCDIR/frankendrift-$BLDVER.macx64.dmg"
+hdiutil create -fs 'HFS+' -format UDZO -volname "FrankenDrift $BLDVER" -srcfolder "$TEMPDIR/x64" "$SRCDIR/frankendrift-$BLDVER-mac.x64.dmg"
 
 rm -r $TEMPDIR
