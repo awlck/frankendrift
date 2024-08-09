@@ -147,11 +147,10 @@ namespace FrankenDrift.GlkRunner
                     {
                         var linkId = ev.val1;
                         Event ev2 = new();
-                        if (_hyperlinks.ContainsKey(linkId))
+                        if (_hyperlinks.TryGetValue(linkId, out string? result))
                         {
                             GlkApi.glk_cancel_line_event(glkwin_handle, ref ev2);
                             IsWaiting = false;
-                            var result = _hyperlinks[linkId];
                             _hyperlinks.Clear();
                             FakeInput(result);
                             return result;
@@ -379,9 +378,8 @@ namespace FrankenDrift.GlkRunner
                     {
                         var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
                         if (imgPath.Success && Adrift.SharedModule.Adventure.BlorbMappings is { Count: > 0 }
-                                && Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(imgPath.Groups[1].Value))
+                                && Adrift.SharedModule.Adventure.BlorbMappings.TryGetValue(imgPath.Groups[1].Value, out int res))
                         {
-                            var res = Adrift.SharedModule.Adventure.BlorbMappings[imgPath.Groups[1].Value];
                             GlkApi.glk_image_draw(glkwin_handle, (uint)res, (int)ImageAlign.MarginRight, 0);
                         }
                     }
