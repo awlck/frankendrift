@@ -302,7 +302,6 @@ namespace FrankenDrift.Runner
             ScrollToEnd();
         }
 
-        // For some reason formatting gets lost upon changing fonts unless we do this terribleness:
         public virtual void AppendWithFont(string src, bool scroll = false)
         {
             var (font, color) = _fonts.Peek();

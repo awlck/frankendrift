@@ -14,7 +14,7 @@ namespace FrankenDrift.Runner
     public partial class MainForm : Form, Glue.UIGlue, frmRunner
     {
         private AdriftOutput output;
-        private TextBox input;
+        private AdriftInput input;
         private Label status;
 
         private Command loadGameCommand;
@@ -177,8 +177,7 @@ namespace FrankenDrift.Runner
 
         private void TimerOnElapsed(object sender, EventArgs e)
         {
-            if (Adrift.SharedModule.UserSession != null)
-                Adrift.SharedModule.UserSession.TimeBasedStuff();
+            Adrift.SharedModule.UserSession?.TimeBasedStuff();
         }
 
         private void InputOnKeyDown(object sender, KeyEventArgs e)
@@ -209,7 +208,7 @@ namespace FrankenDrift.Runner
             if (e.Key != Keys.Enter) return;
             if (Adrift.SharedModule.Adventure is not null)
             {
-                SubmitCommand(input.Text.Trim());
+                SubmitCommand(input.Text);
             }
 #if DEBUG
             else if (input.Text.StartsWith("<>")) OutputHTML(input.Text[2..]);
@@ -249,10 +248,10 @@ namespace FrankenDrift.Runner
             Closing -= MainFormOnClosing;
         }
 
-	private void MainFormOnClosed(object sender, EventArgs e)
-	{
+        private void MainFormOnClosed(object sender, EventArgs e)
+        {
             Application.Instance.Quit();
-	}
+        }
 
         private void OutputOnKeyDown(object sender, KeyEventArgs e)
         {
@@ -272,12 +271,12 @@ namespace FrankenDrift.Runner
             {
                 var cmds = Adrift.SharedModule.UserSession.salCommands;
                 cmds.Add("");
-                cmds[^2] = cmd;
+                cmds[^2] = cmd.Trim();
                 Adrift.SharedModule.Adventure.Turns++;
                 _commandRecallIdx = 0;
             }
 
-            Adrift.SharedModule.UserSession.Process(cmd);
+            Adrift.SharedModule.UserSession.Process(cmd.Trim());
             // just to be extra sure, redraw the map each time a command
             // is done processing.
             map.Invalidate();
@@ -286,7 +285,7 @@ namespace FrankenDrift.Runner
         internal string QueryLoadPath()
         {
             var ofd = new OpenFileDialog { MultiSelect = false };
-            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Game File", Extensions = new[] { ".taf", ".blorb" } });
+            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Game File", Extensions = [".taf", ".blorb"] });
             var result = ofd.ShowDialog(this);
             return result == DialogResult.Ok ? ofd.FileName : "";
         }
@@ -346,7 +345,7 @@ namespace FrankenDrift.Runner
             else
             {
                 var sfd = new SaveFileDialog();
-                sfd.Filters.Add(new FileFilter { Name = "Text file", Extensions = new[] { ".txt" } });
+                sfd.Filters.Add(new FileFilter { Name = "Text file", Extensions = [".txt"] });
                 var result = sfd.ShowDialog(this);
                 if (result != DialogResult.Ok) return;
                 Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
@@ -359,7 +358,7 @@ namespace FrankenDrift.Runner
         private void ReplayCommandOnExecuted(object? sender, EventArgs e)
         {
             var ofd = new OpenFileDialog();
-            ofd.Filters.Add(new FileFilter { Name = "Command files", Extensions = new[] { ".txt", ".cmd" } });
+            ofd.Filters.Add(new FileFilter { Name = "Command files", Extensions = [".txt", ".cmd"] });
             var result = ofd.ShowDialog(this);
             if (result != DialogResult.Ok) return;
             var lines = File.ReadLines(ofd.FileName);
@@ -428,7 +427,7 @@ namespace FrankenDrift.Runner
 
         public void ScrollToEnd()
         {
-            // output.ScrollToBottom();
+            output.ScrollToEnd();
         }
 
         public bool AskYesNoQuestion(string question, string title = null)
@@ -452,7 +451,7 @@ namespace FrankenDrift.Runner
         public string QuerySavePath()
         {
             var sfd = new SaveFileDialog();
-            sfd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = new[] { ".tas" } });
+            sfd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = [".tas"] });
             var result = sfd.ShowDialog(this);
             return result == DialogResult.Ok ? sfd.FileName : "";
         }
@@ -460,7 +459,7 @@ namespace FrankenDrift.Runner
         public string QueryRestorePath()
         {
             var ofd = new OpenFileDialog { MultiSelect = false };
-            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = new[] { ".tas" } });
+            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = [".tas"] });
             var result = ofd.ShowDialog(this);
             if (result != DialogResult.Ok) return "";
             // Fast-forward output only if the player did indeed commit to restoring a saved game.
@@ -472,16 +471,12 @@ namespace FrankenDrift.Runner
         {
             var result = MessageBox.Show("Would you like to save before quitting?", "Quit? -- FrankenDrift",
                 MessageBoxButtons.YesNoCancel, MessageBoxType.Question);
-            switch (result)
+            return result switch
             {
-                case DialogResult.Yes:
-                    return QueryResult.YES;
-                case DialogResult.No:
-                    return QueryResult.NO;
-                case DialogResult.Cancel:
-                    return QueryResult.CANCEL;
-            }
-            return QueryResult.CANCEL;
+                DialogResult.Yes => QueryResult.YES,
+                DialogResult.No => QueryResult.NO,
+                _ => QueryResult.CANCEL,
+            };
         }
 
         public void OutputHTML(string source) => output.AppendHtml(source);
