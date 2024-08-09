@@ -12,4 +12,8 @@
     <ProjectReference Include="..\FrankenDrift.Glue\FrankenDrift.Glue.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<TrimmableAssembly Include="FrankenDrift.Adrift" />
+	</ItemGroup>
+
 </Project>
