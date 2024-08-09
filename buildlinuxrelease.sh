@@ -11,7 +11,7 @@ cd "$SRCDIR/FrankenDrift.Runner/FrankenDrift.Runner.Gtk"
 rm -rf bin/Release/
 dotnet publish --no-self-contained -f net8.0 -c Release -p:Version=$BLDVER -p:IncludeSourceRevisionInInformationalVersion=false
 cd bin/Release/net8.0/publish
-tar czvf "$SRCDIR/frankendrift-v$BLDVER-gtk.any.tar.gz" *
+zip "$SRCDIR/frankendrift-v$BLDVER-gtk.any.zip" *
 
 cd "$SRCDIR/FrankenDrift.Runner/FrankenDrift.Runner.Gtk"
 rm -rf bin/Release/
