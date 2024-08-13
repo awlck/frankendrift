@@ -1,16 +1,21 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
-using Eto;
 
 namespace FrankenDrift.Runner
 {
-    public class AdriftOutput : RichTextArea, Glue.RichTextBox
+    public partial class AdriftOutput : RichTextArea, Glue.RichTextBox
     {
+        protected struct TextStyle
+        {
+            internal bool Bold;
+            internal bool Italic;
+            internal bool Underline;
+        }
+
         public AdriftOutput(MainForm main) : base()
         {
             _main = main;
@@ -55,9 +60,15 @@ namespace FrankenDrift.Runner
             BackgroundColor = _defaultBackground;
             SelectionForeground = _defaultColor;
             SelectionFont = _defaultFont;
+            _style = new()
+            {
+                Bold = false,
+                Italic = false,
+                Underline = false
+            };
+            _previousStyle = null;
         }
         
-        public int TextLength => Text.Length;
         public int SelectionStart { get => Selection.Start; set => Selection = Selection.WithStart(value); }
         public int SelectionLength { get => Selection.Length(); set => Selection = Selection.WithLength(value); }
 
@@ -68,13 +79,12 @@ namespace FrankenDrift.Runner
         internal Color _defaultBackground = Colors.Black;
         internal Color _defaultInput = Colors.Red;
         internal Font _defaultFont;
-        private readonly Stack<Tuple<Font, Color>> _fonts = new();
+        protected readonly Stack<Tuple<Font, Color>> _fonts = new();
         private readonly MainForm _main;
         private readonly bool _wingdingsAvailable;
 
-        private bool _bold = false;
-        private bool _italic = false;
-        private bool _underline = false;
+        protected TextStyle _style;
+        protected TextStyle? _previousStyle = null;
         private bool _fastForward;
 
         internal float CalculateTextSize(int requestedSize)
@@ -94,6 +104,7 @@ namespace FrankenDrift.Runner
                 _pendingText += src;
                 return;
             }
+            if (_main.Quitting) return;
             ReadOnly = false;
             if (!_wingdingsAvailable)
                 src = src.Replace("<font face=\"Wingdings\" size=14>Ø</font>", "<font size=+1>></font>");
@@ -128,7 +139,7 @@ namespace FrankenDrift.Runner
                         current.Remove(current.Length - 1, 1);
                         continue;
                     }
-                    AppendWithFont(current.ToString(), true);
+                    AppendWithFont(current.ToString());
                     current.Clear();
                     switch (currentToken)
                     {
@@ -136,31 +147,32 @@ namespace FrankenDrift.Runner
                             Append("\n");
                             break;
                         case "b":
-                            _bold = true;
+                            _style.Bold = true;
                             break;
                         case "/b":
-                            _bold = false;
+                            _style.Bold = false;
                             break;
                         case "i":
-                            _italic = true;
+                            _style.Italic = true;
                             break;
                         case "/i":
-                            _italic = false;
+                            _style.Italic = false;
                             break;
                         case "u":
-                            _underline = true;
+                            _style.Underline = true;
                             break;
                         case "/u":
-                            _underline = false;
+                            _style.Underline = false;
                             break;
                         case "c":
-                            _fonts.Push(new Tuple<Font, Color>(SelectionFont, _defaultInput));
+                            _fonts.Push(new Tuple<Font, Color>(_fonts.Peek().Item1, _defaultInput));
                             break;
                         case "waitkey" when !_fastForward:
                             _pendingText = src[consumed..];
                             IsWaiting = true;
                             if (SettingsManager.Settings.EnablePressAnyKey)
                                 AppendWithFont("\n(Press any key to continue)");
+                            ScrollToEnd();
                             return;
                         case "/c":
                         case "/font":
@@ -189,7 +201,7 @@ namespace FrankenDrift.Runner
                     }
                     if (currentToken.StartsWith("img"))  // graphics.
                     {
-                        var imgPath = new Regex("src ?= ?\"(.+)\"").Match(currentToken);
+                        var imgPath = ImgSrcRegex().Match(currentToken);
                         if (imgPath.Success && SettingsManager.Settings.EnableGraphics)
                             _main.Graphics.DisplayImage(imgPath.Groups[1].Value);
                         continue;
@@ -201,8 +213,7 @@ namespace FrankenDrift.Runner
                     if (current.Length == 0 && previousToken.StartsWith("font"))
                         _fonts.Pop();
                     var tokenLower = currentToken.ToLower();
-                    var re = new Regex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?");
-                    var col = re.Match(currentToken);
+                    var col = FontColorRegex().Match(currentToken);
                     if (col.Success)
                     {
                         var colorString =  ("#" + col.Groups[1].Value);
@@ -254,8 +265,7 @@ namespace FrankenDrift.Runner
                     else if (tokenLower.Contains("tan"))
                         color = Colors.Tan;
                     
-                    re = new Regex("face ?= ?\"(.*?)\"");
-                    var face = re.Match(currentToken);
+                    var face = FontFaceRegex().Match(currentToken);
                     if (face.Success)
                     {
                         var f = face.Groups[1].Value;
@@ -263,8 +273,7 @@ namespace FrankenDrift.Runner
                             font = font.WithFontFace(f);
                     }
 
-                    re = new Regex("size ?= ?\"?([+-]?\\d+)\"?");
-                    var size = re.Match(currentToken);
+                    var size = FontSizeRegex().Match(currentToken);
                     if (size.Success)
                     {
                         var sizeString = size.Groups[1].Value;
@@ -288,21 +297,25 @@ namespace FrankenDrift.Runner
                 }
                 else current.Append(c);
             }
-            AppendWithFont(current.ToString(), true);
+            AppendWithFont(current.ToString());
             ReadOnly = true;
+            ScrollToEnd();
         }
 
-        // For some reason formatting gets lost upon changing fonts unless we do this terribleness:
-        private void AppendWithFont(string src, bool scroll = false)
+        public virtual void AppendWithFont(string src, bool scroll = false)
         {
             var (font, color) = _fonts.Peek();
-            SelectionForeground = color;
             SelectionFont = font;
-            SelectionBold = _bold;
-            SelectionUnderline = _underline;
-            SelectionItalic = _italic;
+            SelectionForeground = color;
+            if (_style.Bold != _previousStyle?.Bold)
+                SelectionBold = _style.Bold;
+            if (_style.Underline != _previousStyle?.Underline)
+                SelectionUnderline = _style.Underline;
+            if (_style.Italic != _previousStyle?.Italic)
+                SelectionItalic = _style.Italic;
             var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
             Append(text, scroll);
+            _previousStyle = _style;
         }
 
         internal void FinishWaiting()
@@ -363,6 +376,41 @@ namespace FrankenDrift.Runner
             }
             _main.GetSecondaryWindow(tag[7..]).AppendHtml(current.ToString());
             return consumed;
+        }
+
+        [GeneratedRegex("size ?= ?\"?([+-]?\\d+)\"?")]
+        private static partial Regex FontSizeRegex();
+
+        [GeneratedRegex("face ?= ?\"(.*?)\"")]
+        private static partial Regex FontFaceRegex();
+
+        [GeneratedRegex("color ?= ?\"?#?([0-9A-Fa-f]{6})\"?")]
+        private static partial Regex FontColorRegex();
+
+        [GeneratedRegex("src ?= ?\"(.+)\"")]
+        private static partial Regex ImgSrcRegex();
+    }
+
+    class OutputLateFormatting(MainForm main) : AdriftOutput(main)
+    {
+        public override void AppendWithFont(string src, bool scroll = false)
+        {
+            var text = src.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&perc;", "%").Replace("&quot;", "\"");
+            if (string.IsNullOrEmpty(text)) return;
+            var begin = TextLength;
+            Append(text, scroll);
+            var end = TextLength;
+            Selection = new Range<int>(begin, end);
+            var (font, color) = _fonts.Peek();
+            SelectionFont = font;
+            SelectionForeground = color;
+            if (_style.Bold)
+                SelectionBold = true;
+            if (_style.Underline)
+                SelectionUnderline = true;
+            if (_style.Italic)
+                SelectionItalic = true;
+            Selection = new Range<int>(end + 1, end + 1);
         }
     }
 }

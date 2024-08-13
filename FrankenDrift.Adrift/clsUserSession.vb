@@ -8,21 +8,17 @@ Imports FrankenDrift.Glue.Util
 Public Class RunnerSession
 
     Public sIt, sHim, sHer, sThem As String
-    ' Friend stackFonts As New Stack(Of Font)
-    ' Friend stackColours As New Stack(Of String)
     Public dtDebug As DateTime
     Public iDebugIndent As Integer
     Public bNoDebug As Boolean
     Public iPrepProgress As Integer
     Public States As New StateStack
-    Public bAutoComplete As Boolean
     Public iMarginWidth As Integer
     Public bEXE As Boolean = False
     Private listTaskKeys As New Generic.List(Of TaskKey)
     Friend iMatchedTaskCommand As Integer
     Friend dictMacros As New Generic.Dictionary(Of String, clsMacro)
     Friend bSystemTask As Boolean = False
-    Private root, obroot, chroot As AutoComplete
     Public salCommands As New StringArrayList
     Public sTranscriptFile As String
     Public bShowShortLocations As Boolean = True
@@ -30,7 +26,6 @@ Public Class RunnerSession
     Public sGameFolder As String
     Public bGraphics As Boolean = True
     Public WithEvents Map As FrankenDrift.Glue.Map
-    ' Friend DefaultFont As Font
     Friend bUseDefaultFont As Boolean = False
     Friend sTurnOutput As String = ""
     Friend bRequiresRestoreLayout As Boolean = False
@@ -38,11 +33,6 @@ Public Class RunnerSession
     Friend bTestingOutput As Boolean = False
 
     Public Property bSound As Boolean = True
-
-    Friend Sub ClearAutoCompletes()
-        obroot = Nothing
-        chroot = Nothing
-    End Sub
 
     Private Class TaskKey
         Implements IComparable
@@ -3323,364 +3313,6 @@ NextChar2:
         Return sal
     End Function
 
-    Friend Sub DoAutoComplete()
-
-        Dim txtInput As RichTextBox = fRunner.txtInput
-        Dim sWords() As String = txtInput.Text.Substring(2).Split(" "c)
-        Dim node As AutoComplete = root
-
-        ' i             is exact match, has longer word
-        ' in            is exact match, no longer word for some tasks, longer word for other
-        ' inv           is exact match, has longer word
-        ' inve          no exact match, has longer word
-        ' inventory     is exact match, no longer word
-
-        Dim salAllowedTasks As New StringArrayList
-        For Each sWord As String In sWords
-            Dim bLongerWord As Boolean = False
-            If Not node Is Nothing Then
-                If node.htblChildren.ContainsKey(sWord) Then
-                    ' Ok, we've got a complete word.  Let's see if a task exists with longer version of it...
-                    Dim acNode As AutoComplete = node.htblChildren(sWord)
-                    For Each sTask As String In acNode.salTasks
-                        'If htblCompleteableGeneralTasks.ContainsKey(sTask) Then
-                        For Each acChildNode As AutoComplete In node.htblChildren
-                            If Not acChildNode Is acNode Then
-                                If acChildNode.salTasks.Contains(sTask) Then
-                                    If acChildNode.sWord.StartsWith(sWord) AndAlso acChildNode.sWord.Length > sWord.Length Then
-                                        ' Ok, we've found a longer applicable word
-                                        bLongerWord = True
-                                        salAllowedTasks.Add(sTask)
-                                    End If
-                                End If
-                            End If
-                        Next
-                    Next
-                End If
-
-                ' We want it to select the word if it's a whole word in our list, and there's not a longer one available
-                If node.htblChildren.ContainsKey(sWord) AndAlso (txtInput.Text.EndsWith(sWord & " ") OrElse Array.IndexOf(sWords, sWord) < sWords.Length - 1) Then
-                    node = node.htblChildren(sWord)
-                    ListChildren(node, False)
-                Else
-                    If sWord <> "" OrElse (node.htblChildren.Count = 1 AndAlso Not node.htblChildren.ItemByIndex(0).sWord.StartsWith("%")) Then
-                        For Each sChild As AutoComplete In node.htblChildren
-                            Dim bOk As Boolean = False
-                            If salAllowedTasks.Count = 0 Then
-                                bOk = True
-                            Else
-                                For Each sTask As String In salAllowedTasks
-                                    If sChild.salTasks.Contains(sTask) Then
-                                        bOk = True
-                                        Exit For
-                                    End If
-                                Next
-                            End If
-                            If bOk Then
-                                Select Case sChild.sWord
-                                    Case "%direction1%", "%direction2%", "%direction3%", "%direction4%", "%direction5%"
-                                        For d As DirectionsEnum = DirectionsEnum.North To DirectionsEnum.NorthWest
-                                            Dim sal As StringArrayList = ExpandBlock(DirectionRE(d))
-                                            For Each sDir As String In sal
-                                                If sDir = sWord Then
-                                                    node = node.htblChildren(sChild.sWord)
-                                                    ListChildren(node, False)
-                                                    GoTo NextWord
-                                                ElseIf sDir.StartsWith(sWord) AndAlso sWord = sWords(sWords.Length - 1) Then
-                                                    Dim sRemainder As String = sDir.Substring(sWord.Length)
-
-                                                    txtInput.SelectedText = sRemainder
-                                                    txtInput.SelectionStart = txtInput.Text.Length - sRemainder.Length
-                                                    txtInput.SelectionLength = sRemainder.Length
-                                                    Exit Sub
-                                                End If
-                                            Next
-                                        Next
-
-                                    Case "%object1%", "%object2%", "%object3%", "%object4%", "%object5%", "%objects%"
-                                        ' for all completable tasks in node.saltasks
-                                        ' loop thru all objects refs that could pass the task          
-                                        ' Grab the text matching the actual object
-                                        Dim sObName As String = ""
-                                        For i As Integer = sWords.Length - 1 To 0 Step -1
-                                            If sWords(i) = node.sWord Then
-                                                For iOb As Integer = i + 1 To sWords.Length - 1
-                                                    sObName &= sWords(iOb) & " "
-                                                Next
-                                            End If
-                                        Next
-                                        If sObName.Length > 1 Then sObName = sLeft(sObName, sObName.Length - 1)
-                                        Dim sObWords As String() = sObName.Split(" "c)
-
-                                        Dim obnode As AutoComplete = obroot
-
-                                        If sChild.sWord = "%objects%" Then
-                                            For Each sAllWord As String In New String() {"all", "everything"}
-                                                If Not obnode.htblChildren.ContainsKey(sAllWord) Then
-                                                    obnode.htblChildren.Add(New AutoComplete(sAllWord))
-                                                End If
-                                            Next
-                                        End If
-                                        For Each sObWord As String In sObWords
-                                            If obnode.htblChildren.ContainsKey(sObWord) AndAlso (txtInput.Text.EndsWith(sObWord & " ") OrElse Array.IndexOf(sObWords, sObWord) < sObWords.Length) Then
-                                                obnode = obnode.htblChildren(sObWord)
-                                                ListChildren(obnode, True)
-                                                If obnode.htblChildren.Count = 0 Then
-                                                    node = node.htblChildren(sChild.sWord)
-                                                    ListChildren(node, False)
-                                                    GoTo NextObWord
-                                                End If
-                                            Else
-                                                If sObWord <> "" OrElse obnode.htblChildren.Count = 1 Then
-                                                    For Each sObChild As AutoComplete In obnode.htblChildren
-                                                        If sObChild.sWord.StartsWith(sObWord) AndAlso (sObChild.sWord = "all" OrElse sObChild.sWord = "everything" OrElse PlayerSeeOb(sObChild.salTasks, sChild.salTasks)) AndAlso sObWord = sWords(sWords.Length - 1) Then
-                                                            Dim sRemainder As String = sObChild.sWord.Substring(sObWord.Length)
-
-                                                            txtInput.SelectedText = sRemainder
-                                                            txtInput.SelectionStart = txtInput.Text.Length - sRemainder.Length
-                                                            txtInput.SelectionLength = sRemainder.Length
-                                                            Exit Sub
-                                                        End If
-                                                    Next
-                                                End If
-                                            End If
-
-NextObWord:
-                                        Next
-
-                                    Case "%character1%", "%character2%", "%character3%", "%character4%", "character5%", "%characters%"
-                                        ' for all completable tasks in node.saltasks
-                                        ' loop thru all objects refs that could pass the task          
-                                        ' Grab the text matching the actual object
-                                        Dim sChName As String = ""
-                                        For i As Integer = sWords.Length - 1 To 0 Step -1
-                                            If sWords(i) = node.sWord Then
-                                                For iCh As Integer = i + 1 To sWords.Length - 1
-                                                    sChName &= sWords(iCh) & " "
-                                                Next
-                                            End If
-                                        Next
-                                        If sChName.Length > 1 Then sChName = sLeft(sChName, sChName.Length - 1)
-                                        Dim sChWords As String() = sChName.Split(" "c)
-
-                                        Dim chnode As AutoComplete = chroot
-
-                                        For Each sChWord As String In sChWords
-                                            If chnode.htblChildren.ContainsKey(sChWord) AndAlso (txtInput.Text.EndsWith(sChWord & " ") OrElse Array.IndexOf(sChWords, sChWord) < sChWords.Length) Then
-                                                chnode = chnode.htblChildren(sChWord)
-                                                If chnode.htblChildren.Count = 0 Then
-                                                    node = node.htblChildren(sChild.sWord)
-                                                    GoTo NextChWord
-                                                End If
-                                            Else
-                                                If sChWord <> "" OrElse chnode.htblChildren.Count = 1 Then
-                                                    For Each sObChild As AutoComplete In chnode.htblChildren
-                                                        If sObChild.sWord.StartsWith(sChWord) AndAlso PlayerSeeCh(sObChild.salTasks, sChild.salTasks) AndAlso sChWord = sWords(sWords.Length - 1) Then
-                                                            'Debug.WriteLine(sChild.sWord)
-                                                            Dim sRemainder As String = sObChild.sWord.Substring(sChWord.Length)
-
-                                                            txtInput.SelectedText = sRemainder
-                                                            txtInput.SelectionStart = txtInput.Text.Length - sRemainder.Length
-                                                            txtInput.SelectionLength = sRemainder.Length
-                                                            Exit Sub ' For
-                                                        End If
-                                                    Next
-                                                End If
-                                            End If
-
-NextChWord:
-                                        Next
-
-                                    Case Else
-                                        If sChild.sWord.StartsWith(sWord) AndAlso PlayerCanExTask(sChild.salTasks) AndAlso sWord = sWords(sWords.Length - 1) Then
-                                            Dim sRemainder As String = sChild.sWord.Substring(sWord.Length)
-
-                                            bAllowBuildAutos = False
-                                            txtInput.SelectedText = sRemainder
-                                            txtInput.SelectionStart = txtInput.Text.Length - sRemainder.Length
-                                            txtInput.SelectionLength = sRemainder.Length
-                                            bAllowBuildAutos = True
-                                            Exit Sub
-                                        End If
-                                End Select
-                            End If
-                        Next
-                    End If
-                End If
-            End If
-NextWord:
-        Next
-
-    End Sub
-
-
-    ' This function should return True if, for any Task in salTaskList
-    ' any Object in salObList could pass all the task references specific to that reference
-    Private Function PlayerSeeOb(ByVal salObList As StringArrayList, ByVal salTaskList As StringArrayList) As Boolean
-
-        For Each sKey As String In salObList
-            If Adventure.Player.CanSeeObject(sKey) Then Return True
-        Next
-
-        Return False
-
-    End Function
-
-
-    Private Function PlayerSeeCh(ByVal salChList As StringArrayList, ByVal salTaskList As StringArrayList) As Boolean
-        For Each sKey As String In salChList
-            If Adventure.Player.CanSeeCharacter(sKey) Then Return True
-        Next
-        Return False
-    End Function
-
-
-    ' This function should return True if, not including any references, the task
-    ' could be completed
-    Private Function PlayerCanExTask(ByVal salList As StringArrayList) As Boolean
-        For Each sKey As String In salList
-            'Display(sKey, True) ' Debugging...
-            If Adventure.htblTasks(sKey).IsCompleteable Then Return True
-        Next
-        Return False
-    End Function
-
-
-    Private Sub ListChildren(ByVal node As AutoComplete, ByVal bObs As Boolean)
-        If node.htblChildren.Count > 0 Then Debug.WriteLine("")
-        For Each child As AutoComplete In node.htblChildren
-            If Not bObs OrElse PlayerSeeOb(child.salTasks, node.salTasks) Then Debug.WriteLine(child.sWord)
-        Next
-    End Sub
-
-
-    Private Sub SortNodes(ByVal nodes As AutoCompleteSortedArrayList)
-        For Each node As AutoComplete In nodes
-            If node.htblChildren.Count > 0 Then SortNodes(node.htblChildren)
-        Next
-        nodes.Sort()
-    End Sub
-
-
-    Private Sub PrintOutNodes(ByVal node As AutoComplete, ByVal iLevel As Integer)
-        For i As Integer = 0 To iLevel - 1
-            'DisplayDebug("   ")
-            Debug.Write("   ")
-        Next
-        'DisplayDebug(node.sWord & vbCrLf)
-        Debug.WriteLine(node.sWord & " [" & node.iPriority & "]")
-        For Each n As AutoComplete In node.htblChildren
-            PrintOutNodes(n, iLevel + 1)
-        Next
-    End Sub
-
-
-    Dim bAllowBuildAutos As Boolean = True
-    Public Sub BuildAutos()
-        If Not bAutoComplete OrElse Not bAllowBuildAutos OrElse Adventure Is Nothing Then Exit Sub
-        If fRunner.txtInput Is Nothing OrElse fRunner.txtInput.IsDisposed Then Exit Sub
-        If fRunner.txtInput.TextLength < 2 Then Exit Sub
-
-        Dim dtAutos As DateTime = Now
-        Dim sInput As String = fRunner.txtInput.Text.Substring(2)
-        sInput = sLeft(sInput, fRunner.txtInput.SelectionStart - 2)
-
-        root = New AutoComplete
-        root.sWord = Nothing
-
-        For Each tas As clsTask In htblCompleteableGeneralTasks.Values
-            If tas.AutoFillPriority > 0 Then
-                For Each sCommand As String In tas.arlCommands
-                    Dim salList As StringArrayList = ExpandBlock(sCommand)
-                    For Each sList As String In salList
-                        If sInput = "" OrElse sList.StartsWith(sInput) OrElse sList.Contains("%") Then
-                            Dim iPriorityOffset As Integer = 0
-                            sList = sList.Replace("*", "")
-                            While sList.Contains("  ")
-                                sList = sList.Replace("  ", " ")
-                            End While
-                            If sList.Contains("@@@") Then ' This prevents "{walk} west" from giving us w[alk] instead of w[est]
-                                If sList.StartsWith("@@@") Then iPriorityOffset = 1
-                                sList = sList.Replace("@@@", "")
-                            End If
-                            If sList.StartsWith(" ") Then sList = sRight(sList, sList.Length - 1)
-                            Dim node As AutoComplete = root
-                            Dim sWords() As String = Split(sList, " ")
-                            For Each sWord As String In sWords
-                                If Not node.htblChildren.ContainsKey(sWord) Then
-                                    Dim newnode As New AutoComplete
-                                    newnode.sWord = sWord
-                                    node.htblChildren.Add(newnode)
-                                End If
-                                node = node.htblChildren(sWord)
-                                If Not node.salTasks.Contains(tas.Key) Then node.salTasks.Add(tas.Key)
-                                If tas.AutoFillPriority < node.iPriority Then node.iPriority = tas.AutoFillPriority + iPriorityOffset
-                            Next
-                        End If
-                    Next
-                Next
-            End If
-        Next
-
-        If obroot Is Nothing Then
-            obroot = New AutoComplete
-            obroot.sWord = Nothing
-
-            For Each ob As clsObject In Adventure.htblObjects.Values
-                Dim salList As StringArrayList = ExpandBlock(ob.sRegularExpressionString(True))
-                For Each sList As String In salList
-                    Dim iPriorityOffset As Integer = 0
-                    While sList.Contains("  ")
-                        sList = sList.Replace("  ", " ")
-                    End While
-                    If sList.Contains("@@@") Then ' This prevents "{space} ship" from giving us s[pace] instead of s[hip]
-                        If sList.StartsWith("@@@") Then iPriorityOffset = 1
-                        sList = sList.Replace("@@@", "")
-                    End If
-                    If sList.StartsWith(" ") Then sList = sRight(sList, sList.Length - 1)
-                    Dim node As AutoComplete = obroot
-                    Dim sWords() As String = Split(sList, " ")
-                    For Each sWord As String In sWords
-                        If Not node.htblChildren.ContainsKey(sWord) Then
-                            node.htblChildren.Add(New AutoComplete(sWord))
-                        End If
-                        node = node.htblChildren(sWord)
-                        If Not node.salTasks.Contains(ob.Key) Then node.salTasks.Add(ob.Key)
-                        node.iPriority = iPriorityOffset
-                    Next
-                Next
-            Next
-            SortNodes(obroot.htblChildren)
-
-            chroot = New AutoComplete
-            chroot.sWord = Nothing
-
-            For Each ch As clsCharacter In Adventure.htblCharacters.Values
-                Dim salList As StringArrayList = ExpandBlock(ch.sRegularExpressionString(True))
-                For Each sList As String In salList
-                    While sList.Contains("  ")
-                        sList = sList.Replace("  ", " ")
-                    End While
-                    If sList.StartsWith(" ") Then sList = sRight(sList, sList.Length - 1)
-                    Dim node As AutoComplete = chroot
-                    Dim sWords() As String = Split(sList, " ")
-                    For Each sWord As String In sWords
-                        If Not node.htblChildren.ContainsKey(sWord) Then
-                            Dim newnode As New AutoComplete
-                            newnode.sWord = sWord
-                            node.htblChildren.Add(newnode)
-                        End If
-                        node = node.htblChildren(sWord)
-                        If Not node.salTasks.Contains(ch.Key) Then node.salTasks.Add(ch.Key)
-                    Next
-                Next
-            Next
-        End If
-
-        SortNodes(root.htblChildren)
-        Debug.WriteLine("Autos built in " & Now.Subtract(dtAutos).ToString)
-    End Sub
-
     Private Function EvaluateInput(ByVal iMinimumPriority As Integer, ByVal bPassingOnly As Boolean) As String
         Dim cCursor As Char = "Ø"c
         Dim cCommentCursor As Char = "@"c
@@ -4202,8 +3834,6 @@ NextWord:
         Next
 
         PronounKeys.Clear()
-
-        BuildAutos()
     End Sub
 
     ' Runs this on a background thread so if user types a command we just resume where we are

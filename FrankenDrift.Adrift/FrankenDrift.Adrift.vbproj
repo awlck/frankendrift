@@ -2,18 +2,18 @@
 
   <PropertyGroup>
     <RootNamespace>FrankenDrift.Adrift</RootNamespace>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <DefineConstants>Runner=True,Adravalon=True</DefineConstants>
 	<VersionPrefix>0.7.0</VersionPrefix>
 	  <VersionSuffix>indev</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SharpZipLib" Version="1.4.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\FrankenDrift.Glue\FrankenDrift.Glue.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+		<TrimmableAssembly Include="FrankenDrift.Adrift" />
+	</ItemGroup>
 
 </Project>

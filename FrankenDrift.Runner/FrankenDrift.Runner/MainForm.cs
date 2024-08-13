@@ -14,7 +14,7 @@ namespace FrankenDrift.Runner
     public partial class MainForm : Form, Glue.UIGlue, frmRunner
     {
         private AdriftOutput output;
-        private TextBox input;
+        private AdriftInput input;
         private Label status;
 
         private Command loadGameCommand;
@@ -24,6 +24,7 @@ namespace FrankenDrift.Runner
         private Command transcriptCommand;
         private Command replayCommand;
         private Command showMapCommand;
+        private Command clearScreenCommand;
 
         public UltraToolbarsManager UTMMain => throw new NotImplementedException();
 
@@ -42,20 +43,20 @@ namespace FrankenDrift.Runner
         private bool _shouldReplayCancel = false;
         private int _commandRecallIdx = 0;
         private readonly string _myVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        private static bool GameIsOngoing => Adrift.SharedModule.Adventure is not null && Adrift.SharedModule.Adventure.eGameState == Adrift.clsAction.EndGameEnum.Running;
         
         internal GraphicsWindow Graphics { get
         {
-            if (_graphics is null)
-            {
-                _graphics = new GraphicsWindow(this)
+            _graphics ??= new GraphicsWindow(this)
                 {
                     Title = "Graphics - " + Title,
                     ShowActivated = false
                 };
-            }
             _graphics.Show();
             return _graphics;
         }}
+
+        public bool Quitting { get; private set; } = false;
 
         public MainForm()
         {
@@ -70,8 +71,18 @@ namespace FrankenDrift.Runner
             transcriptCommand.Executed += TranscriptCommandOnExecuted;
             replayCommand.Executed += ReplayCommandOnExecuted;
             showMapCommand.Executed += ShowMapCommandOnExecuted;
+            clearScreenCommand.Executed += ClearScreenCommandOnExecuted;
             _timer.Elapsed += TimerOnElapsed;
             KeyDown += MainFormOnKeyDown;
+            Closing += MainFormOnClosing;
+            // ensure the application quits after the main form closes, even on platforms where that wouldn't normally be the case,
+            // or if there are auxiliary windows still open.
+            Closed += MainFormOnClosed;
+            // need to do this or gtk will keep recursively generating closing events as we try to quit.
+            Application.Instance.Terminating += (s, e) => {
+                Closing -= MainFormOnClosing;
+                Closed -= MainFormOnClosed;
+            };
 
             input.KeyDown += InputOnKeyDown;
             output.KeyDown += OutputOnKeyDown;
@@ -87,11 +98,6 @@ namespace FrankenDrift.Runner
             output.AppendHtml($"FrankenDrift {_myVersion}");
         }
 
-        private void ShowMapCommandOnExecuted(object sender, EventArgs e)
-        {
-            map.Show();
-        }
-
         void InitializeComponent()
         {
             Title = "FrankenDrift";
@@ -99,7 +105,10 @@ namespace FrankenDrift.Runner
             Size = new Size(600, 750);
             Padding = 10;
 
-            output = new AdriftOutput(this);
+            if (Application.Instance.Platform.IsGtk)
+                output = (AdriftOutput) new OutputLateFormatting(this);
+            else
+                output = new AdriftOutput(this);
             input = new AdriftInput { PlaceholderText = ">" };
             status = new Label();
 
@@ -115,6 +124,7 @@ namespace FrankenDrift.Runner
             transcriptCommand = new Command { MenuText = "Start Transcript", Enabled = false, Shortcut = Application.Instance.CommonModifier | Keys.T };
             replayCommand = new Command { MenuText = "Replay Commands", Enabled = false, Shortcut = Application.Instance.CommonModifier | Application.Instance.AlternateModifier | Keys.R };
             showMapCommand = new Command { MenuText = "Open Map (experimental)", Enabled = true, Shortcut = Application.Instance.CommonModifier | Keys.M };
+            clearScreenCommand = new Command { MenuText = "Clear Screen", Enabled = true, ToolTip = "Clears the output window, removing all text. Doing this occasionally can improve performance during long-lasting game sessions." };
 
             var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
             quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -122,7 +132,7 @@ namespace FrankenDrift.Runner
             var aboutCommand = new Command { MenuText = "About..." };
             aboutCommand.Executed += (sender, e) => new AboutDialog
             {
-                Copyright = "FrankenDrift (c) 2021-22 Adrian Welcker\nADRIFT Runner (c) 1996-2020 Campbell Wild",
+                Copyright = "FrankenDrift (c) 2021-24 Adrian Welcker\nADRIFT Runner (c) 1996-2020 Campbell Wild",
                 ProgramName = "FrankenDrift",
                 ProgramDescription = "FrankenDrift: A \"Frankenstein's Monster\" consisting of the ADRIFT Runner Code " +
                                      "with a cross-platform UI layer (Eto.Forms) glued on top.",
@@ -138,9 +148,9 @@ namespace FrankenDrift.Runner
             {
                 Items =
                 {
-					// File submenu
 					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
-                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand, showMapCommand }}
+                    new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand }},
+                    new SubMenuItem { Text = "&View", Items = { showMapCommand, clearScreenCommand }}
                 },
                 ApplicationItems =
                 {
@@ -152,10 +162,19 @@ namespace FrankenDrift.Runner
             };
         }
 
+        private void ClearScreenCommandOnExecuted(object sender, EventArgs e)
+        {
+            output.Clear();
+        }
+
+        private void ShowMapCommandOnExecuted(object sender, EventArgs e)
+        {
+            map.Show();
+        }
+
         private void TimerOnElapsed(object sender, EventArgs e)
         {
-            if (Adrift.SharedModule.UserSession != null)
-                Adrift.SharedModule.UserSession.TimeBasedStuff();
+            Adrift.SharedModule.UserSession?.TimeBasedStuff();
         }
 
         private void InputOnKeyDown(object sender, KeyEventArgs e)
@@ -205,6 +224,32 @@ namespace FrankenDrift.Runner
             }
         }
 
+        private void MainFormOnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Quitting = true;
+            if (GameIsOngoing)
+            {
+                var result = QuerySaveBeforeQuit();
+                switch (result)
+                {
+                    case QueryResult.YES:
+                        SaveGameCommandOnExecuted(null, null);
+                        break;
+                    case QueryResult.NO:
+                        break;
+                    case QueryResult.CANCEL:
+                        e.Cancel = true;
+                        return;
+                }
+            }
+            Closing -= MainFormOnClosing;
+        }
+
+        private void MainFormOnClosed(object sender, EventArgs e)
+        {
+            Application.Instance.Quit();
+        }
+
         private void OutputOnKeyDown(object sender, KeyEventArgs e)
         {
             // Allow keyboard shortcuts, e.g. for copying selected text
@@ -223,12 +268,12 @@ namespace FrankenDrift.Runner
             {
                 var cmds = Adrift.SharedModule.UserSession.salCommands;
                 cmds.Add("");
-                cmds[^2] = cmd;
+                cmds[^2] = cmd.Trim();
                 Adrift.SharedModule.Adventure.Turns++;
                 _commandRecallIdx = 0;
             }
 
-            Adrift.SharedModule.UserSession.Process(cmd);
+            Adrift.SharedModule.UserSession.Process(cmd.Trim());
             // just to be extra sure, redraw the map each time a command
             // is done processing.
             map.Invalidate();
@@ -237,7 +282,7 @@ namespace FrankenDrift.Runner
         internal string QueryLoadPath()
         {
             var ofd = new OpenFileDialog { MultiSelect = false };
-            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Game File", Extensions = new[] { ".taf", ".blorb" } });
+            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Game File", Extensions = [".taf", ".blorb"] });
             var result = ofd.ShowDialog(this);
             return result == DialogResult.Ok ? ofd.FileName : "";
         }
@@ -297,7 +342,7 @@ namespace FrankenDrift.Runner
             else
             {
                 var sfd = new SaveFileDialog();
-                sfd.Filters.Add(new FileFilter { Name = "Text file", Extensions = new[] { ".txt" } });
+                sfd.Filters.Add(new FileFilter { Name = "Text file", Extensions = [".txt"] });
                 var result = sfd.ShowDialog(this);
                 if (result != DialogResult.Ok) return;
                 Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
@@ -310,7 +355,7 @@ namespace FrankenDrift.Runner
         private void ReplayCommandOnExecuted(object? sender, EventArgs e)
         {
             var ofd = new OpenFileDialog();
-            ofd.Filters.Add(new FileFilter { Name = "Command files", Extensions = new[] { ".txt", ".cmd" } });
+            ofd.Filters.Add(new FileFilter { Name = "Command files", Extensions = [".txt", ".cmd"] });
             var result = ofd.ShowDialog(this);
             if (result != DialogResult.Ok) return;
             var lines = File.ReadLines(ofd.FileName);
@@ -331,7 +376,7 @@ namespace FrankenDrift.Runner
 
         internal AdriftOutput GetSecondaryWindow(string name)
         {
-            if (_secondaryWindows.ContainsKey(name)) return _secondaryWindows[name].Output;
+            if (_secondaryWindows.TryGetValue(name, out SecondaryWindow value)) return value.Output;
             var win = new SecondaryWindow(this)
             {
                 ShowActivated = false,
@@ -379,7 +424,7 @@ namespace FrankenDrift.Runner
 
         public void ScrollToEnd()
         {
-            // output.ScrollToBottom();
+            output.ScrollToEnd();
         }
 
         public bool AskYesNoQuestion(string question, string title = null)
@@ -403,7 +448,7 @@ namespace FrankenDrift.Runner
         public string QuerySavePath()
         {
             var sfd = new SaveFileDialog();
-            sfd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = new[] { ".tas" } });
+            sfd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = [".tas"] });
             var result = sfd.ShowDialog(this);
             return result == DialogResult.Ok ? sfd.FileName : "";
         }
@@ -411,7 +456,7 @@ namespace FrankenDrift.Runner
         public string QueryRestorePath()
         {
             var ofd = new OpenFileDialog { MultiSelect = false };
-            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = new[] { ".tas" } });
+            ofd.Filters.Add(new FileFilter { Name = "ADRIFT Save File", Extensions = [".tas"] });
             var result = ofd.ShowDialog(this);
             if (result != DialogResult.Ok) return "";
             // Fast-forward output only if the player did indeed commit to restoring a saved game.
@@ -421,18 +466,14 @@ namespace FrankenDrift.Runner
 
         public QueryResult QuerySaveBeforeQuit()
         {
-            var result = MessageBox.Show("Would you like to save before quitting?", MessageBoxButtons.YesNoCancel,
-                MessageBoxType.Question);
-            switch (result)
+            var result = MessageBox.Show("Would you like to save before quitting?", "Quit? -- FrankenDrift",
+                MessageBoxButtons.YesNoCancel, MessageBoxType.Question);
+            return result switch
             {
-                case DialogResult.Yes:
-                    return QueryResult.YES;
-                case DialogResult.No:
-                    return QueryResult.NO;
-                case DialogResult.Cancel:
-                    return QueryResult.CANCEL;
-            }
-            return QueryResult.CANCEL;
+                DialogResult.Yes => QueryResult.YES,
+                DialogResult.No => QueryResult.NO,
+                _ => QueryResult.CANCEL,
+            };
         }
 
         public void OutputHTML(string source) => output.AppendHtml(source);

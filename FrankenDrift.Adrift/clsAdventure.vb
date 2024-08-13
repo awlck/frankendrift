@@ -49,7 +49,7 @@ Public Class clsAdventure
     Friend sConversationCharKey As String ' Who we are in conversation with
     Friend sConversationNode As String ' Where we currently are in the conversation tree
     Friend sGameFilename As String
-    Friend eGameState As clsAction.EndGameEnum = clsAction.EndGameEnum.Running
+    Public eGameState As clsAction.EndGameEnum = clsAction.EndGameEnum.Running
     Friend bDisplayedWinLose As Boolean = False
     Friend qTasksToRun As New Generic.Queue(Of String)
     Friend iElapsed As Integer
@@ -718,7 +718,6 @@ Public Class clsAdventure
             .sThem = ""
             .sHim = ""
             .sHer = ""
-            .ClearAutoCompletes()
         End With
         For i As Integer = 0 To 11
             Enabled(CType(i, EnabledOptionEnum)) = True

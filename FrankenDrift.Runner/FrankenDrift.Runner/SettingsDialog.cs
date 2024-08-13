@@ -6,20 +6,20 @@ namespace FrankenDrift.Runner
 {
     public class SettingsDialog : Dialog
     {
-        private CheckBox _graphics;
-        private CheckBox _devColors;
-        private CheckBox _devFont;
-        private CheckBox _banComicSans;
-        private CheckBox _anyKeyPrompt;
-        private CheckBox _suppressLocation;
-        private CheckBox _showMapByDefault;
-        private Label _fontPickerLabel;
-        private ComboBox _fontPicker;
-        private Label _fontSizeLabel;
-        private NumericStepper _fontSize;
+        private readonly CheckBox _graphics;
+        private readonly CheckBox _devColors;
+        private readonly CheckBox _devFont;
+        private readonly CheckBox _banComicSans;
+        private readonly CheckBox _anyKeyPrompt;
+        private readonly CheckBox _suppressLocation;
+        private readonly CheckBox _showMapByDefault;
+        private readonly Label _fontPickerLabel;
+        private readonly ComboBox _fontPicker;
+        private readonly Label _fontSizeLabel;
+        private readonly NumericStepper _fontSize;
 
-        private Button _okButton;
-        private Button _cancelButton;
+        private readonly Button _okButton;
+        private readonly Button _cancelButton;
         
         public SettingsDialog()
         {

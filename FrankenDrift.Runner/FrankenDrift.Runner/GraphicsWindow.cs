@@ -38,10 +38,7 @@ namespace FrankenDrift.Runner
         {
             if (SharedModule.Adventure.BlorbMappings is {Count: > 0})
             {
-                int res = 0;
-                if (SharedModule.Adventure.BlorbMappings.ContainsKey(path))
-                    res = SharedModule.Adventure.BlorbMappings[path];
-                if (res > 0)
+                if (SharedModule.Adventure.BlorbMappings.TryGetValue(path, out int res) && res > 0)
                 {
                     var scratch = "";
                     var img = SharedModule.Blorb.GetImage(res, true, ref scratch);

@@ -76,7 +76,7 @@ namespace FrankenDrift.GlkRunner
             while (true)
             {
                 var cmd = _output.GetLineInput();
-                SubmitCommand(cmd);
+                SubmitCommand(cmd.Trim());
             }
         }
 
@@ -280,15 +280,14 @@ namespace FrankenDrift.GlkRunner
         internal void PlaySound(string snd, int channel, bool loop)
         {
             if (!_soundSupported) return;
-            if (_recentlyPlayedSounds.ContainsKey(channel) && _recentlyPlayedSounds[channel] == snd)
+            if (_recentlyPlayedSounds.TryGetValue(channel, out string? value) && value == snd)
             {
                 UnpauseSound(channel);
                 return;
             }
             if (!(Adrift.SharedModule.Adventure.BlorbMappings is { Count: > 0 })
-                    || !Adrift.SharedModule.Adventure.BlorbMappings.ContainsKey(snd))
+                    || !Adrift.SharedModule.Adventure.BlorbMappings.TryGetValue(snd, out int theSound))
                 return;
-            var theSound = Adrift.SharedModule.Adventure.BlorbMappings[snd];
             _recentlyPlayedSounds[channel] = snd;
             GlkApi.glk_schannel_play_ext(_sndChannels[channel], (uint)theSound, loop ? 0xFFFFFFFF : 1, 0);
         }
