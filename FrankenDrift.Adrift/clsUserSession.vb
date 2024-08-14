@@ -314,12 +314,15 @@ Public Class RunnerSession
         End If
 
         If bCommit Then
+            ' Ensure text doesn't get output more than once...
+            Dim theText As String = sOutputText
+            sOutputText = ""
             If Not (sText.StartsWith("<c>") AndAlso sText.EndsWith("</c>" & vbCrLf)) Then UnderlineNouns(sOutputText)
-            Source2HTML(sOutputText, fRunner.txtOutput, False)
+            Source2HTML(theText, fRunner.txtOutput, False)
             If Glue.IsTranscriptActive() Then
                 Try
                     Dim stmWriter As New IO.StreamWriter(sTranscriptFile, True)
-                    stmWriter.Write(StripCarats(sOutputText).Replace("Ø", ">"))
+                    stmWriter.Write(StripCarats(theText).Replace("Ø", ">"))
                     stmWriter.Close()
                 Catch exIO As IO.IOException
                     ErrMsg("Unable to output to transcript: " & exIO.Message)
@@ -328,11 +331,10 @@ Public Class RunnerSession
 
             If bRecord Then
                 While sOutputText.EndsWith(vbCrLf)
-                    sOutputText = sOutputText.Substring(0, sOutputText.Length - 2)
+                    sOutputText = sOutputText.Substring(0, theText.Length - 2)
                 End While
-                sTurnOutput &= sOutputText
+                sTurnOutput &= theText
             End If
-            sOutputText = ""
         End If
 
         bDisplaying = False
