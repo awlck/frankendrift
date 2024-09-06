@@ -117,7 +117,11 @@ namespace FrankenDrift.GlkRunner
 
         public void ErrMsg(string message, Exception ex = null)
         {
+            if (_output is null)
+                _output = new(GlkApi);
             _output.AppendHTML($"<b>ADRIFT Fatal Error: {message}</b><br>");
+            if (ex is not null)
+                _output.AppendHTML(ex.ToString());
         }
 
         public string GetAppDataPath()
