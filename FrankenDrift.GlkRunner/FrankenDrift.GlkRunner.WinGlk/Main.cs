@@ -70,6 +70,8 @@ namespace FrankenDrift.GlkRunner.WinGlk
         [DllImport("Glk")]
         internal static unsafe extern StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock);
         [DllImport("Glk")]
+        internal static extern void glk_stream_close(StreamHandle stream, ref StreamResult streamResult);
+        [DllImport("Glk")]
         internal static extern void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode);
         [DllImport("Glk")]
         internal static extern void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val);
@@ -89,6 +91,10 @@ namespace FrankenDrift.GlkRunner.WinGlk
         internal static extern StreamHandle glk_window_get_stream(WindowHandle winId);
         [DllImport("Glk")]
         internal static extern void glk_window_move_cursor(WindowHandle winId, uint xpos, uint ypos);
+        [DllImport("Glk")]
+        internal static extern void glk_window_set_echo_stream(WindowHandle winId, StreamHandle stream);
+        [DllImport("Glk")]
+        internal static extern StreamHandle glk_window_get_echo_stream(WindowHandle winId);
         [DllImport("Glk")]
         internal static extern WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock);
         [DllImport("Glk")]
@@ -142,6 +148,7 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public void glk_set_window(WindowHandle winId) => Winglk_Pinvoke.glk_set_window(winId);
         public StreamHandle glk_stream_open_file(FileRefHandle fileref, Glk.FileMode fmode, uint rock) => Winglk_Pinvoke.glk_stream_open_file(fileref, fmode, rock);
         public unsafe StreamHandle glk_stream_open_memory(byte* buf, uint buflen, Glk.FileMode mode, uint rock) => Winglk_Pinvoke.glk_stream_open_memory(buf, buflen, mode, rock);
+        public void glk_stream_close(StreamHandle stream, ref StreamResult streamResult) => Winglk_Pinvoke.glk_stream_close(stream, ref streamResult);
         public void glk_stream_set_position(StreamHandle stream, int pos, SeekMode seekMode) => Winglk_Pinvoke.glk_stream_set_position(stream, pos, seekMode);
         public void glk_stylehint_set(WinType wintype, Style styl, StyleHint hint, int val) => Winglk_Pinvoke.glk_stylehint_set(wintype, styl, hint, val);
         public uint glk_style_measure(WindowHandle winid, Style styl, StyleHint hint, ref uint result) => Winglk_Pinvoke.glk_style_measure(winid, styl, hint, ref result);
@@ -152,6 +159,8 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public void glk_window_get_size(WindowHandle winId, out uint width, out uint height) => Winglk_Pinvoke.glk_window_get_size(winId, out width, out height);
         public StreamHandle glk_window_get_stream(WindowHandle winId) => Winglk_Pinvoke.glk_window_get_stream(winId);
         public void glk_window_move_cursor(WindowHandle winId, uint xpos, uint ypos) => Winglk_Pinvoke.glk_window_move_cursor(winId, xpos, ypos);
+        public void glk_window_set_echo_stream(WindowHandle winId, StreamHandle stream) => Winglk_Pinvoke.glk_window_set_echo_stream(winId, stream);
+        public StreamHandle glk_window_get_echo_stream(WindowHandle winId) => Winglk_Pinvoke.glk_window_get_echo_stream(winId);
         public WindowHandle glk_window_open(WindowHandle split, WinMethod method, uint size, WinType wintype, uint rock) => Winglk_Pinvoke.glk_window_open(split, method, size, wintype, rock);
         public void garglk_set_zcolors(uint fg, uint bg) => Winglk_Pinvoke.garglk_set_zcolors(fg, bg);
         public string? glkunix_fileref_get_name(FileRefHandle fileref) => Marshal.PtrToStringAnsi(Winglk_Pinvoke.glkunix_fileref_get_name(fileref));
@@ -176,7 +185,7 @@ namespace FrankenDrift.GlkRunner.WinGlk
             if (Winglk_Pinvoke.InitGlk(0x00000704) == 0) { return 2; }
             Winglk_Pinvoke.winglk_app_set_name("Windows Glk FrankenDrift");
 
-            WindowsGlk GlkApi = new WindowsGlk();
+            WindowsGlk GlkApi = new();
             var sess = new MainSession(args[^1], GlkApi);
             sess.Run();
 
