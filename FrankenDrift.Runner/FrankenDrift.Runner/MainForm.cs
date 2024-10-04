@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Application = Eto.Forms.Application;
+using System.Text;
 
 namespace FrankenDrift.Runner
 {
@@ -30,7 +31,7 @@ namespace FrankenDrift.Runner
 
         public RichTextBox txtOutput => output;
 
-        public RichTextBox txtInput => (Glue.RichTextBox) input;
+        public RichTextBox txtInput => (Glue.RichTextBox)input;
 
         public bool Locked => false;
 
@@ -38,23 +39,23 @@ namespace FrankenDrift.Runner
         private readonly Dictionary<string, SecondaryWindow> _secondaryWindows = new();
         private GraphicsWindow _graphics = null;
         private readonly UITimer _timer;
-        private bool _isTranscriptActive = false;
+        private FileStream _transcript = null;
         private bool _isReplaying = false;
         private bool _shouldReplayCancel = false;
         private int _commandRecallIdx = 0;
         private readonly string _myVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
         private static bool GameIsOngoing => Adrift.SharedModule.Adventure is not null && Adrift.SharedModule.Adventure.eGameState == Adrift.clsAction.EndGameEnum.Running;
-        
+
         internal GraphicsWindow Graphics { get
-        {
-            _graphics ??= new GraphicsWindow(this)
+            {
+                _graphics ??= new GraphicsWindow(this)
                 {
                     Title = "Graphics - " + Title,
                     ShowActivated = false
                 };
-            _graphics.Show();
-            return _graphics;
-        }}
+                _graphics.Show();
+                return _graphics;
+            } }
 
         public bool Quitting { get; private set; } = false;
 
@@ -92,7 +93,7 @@ namespace FrankenDrift.Runner
 
             Adrift.SharedModule.Glue = this;
             Adrift.SharedModule.fRunner = this;
-            Adrift.SharedModule.UserSession = new Adrift.RunnerSession {Map = map};
+            Adrift.SharedModule.UserSession = new Adrift.RunnerSession { Map = map };
             Glue.Application.SetFrontend(this);
             Adrift.SharedModule.UserSession.bShowShortLocations = !SettingsManager.Settings.SuppressLocationName;
             output.AppendHtml($"FrankenDrift {_myVersion}");
@@ -106,7 +107,7 @@ namespace FrankenDrift.Runner
             Padding = 10;
 
             if (Application.Instance.Platform.IsGtk)
-                output = (AdriftOutput) new OutputLateFormatting(this);
+                output = (AdriftOutput)new OutputLateFormatting(this);
             else
                 output = new AdriftOutput(this);
             input = new AdriftInput { PlaceholderText = ">" };
@@ -148,7 +149,7 @@ namespace FrankenDrift.Runner
             {
                 Items =
                 {
-					new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
+                    new SubMenuItem { Text = "&File", Items = { loadGameCommand } },
                     new SubMenuItem { Text = "&Game", Items = { saveGameCommand, restoreGameCommand, restartGameCommand, transcriptCommand, replayCommand }},
                     new SubMenuItem { Text = "&View", Items = { showMapCommand, clearScreenCommand }}
                 },
@@ -189,8 +190,8 @@ namespace FrankenDrift.Runner
             {
                 e.Handled = true;
                 _commandRecallIdx++;
-                if (_commandRecallIdx > Adrift.SharedModule.UserSession.salCommands.Count-1) return;
-                input.Text = Adrift.SharedModule.UserSession.salCommands[^(_commandRecallIdx+1)];
+                if (_commandRecallIdx > Adrift.SharedModule.UserSession.salCommands.Count - 1) return;
+                input.Text = Adrift.SharedModule.UserSession.salCommands[^(_commandRecallIdx + 1)];
                 return;
             }
             else if (e.Key == Keys.Down)
@@ -242,6 +243,8 @@ namespace FrankenDrift.Runner
                         return;
                 }
             }
+            if (_transcript is not null)
+                _transcript.Dispose();
             Closing -= MainFormOnClosing;
         }
 
@@ -263,6 +266,7 @@ namespace FrankenDrift.Runner
 
         public void SubmitCommand(string cmd)
         {
+            _transcript?.Flush();  // ensure the transcript is written to disk each turn.
             OutputHTML("<br>");
             if (cmd.Length > 0)
             {
@@ -332,11 +336,11 @@ namespace FrankenDrift.Runner
 
         private void TranscriptCommandOnExecuted(object? sender, EventArgs e)
         {
-            if (_isTranscriptActive)
+            if (_transcript is not null)
             {
-                Adrift.SharedModule.UserSession.sTranscriptFile = "";
                 Menu.Items.GetSubmenu("&Game").Items[3].Text = "Start Transcript";
-                _isTranscriptActive = false;
+                _transcript.Dispose();
+                _transcript = null;
                 OutputHTML("<i>Transcript stopped.</i><br><br>");
             }
             else
@@ -345,9 +349,8 @@ namespace FrankenDrift.Runner
                 sfd.Filters.Add(new FileFilter { Name = "Text file", Extensions = [".txt"] });
                 var result = sfd.ShowDialog(this);
                 if (result != DialogResult.Ok) return;
-                Adrift.SharedModule.UserSession.sTranscriptFile = sfd.FileName;
                 Menu.Items.GetSubmenu("&Game").Items[3].Text = "Stop Transcript";
-                _isTranscriptActive = true;
+                _transcript = new(sfd.FileName, System.IO.FileMode.Create, FileAccess.Write, FileShare.Read);
                 OutputHTML("<i>Transcript starting.</i><br><br>");
             }
         }
@@ -420,7 +423,12 @@ namespace FrankenDrift.Runner
             Title = $"{name} - FrankenDrift";
         }
 
-        public bool IsTranscriptActive() => _isTranscriptActive;
+        public bool IsTranscriptActive() => _transcript is not null;
+
+        public void WriteTranscript(string text)
+        {
+            _transcript?.Write(Encoding.UTF8.GetBytes(text));
+        }
 
         public void ScrollToEnd()
         {
@@ -469,7 +477,11 @@ namespace FrankenDrift.Runner
             };
         }
 
-        public void OutputHTML(string source) => output.AppendHtml(source);
+        public void OutputHTML(string source) {
+            if (_transcript is not null)
+                WriteTranscript(Util.StripCarats(source).Replace("Ø", ">"));
+            output.AppendHtml(source);
+        }
 
         public void InitInput() => input.Focus();
 
