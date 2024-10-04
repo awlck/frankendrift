@@ -438,13 +438,6 @@ namespace FrankenDrift.Runner
             MessageBox.Show(info, title ?? "FrankenDrift", MessageBoxType.Information);
         }
 
-        public void ComplainAboutVersionMismatch(string advVer, string terpVer)
-        {
-            MessageBox.Show(
-                $"The underlying Runner (v{terpVer}) can't run this game, which was written with ADRIFT version {advVer}.",
-                "FrankenDrift", MessageBoxType.Error);
-        }
-
         public string QuerySavePath()
         {
             var sfd = new SaveFileDialog();
