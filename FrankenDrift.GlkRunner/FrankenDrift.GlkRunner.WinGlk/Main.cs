@@ -167,6 +167,7 @@ namespace FrankenDrift.GlkRunner.WinGlk
         public uint glk_gestalt(Gestalt sel, uint val) => Winglk_Pinvoke.glk_gestalt(sel, val);
         public unsafe uint glk_gestalt_ext(Gestalt sel, uint val, uint* arr, uint arrlen) => Winglk_Pinvoke.glk_gestalt_ext(sel, val, arr, arrlen);
         public void glk_request_timer_events(uint millisecs) => Winglk_Pinvoke.glk_request_timer_events(millisecs);
+        public uint garglk_unput_string_count_uni(uint[] str) { return 0; }
 
         public void SetGameName(string game) => Winglk_Pinvoke.winglk_window_set_title(game);
     }
