@@ -37,7 +37,7 @@ The following features are known not to work:
 
 ## License
 
-The frontend (FrankenDrift.Runner) and compatibility glue (FrankenDrift.Glue) are &copy;&nbsp;2021-22 Adrian
+The frontends (FrankenDrift.Runner, FrankenDrift.GlkRunner, et al.) and compatibility glue (FrankenDrift.Glue) are &copy;&nbsp;2021-24 Adrian
 Welcker and distributed under the MIT license (see LICENSE). The ADRIFT logic code
 (FrankenDrift.Adrift) is &copy;&nbsp;Campbell Wild and distributed under a 3-clause BSD license (see
 FrankenDrift.Adrift/LICENSE.txt)
