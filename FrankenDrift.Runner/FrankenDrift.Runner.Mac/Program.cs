@@ -17,8 +17,19 @@ namespace FrankenDrift.Runner.Mac
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            File.WriteAllText("fdcrash.txt", e.ExceptionObject.ToString());
-            Eto.Forms.MessageBox.Show($"An unhandled exception occurred within FrankenDrift: {e.ExceptionObject}", "Unhandled Exception", MessageBoxButtons.OK);
+            try
+            {
+                File.WriteAllText(Path.Combine(Environment.GetEnvironmentVariable("HOME"), "fdcrash.txt"), e.ExceptionObject.ToString());
+            }
+            catch (Exception exception)
+            { /* do nothing */ }
+
+            try
+            {
+                Eto.Forms.MessageBox.Show($"An unhandled exception occurred within FrankenDrift: {e.ExceptionObject}",
+                    "Unhandled Exception", MessageBoxButtons.OK);
+            }
+            catch (Exception exception) { /* do nothing */ }
         }
     }
 }
