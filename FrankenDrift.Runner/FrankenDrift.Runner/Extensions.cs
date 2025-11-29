@@ -42,4 +42,32 @@ namespace FrankenDrift.Runner
             return new(font.Typeface, size, font.FontDecoration);
         }
     }
+
+    public static class ColorExtensions
+    {
+        // Adapted from: https://gist.github.com/paulcollett/5533b0f3b9be16a068f58f9e76ad6289
+
+        internal static double RoughLuminanceRatio(this Color color)
+        {
+            var rgb = color.ToPremultipliedArgb();
+            var r = Math.Pow(((double)((rgb & 0x00FF0000) >> 16)) / 255, 2.218);
+            var g = Math.Pow(((double)((rgb & 0x0000FF00) >> 8)) / 255, 2.218);
+            var b = Math.Pow(((double)(rgb & 0x000000FF)) / 255, 2.218);
+            return r * 0.2126 + g * 0.7152 + b * 0.0722;
+        }
+
+        internal static double RoughLightness(this Color color)
+        {
+            return Math.Pow(color.RoughLuminanceRatio(), 0.33);
+        }
+        
+        public static bool IsCloseTo(this Color color, Color otherColor)
+        {
+            var luminanceRatioA = color.RoughLuminanceRatio();
+            var luminanceRatioB = otherColor.RoughLuminanceRatio();
+            var contrast = ((Math.Max(luminanceRatioA, luminanceRatioB) + 0.05) /
+                            (Math.Min(luminanceRatioA, luminanceRatioB) + 0.05));
+            return contrast < 1.5;
+        }
+    }
 }

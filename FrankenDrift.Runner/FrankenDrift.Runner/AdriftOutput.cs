@@ -319,7 +319,13 @@ namespace FrankenDrift.Runner
         {
             var (font, color) = _fonts.Peek();
             SelectionFont = font;
-            SelectionForeground = color;
+            var newColor = color;
+            if (newColor.Ab <= 1)
+                newColor.Ab = 255;
+            if (SelectionBackground.IsCloseTo(newColor))
+                newColor.Invert();
+            SelectionForeground = newColor;
+
             if (_style.Bold != _previousStyle?.Bold)
                 SelectionBold = _style.Bold;
             if (_style.Underline != _previousStyle?.Underline)
