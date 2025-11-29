@@ -7,9 +7,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>de.diepixelecke.frankendrift</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.6.999</string>
+	<string>0.7.999</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.12</string>
+	<string>10.15</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>NSHumanReadableCopyright</key>
