@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Text;
@@ -264,7 +265,19 @@ namespace FrankenDrift.Runner
                         color = Colors.Olive;
                     else if (tokenLower.Contains("tan"))
                         color = Colors.Tan;
-                    
+
+                    if (font is null)
+                    {
+                        if (_defaultFont is not null)
+                            font = _defaultFont;
+                        else
+                        {
+                            font = new Font(
+                                Fonts.AvailableFontFamilies.FirstOrDefault(f =>
+                                    f.Name is "Helvetica" or "Arial" or "Liberation Sans"),
+                                SettingsManager.Settings.UserFontSize);
+                        }
+                    }
                     var face = FontFaceRegex().Match(currentToken);
                     if (face.Success)
                     {
