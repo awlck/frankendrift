@@ -11,6 +11,7 @@ namespace FrankenDrift.Glue
         {
             if (str.Contains("<#") && str.Contains("#>"))
                 str = str.Replace("<#", "[[==~~").Replace("#>", "~~==]]");
+            str = str.Replace("<>", "");
             return HtmlTagRegex().Replace(str, "");
         }
 
