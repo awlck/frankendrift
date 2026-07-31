@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>FrankenDrift.Glue</RootNamespace>
-	<VersionPrefix>0.9.0</VersionPrefix>
-      <VersionSuffix>indev</VersionSuffix>
+	<VersionPrefix>0.8.1</VersionPrefix>
   </PropertyGroup>
 </Project>
